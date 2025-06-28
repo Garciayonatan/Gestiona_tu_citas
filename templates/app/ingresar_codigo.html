@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <title>Restablecer Contraseña</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #007BFF, #00C6FF);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: white;
+            padding: 35px 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 420px;
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 {
+            text-align: center;
+            color: #007BFF;
+            margin-bottom: 25px;
+            font-size: 24px;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            font-size: 15px;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus {
+            border-color: #007BFF;
+            outline: none;
+        }
+
+        button {
+            margin-top: 25px;
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(90deg, #007BFF, #00C6FF);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        button:hover {
+            background: linear-gradient(90deg, #0056b3, #00aaff);
+            transform: scale(1.03);
+        }
+
+        .message {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            animation: slideDown 0.4s ease;
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border-left: 6px solid #28a745;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-left: 6px solid #dc3545;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media screen and (max-width: 500px) {
+            .container {
+                padding: 25px 20px;
+            }
+
+            h2 {
+                font-size: 20px;
+            }
+
+            button {
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🔐 Restablecer Contraseña</h2>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="message {% if message.tags %}{{ message.tags }}{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post" action="{% url 'app:restablecer_contraseña' %}">
+            {% csrf_token %}
+
+            <label for="codigo">📨 Código de recuperación que te enviamos al correo:</label>
+            <input type="text" id="codigo" name="codigo" placeholder="Ej: dXNlcmlk::token123" required />
+
+            <label for="nueva_password">🔑 Nueva Contraseña:</label>
+            <input type="password" id="nueva_password" name="nueva_password" placeholder="Tu nueva contraseña" required />
+
+            <label for="confirmar_password">🔁 Confirmar Contraseña:</label>
+            <input type="password" id="confirmar_password" name="confirmar_password" placeholder="Confirma tu contraseña" required />
+
+            <button type="submit">✅ Restablecer Contraseña</button>
+        </form>
+    </div>
+</body>
+</html>

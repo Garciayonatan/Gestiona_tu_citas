@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Eliminar Cita</title>
+    <style>
+        body {
+            background-color: #f2f2f2;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .delete-container {
+            background-color: white;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h2 {
+            color: #dc3545;
+            margin-bottom: 15px;
+        }
+
+        p {
+            margin-bottom: 25px;
+            font-size: 1.1em;
+            color: #333;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .buttons button,
+        .buttons a {
+            padding: 12px 25px;
+            font-size: 1em;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: background 0.3s ease;
+        }
+
+        .btn-cancel {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background-color: #5a6268;
+        }
+
+        .btn-confirm {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-confirm:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="delete-container">
+        <h2>¿Estás seguro que deseas eliminar esta cita?</h2>
+        <p>Una vez eliminada, no podrás recuperarla.</p>
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="buttons">
+                <button type="submit" class="btn-confirm">Sí, eliminar</button>
+                <a href="{% url 'app:empresa_panel' %}" class="btn-cancel">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

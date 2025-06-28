@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Panel Empresa</title>
+    <style>
+        /* Reset y base */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            /* Fondo degradado suave */
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            margin: 0;
+            padding: 10px;
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e0e6ed;
+            padding-bottom: 10px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin: 0;
+        }
+        nav a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 6px 12px;
+            border: 1px solid #3498db;
+            border-radius: 6px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            background: rgba(255,255,255,0.9);
+            box-shadow: 0 2px 6px rgba(52, 152, 219, 0.15);
+        }
+        nav a:hover {
+            background-color: #3498db;
+            color: white;
+        }
+        section.info, section.citas {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        section.info h2, section.citas h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #34495e;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #e0e6ed;
+            padding-bottom: 6px;
+        }
+        section.info p {
+            font-size: 1rem;
+            margin: 6px 0;
+            color: #555;
+        }
+        form {
+            margin-top: 10px;
+            max-width: 100%;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #2c3e50;
+        }
+        input[type="time"] {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1.5px solid #bdc3c7;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: border-color 0.3s ease;
+        }
+        input[type="time"]:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 6px rgba(52, 152, 219, 0.3);
+        }
+        .checkbox-group {
+            margin-bottom: 15px;
+        }
+        .checkbox-group label {
+            font-weight: 500;
+            color: #34495e;
+            display: inline-block;
+            margin-right: 12px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            user-select: none;
+        }
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 4px;
+            transform: scale(1.1);
+            cursor: pointer;
+        }
+        button {
+            cursor: pointer;
+            font-weight: 700;
+            border-radius: 8px;
+            border: none;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 3px 8px rgba(52, 152, 219, 0.25);
+        }
+        button[type="submit"] {
+            background-color: #3498db;
+            color: white;
+        }
+        button[type="submit"]:hover {
+            background-color: #2980b9;
+            box-shadow: 0 5px 12px rgba(41, 128, 185, 0.4);
+        }
+        .btn-servicios {
+            display: inline-block;
+            margin: 10px 0;
+            background-color: #1abc9c;
+            color: white;
+            border-radius: 8px;
+            padding: 10px 25px;
+            font-weight: 700;
+            font-size: 1rem;
+            border: none;
+            box-shadow: 0 4px 10px rgba(26, 188, 156, 0.4);
+            text-decoration: none;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .btn-servicios:hover {
+            background-color: #16a085;
+            box-shadow: 0 6px 15px rgba(22, 160, 133, 0.6);
+        }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+            font-size: 0.9rem;
+            min-width: 280px;
+        }
+        thead th {
+            text-align: left;
+            color: #7f8c8d;
+            font-weight: 600;
+            padding: 10px 12px;
+            border-bottom: 1px solid #e0e6ed;
+        }
+        tbody tr {
+            background-color: #ffffff;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            border-radius: 8px;
+            transition: transform 0.1s ease;
+        }
+        tbody tr:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+        tbody td {
+            padding: 12px;
+            color: #34495e;
+            vertical-align: middle;
+        }
+        .actions form {
+            display: inline-block;
+            margin-right: 8px;
+            margin-bottom: 4px;
+        }
+        button.accept {
+            background-color: #27ae60;
+            color: white;
+            box-shadow: 0 4px 10px rgba(39, 174, 96, 0.4);
+            border-radius: 8px;
+            padding: 8px 18px;
+            font-weight: 600;
+        }
+        button.accept:hover {
+            background-color: #219150;
+            box-shadow: 0 5px 15px rgba(33, 145, 80, 0.6);
+        }
+        button.reject {
+            background-color: #e74c3c;
+            color: white;
+            box-shadow: 0 4px 10px rgba(231, 76, 60, 0.4);
+            border-radius: 8px;
+            padding: 8px 18px;
+            font-weight: 600;
+        }
+        button.reject:hover {
+            background-color: #c0392b;
+            box-shadow: 0 5px 15px rgba(192, 57, 43, 0.6);
+        }
+        button.delete {
+            background-color: #f39c12;
+            color: white;
+            box-shadow: 0 4px 10px rgba(243, 156, 18, 0.4);
+            border-radius: 8px;
+            padding: 8px 18px;
+            font-weight: 600;
+        }
+        button.delete:hover {
+            background-color: #d68910;
+            box-shadow: 0 5px 15px rgba(214, 137, 16, 0.6);
+        }
+        .no-citas {
+            font-style: italic;
+            color: #7f8c8d;
+            padding: 10px 0;
+            font-size: 1rem;
+        }
+        @media (max-width: 700px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            nav {
+                margin-top: 10px;
+            }
+            section.info, section.citas {
+                padding: 15px;
+            }
+            form {
+                max-width: 100%;
+            }
+            .checkbox-group label {
+                margin-right: 8px;
+                font-size: 0.85rem;
+            }
+            table {
+                font-size: 0.8rem;
+                min-width: 240px;
+            }
+            .actions form {
+                display: block;
+                margin-right: 0;
+                margin-bottom: 8px;
+            }
+            button.accept, button.reject, button.delete {
+                width: 100%;
+                padding: 10px 0;
+                font-size: 1rem;
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Bienvenido, {{ request.user.username }}</h1>
+        <nav>
+            <a href="{% url 'app:logout' %}">Cerrar Sesión</a>
+        </nav>
+    </header>
+
+    <section class="info">
+        <h2>Información de la Empresa</h2>
+        <p><strong>Nombre de la Empresa:</strong> {{ empresa.nombre_empresa }}</p>
+        <p><strong>Dirección:</strong> {{ empresa.direccion }}</p>
+        <p><strong>Nombre del Dueño:</strong> {{ empresa.nombre_dueno }}</p>
+        <p><strong>Tipo de Empresa:</strong> {{ empresa.get_tipo_empresa_display }}</p>
+        <p><strong>Teléfono:</strong> {{ empresa.telefono }}</p>
+        <p><strong>Cantidad de Clientes con Cita:</strong> {{ citas.count }}</p>
+
+        <a href="{% url 'app:servicios_empresa' %}" class="btn-servicios">Gestionar Servicios</a>
+
+        <h3>Editar Horario</h3>
+        <form method="POST" action="{% url 'app:editar_horario' %}">
+            {% csrf_token %}
+            <label for="hora_inicio">Hora de inicio:</label>
+            <input type="time" id="hora_inicio" name="hora_inicio" value="{{ empresa.hora_inicio|default_if_none:'' }}">  
+
+            <label for="hora_cierre" style="margin-top:10px;">Hora de cierre:</label>
+            <input type="time" id="hora_cierre" name="hora_cierre" value="{{ empresa.hora_cierre|default_if_none:'' }}">  
+
+            <button type="submit" style="margin-top:15px;">Guardar Horario</button>
+        </form>
+
+        <h3 style="margin-top: 25px;">Editar Días Laborables</h3>
+        <form method="POST" action="{% url 'app:editar_dias_laborables' %}">
+            {% csrf_token %}
+            <div class="checkbox-group">
+                
+            </div>
+            <button type="submit">Guardar Días Laborables</button>
+        </form>
+    </section>
+
+    <section class="citas">
+        <h2>Citas Solicitadas</h2>
+        {% if citas %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Cliente</th>
+                    <th>Fecha</th>
+                    <th>Hora</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cita in citas %}
+                <tr>
+                    <td>{{ cita.cliente.nombre_completo }}</td>
+                    <td>{{ cita.fecha|date:"d/m/Y" }}</td>
+                    <td>{{ cita.hora|time:"H:i" }}</td>
+                    <td>{{ cita.get_estado_display }}</td>
+                    <td class="actions">
+                        {% if cita.estado == 'pendiente' %}
+                        <form method="POST" action="{% url 'app:aceptar_cita' cita.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="accept" title="Aceptar cita">Aceptar</button>
+                        </form>
+                        <form method="POST" action="{% url 'app:rechazar_cita' cita.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="reject" title="Rechazar cita">Rechazar</button>
+                        </form>
+                        {% endif %}
+
+                        <form method="POST" action="{% url 'app:eliminar_cita_empresa' cita.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="delete" title="Eliminar cita">Eliminar</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p class="no-citas">No hay citas solicitadas.</p>
+        {% endif %}
+    </section>
+</body>
+</html>

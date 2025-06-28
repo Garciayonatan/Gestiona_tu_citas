@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <title>Registro Empresa</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2); /* Fondo tipo imagen */
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .form-box {
+            background: white;
+            padding: 25px 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 360px;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+            font-size: 1rem;
+        }
+        input[type=text],
+        input[type=email],
+        input[type=password],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+        button {
+            width: 100%;
+            background: #007bff;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .links {
+            margin-top: 15px;
+            text-align: center;
+        }
+        .links a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        .links a:hover {
+            text-decoration: underline;
+        }
+        .errorlist {
+            color: red;
+            margin: 0;
+            padding: 0;
+            list-style-type: none;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-box">
+        <h2>Registro Empresa</h2>
+        <form method="POST" novalidate>
+            {% csrf_token %}
+
+            <label for="{{ user_form.username.id_for_label }}">Usuario:</label>
+            {{ user_form.username }}
+            {% if user_form.username.errors %}
+                <ul class="errorlist">{{ user_form.username.errors }}</ul>
+            {% endif %}
+
+            <label for="{{ user_form.email.id_for_label }}">Email:</label>
+            {{ user_form.email }}
+            {% if user_form.email.errors %}
+                <ul class="errorlist">{{ user_form.email.errors }}</ul>
+            {% endif %}
+
+            <label for="{{ user_form.password.id_for_label }}">Contraseña:</label>
+            {{ user_form.password }}
+            {% if user_form.password.errors %}
+                <ul class="errorlist">{{ user_form.password.errors }}</ul>
+            {% endif %}
+
+            <label for="{{ empresa_form.nombre_empresa.id_for_label }}">Nombre de la Empresa:</label>
+            <input type="text" name="nombre_empresa" id="{{ empresa_form.nombre_empresa.id_for_label }}" placeholder="Ingrese el nombre de la empresa" value="{{ empresa_form.nombre_empresa.value|default:'' }}">
+            {% if empresa_form.nombre_empresa.errors %}
+                <ul class="errorlist">{{ empresa_form.nombre_empresa.errors }}</ul>
+            {% endif %}
+
+            <label for="{{ empresa_form.nombre_dueno.id_for_label }}">Nombre del Dueño:</label>
+            {{ empresa_form.nombre_dueno }}
+            {% if empresa_form.nombre_dueno.errors %}
+                <ul class="errorlist">{{ empresa_form.nombre_dueno.errors }}</ul>
+            {% endif %}
+
+            <label for="{{ empresa_form.tipo_empresa.id_for_label }}">Tipo de Empresa:</label>
+            {{ empresa_form.tipo_empresa }}
+            {% if empresa_form.tipo_empresa.errors %}
+                <ul class="errorlist">{{ empresa_form.tipo_empresa.errors }}</ul>
+            {% endif %}
+
+            <label for="{{ empresa_form.telefono.id_for_label }}">Teléfono:</label>
+            {{ empresa_form.telefono }}
+            {% if empresa_form.telefono.errors %}
+                <ul class="errorlist">{{ empresa_form.telefono.errors }}</ul>
+            {% endif %}
+
+            <label for="{{ empresa_form.direccion.id_for_label }}">Dirección:</label>
+            {{ empresa_form.direccion }}
+            {% if empresa_form.direccion.errors %}
+                <ul class="errorlist">{{ empresa_form.direccion.errors }}</ul>
+            {% endif %}
+
+            <button type="submit">Registrar</button>
+        </form>
+        <div class="links">
+            <a href="{% url 'login' %}">Volver a Login</a>
+        </div>
+    </div>
+</body>
+</html>

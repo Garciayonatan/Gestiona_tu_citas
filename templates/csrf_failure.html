@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Error de Seguridad</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f8f9fa;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    .container {
+      background-color: #fff;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
+      max-width: 500px;
+      text-align: center;
+    }
+
+    h1 {
+      color: #e53e3e;
+      font-size: 1.8rem;
+      margin-bottom: 15px;
+    }
+
+    p {
+      font-size: 1rem;
+      color: #444;
+      margin-bottom: 20px;
+    }
+
+    a {
+      display: inline-block;
+      margin-top: 10px;
+      text-decoration: none;
+      color: #3182ce;
+      font-weight: bold;
+      transition: color 0.3s ease;
+    }
+
+    a:hover {
+      color: #225ea8;
+      text-decoration: underline;
+    }
+
+    @media (max-width: 500px) {
+      .container {
+        padding: 30px 20px;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      p {
+        font-size: 0.95rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⚠️ Error de Seguridad (CSRF)</h1>
+    <p>Tu sesión ha expirado o el formulario fue alterado por motivos de seguridad.</p>
+    <p>Por favor, vuelve a la página anterior y recarga para intentarlo de nuevo.</p>
+    <a href="{% url 'app:login' %}">Volver a Iniciar Sesión</a>
+  </div>
+</body>
+</html>
