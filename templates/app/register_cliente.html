@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Registro de Cliente</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/estilo.css' %}" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2); /* Fondo suave y atractivo */
+            margin: 0;
+            padding: 40px 15px;
+        }
+        .container {
+            max-width: 500px;
+            background-color: #fff;
+            margin: auto;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 6px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-left: 5px solid #28a745;
+            border-radius: 4px;
+        }
+        .error-message, .field-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-left: 5px solid #dc3545;
+            border-radius: 4px;
+        }
+        button {
+            margin-top: 25px;
+            padding: 12px;
+            width: 100%;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        p {
+            text-align: center;
+            margin-top: 25px;
+            color: #333;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Registro de Cliente</h1>
+
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == 'success' %}
+                    <div class="success-message">{{ message }}</div>
+                {% elif message.tags == 'error' %}
+                    <div class="error-message">{{ message }}</div>
+                {% else %}
+                    <div>{{ message }}</div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST" action="{% url 'app:register_cliente' %}">
+            {% csrf_token %}
+
+            <label for="id_username">Nombre de usuario:</label>
+            <input type="text" id="id_username" name="username" value="{{ form.username.value|default_if_none:'' }}" required />
+            {% if form.username.errors %}
+                <div class="field-error">{{ form.username.errors|striptags }}</div>
+            {% endif %}
+
+            <label for="id_nombre_completo">Nombre completo:</label>
+            <input type="text" id="id_nombre_completo" name="nombre_completo" value="{{ form.nombre_completo.value|default_if_none:'' }}" required />
+            {% if form.nombre_completo.errors %}
+                <div class="field-error">{{ form.nombre_completo.errors|striptags }}</div>
+            {% endif %}
+
+            <label for="id_email">Correo electrónico:</label>
+            <input type="email" id="id_email" name="email" value="{{ form.email.value|default_if_none:'' }}" required />
+            {% if form.email.errors %}
+                <div class="field-error">{{ form.email.errors|striptags }}</div>
+            {% endif %}
+
+            <label for="id_telefono">Teléfono:</label>
+            <input type="text" id="id_telefono" name="telefono" value="{{ form.telefono.value|default_if_none:'' }}" required />
+            {% if form.telefono.errors %}
+                <div class="field-error">{{ form.telefono.errors|striptags }}</div>
+            {% endif %}
+
+            <label for="id_password">Contraseña:</label>
+            <input type="password" id="id_password" name="password" required />
+            {% if form.password.errors %}
+                <div class="field-error">{{ form.password.errors|striptags }}</div>
+            {% endif %}
+
+            <button type="submit">Registrarse</button>
+        </form>
+
+        <p>¿Ya tienes cuenta? <a href="{% url 'app:login' %}">Inicia sesión</a></p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Solicitar Nueva Cita</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      /* Fondo degradado bonito */
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .form-box {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+      width: 400px;
+      max-width: 90vw;
+    }
+    h2 { text-align: center; }
+    label {
+      font-weight: bold;
+      margin-top: 15px;
+      display: block;
+    }
+    select, input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1em;
+      box-sizing: border-box;
+      transition: border-color 0.3s ease;
+    }
+    select:focus, input:focus, textarea:focus {
+      border-color: #764ba2;
+      outline: none;
+      box-shadow: 0 0 8px #764ba2;
+    }
+    select:disabled, input:disabled, textarea:disabled {
+      background: #eee;
+      cursor: not-allowed;
+    }
+    button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 12px;
+      background: #764ba2;
+      color: white;
+      border: 0;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1em;
+      transition: background-color 0.3s ease;
+    }
+    button:hover { background: #5a3579; }
+    .message {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+    .message.error { background: #f8d7da; color: #842029; }
+    .message.success { background: #d1e7dd; color: #0f5132; }
+    a { 
+      display: block; 
+      margin-top: 15px; 
+      text-align: center; 
+      color: #007bff; /* azul brillante */
+      font-weight: 600;
+      text-decoration: none;
+    }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="form-box">
+    <h2>Solicitar Nueva Cita</h2>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="message {{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="POST" action="{% url 'app:nueva_cita' %}" id="form-cita" novalidate>
+      {% csrf_token %}
+      <label for="empresa">Empresa:</label>
+      <select name="empresa" id="empresa" required>
+        <option value="" disabled selected>Seleccione una empresa</option>
+        {% for empresa in empresas %}
+          <option value="{{ empresa.id }}">{{ empresa.nombre_empresa }}</option>
+        {% endfor %}
+      </select>
+
+      <label for="servicio">Servicio:</label>
+      <select name="servicio" id="servicio" required disabled>
+        <option value="" disabled selected>Seleccione una empresa primero</option>
+      </select>
+
+      <label for="fecha_hora">Fecha y Hora:</label>
+      <input type="datetime-local" name="fecha_hora" id="fecha_hora" required />
+
+      <label for="comentarios">Comentarios (opcional):</label>
+      <textarea name="comentarios" id="comentarios" placeholder="Agrega algún comentario adicional..."></textarea>
+
+      <button type="submit">Solicitar Cita</button>
+    </form>
+
+    <a href="{% url 'app:cliente_panel' %}">Volver al Panel</a>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const selEmp = document.getElementById('empresa');
+      const selSvc = document.getElementById('servicio');
+
+      function recortarTexto(texto, maxLength) {
+        if (!texto) return 'Sin descripción';
+        return texto.length > maxLength ? texto.substring(0, maxLength) + '…' : texto;
+      }
+
+      selEmp.addEventListener('change', () => {
+        const id = selEmp.value;
+        selSvc.innerHTML = '<option>Cargando servicios...</option>';
+        selSvc.disabled = true;
+
+        fetch(`/api/servicios/?empresa_id=${id}`)
+          .then(res => {
+            if (!res.ok) {
+              throw new Error('No se pudo obtener los servicios. Intente nuevamente.');
+            }
+            return res.json();
+          })
+          .then(data => {
+            selSvc.innerHTML = '<option value="" disabled selected>Seleccione un servicio</option>';
+            if (data.servicios && data.servicios.length > 0) {
+              data.servicios.forEach(s => {
+                const nombreCortado = recortarTexto(s.nombre, 30);
+                const descripcion = s.descripcion ? s.descripcion : 'Sin descripción';
+                const opt = document.createElement('option');
+                opt.value = s.id;
+                opt.textContent = `${nombreCortado} – ${descripcion} – RD$${s.precio} – Duración: ${s.duracion} min`;
+                selSvc.appendChild(opt);
+              });
+              selSvc.disabled = false;
+            } else {
+              selSvc.innerHTML = '<option value="" disabled>No hay servicios disponibles para esta empresa.</option>';
+            }
+          })
+          .catch(err => {
+            console.error('Error al cargar servicios:', err);
+            selSvc.innerHTML = '<option disabled>Error al cargar servicios. Intente nuevamente.</option>';
+            selSvc.disabled = true;
+          });
+      });
+    });
+  </script>
+</body>
+</html>

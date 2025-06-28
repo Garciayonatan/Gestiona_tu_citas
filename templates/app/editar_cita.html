@@ -1,0 +1,138 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Editar Cita</title>
+    <!-- Bootstrap CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 40px 15px;
+            margin: 0;
+        }
+        .container {
+            max-width: 600px;
+            width: 100%;
+            margin-top: 40px;
+            background: white;
+            padding: 30px 35px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        h2 {
+            margin-bottom: 25px;
+            color: #4b0082;
+            text-align: center;
+            font-weight: 700;
+            font-size: 2rem;
+        }
+        .btn-primary {
+            background-color: #4b0082;
+            border-color: #4b0082;
+            transition: background-color 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #35006a;
+            border-color: #35006a;
+        }
+        .btn-cancel {
+            color: #4b0082;
+            border: 2px solid #4b0082;
+            background: transparent;
+            transition: all 0.3s ease;
+        }
+        .btn-cancel:hover {
+            background-color: #4b0082;
+            color: white;
+        }
+        /* Alert styling overrides */
+        .alert {
+            border-radius: 8px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container shadow-sm">
+        <h2>Editar Cita</h2>
+
+        <!-- Mostrar mensajes de éxito o error aquí -->
+        {% if messages %}
+            <div class="mb-3">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <form method="POST" novalidate>
+            {% csrf_token %}
+
+            <!-- Mostrar errores generales (como cita en el pasado o choque de cita) -->
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Campos del formulario -->
+            {% for field in form %}
+                <div class="mb-3">
+                    <label for="{{ field.id_for_label }}" class="form-label fw-semibold">{{ field.label }}</label>
+                    {{ field }}
+
+                    {% if field.help_text %}
+                        <small class="form-text text-muted">{{ field.help_text }}</small>
+                    {% endif %}
+
+                    {% if field.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ field.errors|striptags }}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <!-- Campo comentarios si está presente -->
+            {% if form.comentarios %}
+                <div class="mb-3">
+                    <label for="{{ form.comentarios.id_for_label }}" class="form-label fw-semibold">Comentarios (opcional)</label>
+                    {{ form.comentarios }}
+                    {% if form.comentarios.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ form.comentarios.errors|striptags }}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'app:cliente_panel' %}" class="btn btn-cancel">Cancelar</a>
+                <button type="submit" class="btn btn-primary">Guardar cambios</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Bootstrap JS Bundle (Popper + Bootstrap JS) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const apiServiciosUrl = "{% url 'app:api_servicios' %}";
+        console.log('URL API Servicios:', apiServiciosUrl);
+        // Puedes hacer fetch aquí si necesitas cargar dinámicamente servicios
+    </script>
+</body>
+</html>

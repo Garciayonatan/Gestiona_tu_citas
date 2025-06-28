@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Servicios de la Empresa</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+    <style>
+        body {
+            padding: 20px;
+            background: linear-gradient(to right, #89f7fe, #66a6ff);
+            font-family: Arial, sans-serif;
+            color: #333;
+        }
+        .card {
+            border-radius: 1rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .form-section {
+            margin-top: 30px;
+        }
+        .table th, .table td {
+            vertical-align: middle;
+        }
+        .btn-danger {
+            margin-left: 5px;
+        }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Encabezado y botón de volver -->
+        <div class="top-bar">
+            <h2 class="mb-3">Servicios de <strong>{{ empresa.nombre_empresa }}</strong></h2>
+            <a href="{% url 'app:empresa_panel' %}" class="btn btn-secondary">⬅ Volver al Panel</a>
+        </div>
+
+        <!-- Selección de cantidad de empleados -->
+        <div class="mb-4">
+            <form method="post" action="">
+                {% csrf_token %}
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <label for="cantidad_empleados" class="form-label">Seleccione la cantidad de empleados:</label>
+                        <select id="cantidad_empleados" class="form-select" name="cantidad_empleados" required>
+                            <option value="" disabled {% if not cantidad_empleados %}selected{% endif %}>Seleccione</option>
+                            {% for i in empleados_rango %}
+                                <option value="{{ i }}" {% if i == cantidad_empleados %}selected{% endif %}>{{ i }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 text-end mt-3 mt-md-0">
+                        <button type="submit" class="btn btn-primary">Actualizar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Formulario para agregar servicios -->
+        <div class="card p-4 mb-4">
+            <h5>Agregar Nuevo Servicio</h5>
+            <form method="post" action="">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="{{ form.nombre.id_for_label }}" class="form-label">Nombre del Servicio</label>
+                    {{ form.nombre }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.descripcion.id_for_label }}" class="form-label">Descripción</label>
+                    {{ form.descripcion }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.precio.id_for_label }}" class="form-label">Precio</label>
+                    {{ form.precio }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.duracion.id_for_label }}" class="form-label">Duración (en minutos)</label>
+                    {{ form.duracion }}
+                </div>
+                <button type="submit" class="btn btn-success mt-3">Agregar Servicio</button>
+            </form>
+        </div>
+
+        <!-- Lista de servicios -->
+        <div class="form-section">
+            <h5>Lista de Servicios</h5>
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Descripción</th>
+                        <th>Precio</th>
+                        <th>Duración</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for servicio in servicios %}
+                        <tr>
+                            <td>{{ servicio.nombre }}</td>
+                            <td>{{ servicio.descripcion|default:"Sin descripción" }}</td>
+                            <td>RD$ {{ servicio.precio }}</td>
+                            <td>{{ servicio.duracion|default:"No especificado" }} min</td>
+                            <td>
+                                <form method="post" action="" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="eliminar_servicio" value="1" />
+                                    <input type="hidden" name="servicio_id" value="{{ servicio.id }}" />
+                                    <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">No hay servicios registrados aún.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

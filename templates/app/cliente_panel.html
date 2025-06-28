@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <title>Panel Cliente</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        /* Fondo igual para desktop y móvil */
+        body {
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            margin: 0;
+            padding: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            box-sizing: border-box;
+        }
+
+        /* Caja de contenido blanca semi-transparente */
+        .citas {
+            background: rgba(255, 255, 255, 0.85);
+            color: #222;
+            padding: 20px;
+            border-radius: 12px;
+            max-width: 1100px;
+            margin: 0 auto 30px auto;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+        }
+
+        header {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 25px;
+            max-width: 1100px;
+            margin-left: auto;
+            margin-right: auto;
+            color: #f0f0f0;
+            text-shadow: 1px 1px 6px rgba(0,0,0,0.5);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2.2em;
+            text-align: center;
+        }
+
+        nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: white;
+            padding: 10px 18px;
+            font-size: 1em;
+            border-radius: 6px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .btn-nueva {
+            background: #28a745;
+        }
+
+        .btn-nueva:hover {
+            background: #218838;
+            box-shadow: 0 5px 15px rgba(33, 136, 56, 0.7);
+        }
+
+        nav a:last-child {
+            background: #dc3545;
+        }
+
+        nav a:last-child:hover {
+            background: #a71d2a;
+            box-shadow: 0 5px 15px rgba(167, 29, 42, 0.7);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 1em;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ccc;
+            text-align: left;
+            vertical-align: top;
+            color: #222;
+        }
+
+        th {
+            background: #f4f4f4;
+            color: #555;
+            font-weight: 600;
+            box-shadow: inset 0 -2px 3px rgba(0,0,0,0.1);
+        }
+
+        .btn-editar, .btn-eliminar {
+            display: inline-block;
+            width: 110px;  /* ancho fijo igual para ambos */
+            padding: 8px 0;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 0.9em;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            text-decoration: none; /* en caso sea link */
+        }
+
+        .btn-editar {
+            background-color: #007bff;
+        }
+
+        .btn-editar:hover {
+            background-color: #0056b3;
+            box-shadow: 0 6px 20px rgba(0, 86, 179, 0.7);
+        }
+
+        .btn-eliminar {
+            background-color: #dc3545;
+        }
+
+        .btn-eliminar:hover {
+            background-color: #a71d2a;
+            box-shadow: 0 6px 20px rgba(167, 29, 42, 0.7);
+        }
+
+        .estado {
+            padding: 6px 12px;
+            border-radius: 20px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9em;
+            display: inline-block;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+
+        .estado-pendiente { background-color: #ff9800; }
+        .estado-aceptada { background-color: #2196f3; }
+        .estado-completada { background-color: #4caf50; }
+        .estado-rechazada { background-color: #f44336; }
+        .estado-cancelada { background-color: #9e9e9e; }
+
+        .horario-info {
+            font-size: 0.8em;
+            color: #555;
+            margin-top: 6px;
+            line-height: 1.3;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                /* mismo fondo degradado que en desktop */
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            }
+            .citas {
+                max-width: 100%;
+                box-shadow: none;
+                padding: 15px 10px;
+            }
+            header {
+                max-width: 100%;
+                padding: 0 10px;
+            }
+            table, thead, tbody, th, td, tr {
+                display: block;
+            }
+            thead tr {
+                display: none;
+            }
+            tr {
+                margin-bottom: 15px;
+                border: 1px solid #ccc;
+                border-radius: 8px;
+                padding: 12px;
+                background: #fff;
+            }
+            td {
+                border: none;
+                padding: 8px 6px;
+                color: #333;
+            }
+            td::before {
+                content: attr(data-label);
+                font-weight: 700;
+                display: block;
+                margin-bottom: 6px;
+                color: #444;
+            }
+            nav {
+                gap: 10px;
+            }
+            /* En móvil los botones ocupan 100% y están centrados */
+            .btn-editar, .btn-eliminar {
+                width: 100%;
+                margin-bottom: 6px;
+                box-sizing: border-box;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Bienvenido, {{ request.user.username }}</h1>
+        <nav>
+            <a href="{% url 'app:nueva_cita' %}" class="btn-nueva">Solicitar Nueva Cita</a>
+            <a href="{% url 'app:logout' %}">Cerrar Sesión</a>
+        </nav>
+    </header>
+
+    <section class="citas">
+        <h2 style="margin-top: 0; font-size: 1.2em; color: #444;">Mis Citas</h2>
+        {% if citas %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Empresa</th>
+                    <th>Tipo</th>
+                    <th>Fecha y Hora</th>
+                    <th>Estado</th>
+                    <th>Editar</th>
+                    <th>Eliminar</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cita in citas %}
+                <tr>
+                    <td data-label="Empresa">
+                        {{ cita.empresa.nombre_empresa }}
+                        <div class="horario-info">
+                            <div><strong>Dueño:</strong> {{ cita.empresa.nombre_dueno }}</div>
+                            <div><strong>Horario:</strong>
+                                {{ cita.empresa.hora_inicio|time:"h:i a" }} - {{ cita.empresa.hora_cierre|time:"h:i a" }}
+                            </div>
+                            <div><strong>Días:</strong>
+                                {% with cita.empresa.dias_laborables.all as dias %}
+                                    {% if dias %}
+                                        {% for dia in dias %}
+                                            {{ dia.nombre }}{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        No definido
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                            <div><strong>Dirección:</strong> {{ cita.empresa.direccion }}</div>
+                            <div><strong>Teléfono:</strong> {{ cita.empresa.telefono }}</div>
+                        </div>
+                    </td>
+                    <td data-label="Tipo">{{ cita.empresa.get_tipo_empresa_display }}</td>
+                    <td data-label="Fecha y Hora">
+                        {{ cita.fecha|date:"d/m/Y" }} {{ cita.hora|time:"h:i a" }}
+                    </td>
+                    <td data-label="Estado">
+                        {% if cita.estado == "pendiente" %}
+                            <span class="estado estado-pendiente">Pendiente</span>
+                        {% elif cita.estado == "aceptada" %}
+                            <span class="estado estado-aceptada">Aceptada</span>
+                        {% elif cita.estado == "completada" %}
+                            <span class="estado estado-completada">Completada</span>
+                        {% elif cita.estado == "rechazada" %}
+                            <span class="estado estado-rechazada">Rechazada</span>
+                        {% elif cita.estado == "cancelada" %}
+                            <span class="estado estado-cancelada">Cancelada</span>
+                        {% else %}
+                            {{ cita.get_estado_display }}
+                        {% endif %}
+                    </td>
+                    <td data-label="Editar">
+                        <a href="{% url 'app:editar_cita' cita.id %}" class="btn-editar">Editar</a>
+                    </td>
+                    <td data-label="Eliminar">
+                        <form method="POST" action="{% url 'app:eliminar_cita' cita.id %}" onsubmit="return confirm('¿Estás seguro de eliminar esta cita?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-eliminar">Eliminar</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p style="color:#444;">No tienes citas aún.</p>
+        {% endif %}
+    </section>
+</body>
+</html>
