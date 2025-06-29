@@ -1,86 +1,8 @@
-from pathlib import Path
-from decouple import config, Csv
-
-# BASE DIR
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-# SEGURIDAD
-SECRET_KEY = config('SECRET_KEY')
-DEBUG = config('DEBUG', cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv())
-
-# APLICACIONES INSTALADAS
-INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'citas',  # Tu app personalizada
-]
-
-# MIDDLEWARE
-MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-]
-
-# URLS
-ROOT_URLCONF = 'gestiona_tu_cita.urls'
-
-# TEMPLATES
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-            ],
-        },
-    },
-]
-
-# WSGI
-WSGI_APPLICATION = 'gestiona_tu_cita.wsgi.application'
-
-# BASE DE DATOS - PostgreSQL AlwaysData
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST'),
-        'PORT': config('DB_PORT'),
-    }
-}
-
-# VALIDADORES DE CONTRASEÑA
-AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
-]
-
-# INTERNACIONALIZACIÓN
-LANGUAGE_CODE = 'es-es'
 import os
 from pathlib import Path
-from decouple import Csv, AutoConfig
+from decouple import config, Csv, AutoConfig
 
-# Configuración para cargar .env incluso sin manage.py
+# Carga automática desde .env aunque no se use manage.py
 config = AutoConfig(search_path=os.path.dirname(os.path.dirname(__file__)))
 
 # BASE DIR
@@ -99,7 +21,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'citas',  # Tu app personalizada
+    'citas',  # App personalizada
 ]
 
 # MIDDLEWARE
@@ -180,7 +102,7 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
 
-# SEGURIDAD
+# SEGURIDAD HTTPS
 CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', cast=Csv())
 SECURE_HSTS_SECONDS = config('SECURE_HSTS_SECONDS', cast=int)
 SECURE_HSTS_INCLUDE_SUBDOMAINS = config('SECURE_HSTS_INCLUDE_SUBDOMAINS', cast=bool)
