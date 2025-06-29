@@ -93,7 +93,7 @@ EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='tu_correo@gmail.com')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='tu_contraseña_de_app')
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='tu_correo@gmail.com')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER)
 
 # SEGURIDAD SSL Y COOKIES
 CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='http://localhost,http://127.0.0.1', cast=Csv())
@@ -104,9 +104,8 @@ SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=False, cast=bool)
 SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=False, cast=bool)
 CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=False, cast=bool)
 
-# intrusa esta 23 de junio --------------------------------------------------
-CSRF_FAILURE_VIEW = 'citas.views.csrf_failure'  # Cambia 'app' por tu app real
-# --------------------------------------------------------------------------
+# Vista personalizada para fallos CSRF
+CSRF_FAILURE_VIEW = 'citas.views.csrf_failure'  # Cambia 'citas' si tu app tiene otro nombre
 
 # CONFIGURACIÓN DE TELEGRAM
 TELEGRAM_BOT_TOKEN = config('TELEGRAM_BOT_TOKEN', default=None)
