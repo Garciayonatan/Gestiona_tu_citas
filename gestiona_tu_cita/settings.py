@@ -58,10 +58,10 @@ WSGI_APPLICATION = 'gestiona_tu_cita.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='cita1'),
-        'USER': config('DB_USER', default='postgres'),
+        'NAME': config('DB_NAME', default='gestionatucitas1_cita1'),
+        'USER': config('DB_USER', default='gestionatucitas1'),
         'PASSWORD': config('DB_PASSWORD', default='123'),
-        'HOST': config('DB_HOST', default='localhost'),
+        'HOST': config('DB_HOST', default='postgresql-gestionatucitas1.alwaysdata.net'),
         'PORT': config('DB_PORT', default='5432'),
     }
 }
@@ -93,7 +93,7 @@ EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='tu_correo@gmail.com')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='tu_contraseña_de_app')
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER)
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='tu_correo@gmail.com')
 
 # SEGURIDAD SSL Y COOKIES
 CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='http://localhost,http://127.0.0.1', cast=Csv())
@@ -104,15 +104,13 @@ SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=False, cast=bool)
 SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=False, cast=bool)
 CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=False, cast=bool)
 
-#intrusa esta 23 de junio--------------------------------------------------
-
+# intrusa esta 23 de junio --------------------------------------------------
 CSRF_FAILURE_VIEW = 'citas.views.csrf_failure'  # Cambia 'app' por tu app real
-#--------------------------------------------------------------------------
+# --------------------------------------------------------------------------
 
 # CONFIGURACIÓN DE TELEGRAM
 TELEGRAM_BOT_TOKEN = config('TELEGRAM_BOT_TOKEN', default=None)
-TELEGRAM_CHAT_ID = config('TELEGRAM_CHAT_ID', default=None) 
-
+TELEGRAM_CHAT_ID = config('TELEGRAM_CHAT_ID', default=None)
 
 # LOGIN Y LOGOUT
 LOGIN_REDIRECT_URL = '/home/'
