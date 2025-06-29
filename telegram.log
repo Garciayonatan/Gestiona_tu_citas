@@ -8434,3 +8434,4 @@ django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: '192.168.100.10
 2025-06-28 09:45:13,760 [INFO] ✅ Mensaje enviado correctamente a chat_id 7684511414
 2025-06-28 09:45:13,762 [INFO] 📤 Intentando enviar mensaje a chat_id 5776033843...
 2025-06-28 09:45:14,355 [INFO] ✅ Mensaje enviado correctamente a chat_id 5776033843
+2025-06-28 12:56:53,978 [INFO] C:\Users\MACBOOK\OneDrive\Desktop\Djando\gestiona_tu_cita\settings.py changed, reloading.
