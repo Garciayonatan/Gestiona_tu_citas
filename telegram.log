@@ -8435,3 +8435,9 @@ django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: '192.168.100.10
 2025-06-28 09:45:13,762 [INFO] 📤 Intentando enviar mensaje a chat_id 5776033843...
 2025-06-28 09:45:14,355 [INFO] ✅ Mensaje enviado correctamente a chat_id 5776033843
 2025-06-28 12:56:53,978 [INFO] C:\Users\MACBOOK\OneDrive\Desktop\Djando\gestiona_tu_cita\settings.py changed, reloading.
+2025-06-29 00:00:46,883 [WARNING] Not Found: /favicon.ico
+2025-06-29 00:52:53,335 [INFO] C:\Users\MACBOOK\OneDrive\Desktop\Djando\citas\models.py changed, reloading.
+2025-06-29 00:54:50,908 [INFO] C:\Users\MACBOOK\OneDrive\Desktop\Djando\citas\models.py changed, reloading.
+2025-06-29 00:55:30,672 [INFO] C:\Users\MACBOOK\OneDrive\Desktop\Djando\citas\views.py changed, reloading.
+2025-06-29 01:05:14,223 [INFO] C:\Users\MACBOOK\OneDrive\Desktop\Djando\citas\views.py changed, reloading.
+2025-06-29 08:24:48,755 [WARNING] Not Found: /favicon.ico
