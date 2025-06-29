@@ -1485,6 +1485,9 @@ def csrf_failure(request, reason=""):
 
 
 #def enviar_recordatorios_pendientes():
+
+
+
     """
     Envía recordatorios para todas las citas aceptadas que cumplen
     con las condiciones de tiempo para los recordatorios configurados.
@@ -1513,3 +1516,6 @@ def csrf_failure(request, reason=""):
             cita.segundo_recordatorio_enviado = True
             cita.save()
             logger.info(f"Segundo recordatorio enviado para la cita ID {cita.id}.")
+
+
+            

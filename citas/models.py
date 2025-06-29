@@ -16,6 +16,13 @@ TIPOS_EMPRESA = [
     ("Tienda", "Tienda"),
     ("Centro", "Centro"),
 ]
+#borrar
+def get_default_servicio_id():
+    from citas.models import Servicio
+    servicio, created = Servicio.objects.get_or_create(nombre='Servicio predeterminado')
+    return servicio.id  #borrar
+
+
 
 class DiaLaborable(models.Model):
     codigo = models.CharField(max_length=5, unique=True, verbose_name="Código del Día")
@@ -74,7 +81,8 @@ class Servicio(models.Model):
     precio = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Precio")
     duracion = models.PositiveIntegerField(default=30, verbose_name="Duración Estimada (minutos)", help_text="Duración aproximada del servicio en minutos.")
     empleados_disponibles = models.PositiveIntegerField(default=1, verbose_name="Cantidad de empleados disponibles", help_text="Número de citas que pueden atenderse al mismo tiempo.")
-
+    #borrae
+    nombre = models.CharField(max_length=100)#borrar
     def __str__(self):
         return f"{self.nombre} - {self.empresa.nombre_empresa} (${self.precio})"
 
@@ -96,6 +104,8 @@ class Cita(models.Model):
     estado = models.CharField(max_length=20, choices=ESTADOS_CITA, default="pendiente", verbose_name="Estado")
     visible_para_empresa = models.BooleanField(default=True, verbose_name="Visible para Empresa", help_text="Si es True, la empresa verá esta cita en su panel; si es False, no.")
    # primer_recordatorio_enviado = models.BooleanField(default=False)
+    servicio = models.ForeignKey(Servicio, on_delete=models.CASCADE, null=True, blank=True)
+
     #segundo_recordatorio_enviado = models.BooleanField(default=False)
     def __str__(self):
         return (
