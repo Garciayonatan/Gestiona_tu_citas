@@ -36,7 +36,7 @@ MIDDLEWARE = [
 ]
 
 # URLS
-ROOT_URLCONF = 'Gestiona_tu_citas.urls'
+ROOT_URLCONF = 'gestiona_tu_cita.urls'
 
 # TEMPLATES
 TEMPLATES = [
@@ -56,7 +56,7 @@ TEMPLATES = [
 ]
 
 # WSGI
-WSGI_APPLICATION = 'Gestiona_tu_citas.wsgi.application'
+WSGI_APPLICATION = 'gestiona_tu_cita.wsgi.application'
 
 # BASE DE DATOS - PostgreSQL AlwaysData
 DATABASES = {
@@ -64,7 +64,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': config('DB_NAME', default='gestionatucitas1_cita1'),
         'USER': config('DB_USER', default='gestionatucitas1'),
-        'PASSWORD': config('DB_PASSWORD', default='123'),
+        'PASSWORD': config('DB_PASSWORD', default='yonatan@@'),
         'HOST': config('DB_HOST', default='postgresql-gestionatucitas1.alwaysdata.net'),
         'PORT': config('DB_PORT', default='5432'),
     }
