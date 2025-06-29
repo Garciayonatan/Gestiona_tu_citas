@@ -6,8 +6,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SEGURIDAD
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-placeholder-key')
-DEBUG = config('DEBUG', default=True, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost', cast=Csv())
+DEBUG = config('DEBUG', default=False, cast=bool)
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='gestionatucitas1.alwaysdata.net,localhost,127.0.0.1', cast=Csv())
 
 # APLICACIONES INSTALADAS
 INSTALLED_APPS = [
@@ -54,7 +54,7 @@ TEMPLATES = [
 # WSGI
 WSGI_APPLICATION = 'gestiona_tu_cita.wsgi.application'
 
-# BASE DE DATOS - PostgreSQL
+# BASE DE DATOS - PostgreSQL AlwaysData
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -78,7 +78,6 @@ AUTH_PASSWORD_VALIDATORS = [
 LANGUAGE_CODE = 'es-es'
 TIME_ZONE = 'America/Santo_Domingo'
 USE_I18N = True
-USE_L10N = True
 USE_TZ = True
 
 # ARCHIVOS ESTÁTICOS
@@ -86,7 +85,11 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# CONFIGURACIÓN DE EMAIL (Gmail)
+# ARCHIVOS DE MEDIA (opcional)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# EMAIL (Gmail o AlwaysData)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
@@ -95,8 +98,8 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='tu_correo@gmail.com')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='tu_contraseña_de_app')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER)
 
-# SEGURIDAD SSL Y COOKIES
-CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='http://localhost,http://127.0.0.1', cast=Csv())
+# SEGURIDAD
+CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='https://gestionatucitas1.alwaysdata.net', cast=Csv())
 SECURE_HSTS_SECONDS = config('SECURE_HSTS_SECONDS', default=0, cast=int)
 SECURE_HSTS_INCLUDE_SUBDOMAINS = config('SECURE_HSTS_INCLUDE_SUBDOMAINS', default=False, cast=bool)
 SECURE_HSTS_PRELOAD = config('SECURE_HSTS_PRELOAD', default=False, cast=bool)
@@ -104,10 +107,10 @@ SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=False, cast=bool)
 SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=False, cast=bool)
 CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=False, cast=bool)
 
-# Vista personalizada para fallos CSRF
-CSRF_FAILURE_VIEW = 'citas.views.csrf_failure'  # Cambia 'citas' si tu app tiene otro nombre
+# Vista personalizada para errores CSRF
+CSRF_FAILURE_VIEW = 'citas.views.csrf_failure'
 
-# CONFIGURACIÓN DE TELEGRAM
+# TELEGRAM (opcional)
 TELEGRAM_BOT_TOKEN = config('TELEGRAM_BOT_TOKEN', default=None)
 TELEGRAM_CHAT_ID = config('TELEGRAM_CHAT_ID', default=None)
 
