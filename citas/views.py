@@ -329,8 +329,11 @@ class TelegramWebhookView(View):
             logger.info(f"📩 Mensaje recibido: {texto} de chat_id: {chat_id}")
 
             if texto == "/start":
-                cliente = Cliente.objects.filter(chat_id=chat_id).first()
-                empresa = Empresa.objects.filter(chat_id=chat_id).first()
+                cliente = Cliente.objects.filter(telegram_chat_id=chat_id).first()
+                empresa = Empresa.objects.filter(telegram_chat_id=chat_id).first()
+
+                #cliente = Cliente.objects.filter(chat_id=chat_id).first()
+               # empresa = Empresa.objects.filter(chat_id=chat_id).first()
 
                 if cliente:
                     mensaje_respuesta = "👤 Hola *Cliente*. Recibirás notificaciones sobre tus citas aquí."
