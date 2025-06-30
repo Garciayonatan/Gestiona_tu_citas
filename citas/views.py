@@ -237,6 +237,12 @@ def empresa_panel(request):
 #telegram noti
 # Configurar el logger
 # Configuración del logger
+from django.http import JsonResponse, HttpRequest
+from django.views import View
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+
+# Configuración del logger
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s',
@@ -246,6 +252,7 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+
 
 # Función general para enviar mensajes a Telegram
 def enviar_mensaje_telegram(chat_id, mensaje):
@@ -285,6 +292,24 @@ def enviar_mensaje_telegram(chat_id, mensaje):
     except requests.exceptions.RequestException as e:
         logger.error(f"❌ Error de conexión al enviar mensaje: {e}")
         return False
+
+
+# Vista para manejar POST y enviar mensaje por Telegram
+@method_decorator(csrf_exempt, name='dispatch')
+class EnviarMensajeTelegramView(View):
+    def post(self, request: HttpRequest):
+        chat_id = request.POST.get('chat_id')
+        mensaje = request.POST.get('mensaje')
+
+        if not chat_id or not mensaje:
+            return JsonResponse({'error': 'chat_id y mensaje son requeridos.'}, status=400)
+
+        enviado = enviar_mensaje_telegram(chat_id, mensaje)
+
+        if enviado:
+            return JsonResponse({'status': 'mensaje enviado'})
+        else:
+            return JsonResponse({'error': 'error enviando mensaje'}, status=500)
 
 # Editar horario
 @login_required(login_url='app:login')
