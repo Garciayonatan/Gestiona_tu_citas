@@ -11,6 +11,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SEGURIDAD
 SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
+
+# Asegúrate que en tu archivo .env ALLOWED_HOSTS incluye tu dominio.
+# Ejemplo en .env: ALLOWED_HOSTS=127.0.0.1,localhost,gestiona-tu-citas.onrender.com
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='', cast=Csv())
 
 # APLICACIONES INSTALADAS
