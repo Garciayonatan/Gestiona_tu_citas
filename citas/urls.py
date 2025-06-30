@@ -1,6 +1,8 @@
 from django.urls import path
 from . import views
 from .views import obtener_servicios_por_empresa 
+from .views import EnviarMensajeTelegramView
+#from citas.views import webhook_telegram
 
 
 app_name = 'app'
@@ -16,6 +18,9 @@ urlpatterns = [
     # original
    #path('', views.login_view, name='login'),                      # Página de inicio de sesión
    #path('logout/', views.logout_view, name='logout'),             # Cerrar sesión
+
+  # path('telegram-webhook/', webhook_telegram, name='telegram_webhook'),
+   path('enviar-mensaje/', EnviarMensajeTelegramView.as_view(), name='enviar_mensaje_telegram'),
     
 
   
@@ -60,6 +65,8 @@ urlpatterns = [
 
      #path('api/servicios/', views.cargar_servicios, name='cargar_servicios'),
      path('api/servicios/', obtener_servicios_por_empresa, name='api_servicios'),
+
+   
  
 
         
