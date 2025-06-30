@@ -2,18 +2,18 @@ import os
 from pathlib import Path
 from decouple import config, Csv, AutoConfig
 
-# Carga automática desde .env aunque no se use manage.py
-config = AutoConfig(search_path=os.path.dirname(os.path.dirname(__file__)))
-
 # BASE DIR
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Configuración para cargar el .env desde BASE_DIR
+config = AutoConfig(search_path=BASE_DIR)
 
 # SEGURIDAD
 SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-# Asegúrate que en tu archivo .env ALLOWED_HOSTS incluye tu dominio.
-# Ejemplo en .env: ALLOWED_HOSTS=127.0.0.1,localhost,gestiona-tu-citas.onrender.com
+# ALLOWED_HOSTS - asegúrate que en tu .env esté así:
+# ALLOWED_HOSTS=127.0.0.1,localhost,gestiona-tu-citas.onrender.com
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='', cast=Csv())
 
 # APLICACIONES INSTALADAS
@@ -99,7 +99,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # CONFIGURACIÓN DE EMAIL
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = config('EMAIL_HOST', default='')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
@@ -127,3 +127,7 @@ TELEGRAM_CHAT_ID = config('TELEGRAM_CHAT_ID', default=None)
 LOGIN_REDIRECT_URL = '/home/'
 LOGIN_URL = '/accounts/login/'
 LOGOUT_REDIRECT_URL = '/'
+
+# DEBUG - para comprobar si se está leyendo bien el .env
+# (puedes comentar o eliminar esta línea en producción)
+print(f"DEBUG={DEBUG}, ALLOWED_HOSTS={ALLOWED_HOSTS}")
