@@ -20,7 +20,10 @@ django.setup()
 
 from citas.models import Cliente, Empresa
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(message)s'
+)
 logger = logging.getLogger(__name__)
 
 TELEFONO = 1
@@ -49,46 +52,48 @@ def enviar_mensaje_telegram(chat_id, mensaje):
         logger.error(f"Error enviando mensaje Telegram: {e}")
 
 async def recibir_telefono(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    telefono = update.message.text.strip()
-    chat_id = str(update.message.chat.id)
-    telefono = telefono.replace(" ", "").replace("-", "").strip()
-    logger.info(f"Teléfono recibido: {telefono}, Chat ID: {chat_id}")
+    try:
+        telefono = update.message.text.strip()
+        chat_id = str(update.message.chat.id)
+        telefono = telefono.replace(" ", "").replace("-", "").strip()
+        logger.info(f"Teléfono recibido: {telefono}, Chat ID: {chat_id}")
 
-    # Verificar si el chat_id ya está registrado para evitar duplicados
-    cliente_con_chat_id = await sync_to_async(Cliente.objects.filter(telegram_chat_id=chat_id).first)()
-    empresa_con_chat_id = await sync_to_async(Empresa.objects.filter(telegram_chat_id=chat_id).first)()
+        cliente_con_chat_id = await sync_to_async(lambda: Cliente.objects.filter(telegram_chat_id=chat_id).first())()
+        empresa_con_chat_id = await sync_to_async(lambda: Empresa.objects.filter(telegram_chat_id=chat_id).first())()
 
-    if cliente_con_chat_id or empresa_con_chat_id:
+        if cliente_con_chat_id or empresa_con_chat_id:
+            await update.message.reply_text(
+                "Este chat ya está registrado con un rol. Si necesitas cambiarlo, contacta soporte."
+            )
+            logger.warning(f"Chat ID {chat_id} ya registrado.")
+            return ConversationHandler.END
+
+        cliente = await sync_to_async(lambda: Cliente.objects.filter(telefono=telefono).first())()
+        if cliente:
+            cliente.telegram_chat_id = chat_id
+            await sync_to_async(cliente.save)()
+            await update.message.reply_text("¡Perfecto! Ahora recibirás notificaciones como cliente.")
+            logger.info(f"Chat ID {chat_id} asociado como cliente.")
+            return ConversationHandler.END
+
+        empresa = await sync_to_async(lambda: Empresa.objects.filter(telefono=telefono).first())()
+        if empresa:
+            empresa.telegram_chat_id = chat_id
+            await sync_to_async(empresa.save)()
+            await update.message.reply_text("¡Perfecto! Ahora recibirás notificaciones como empresa.")
+            logger.info(f"Chat ID {chat_id} asociado como empresa.")
+            return ConversationHandler.END
+
         await update.message.reply_text(
-            "Este chat ya está registrado con un rol. Si necesitas cambiarlo, contacta soporte."
+            "No encontramos tu número en nuestra base de datos. Por favor verifica que te hayas registrado."
         )
-        logger.warning(f"Chat ID {chat_id} ya registrado.")
+        logger.warning(f"Teléfono {telefono} no encontrado en la base de datos.")
         return ConversationHandler.END
 
-    # Buscar cliente primero
-    cliente = await sync_to_async(Cliente.objects.filter(telefono=telefono).first)()
-    if cliente:
-        cliente.telegram_chat_id = chat_id
-        await sync_to_async(cliente.save)()
-        await update.message.reply_text("¡Perfecto! Ahora recibirás notificaciones como cliente.")
-        logger.info(f"Chat ID {chat_id} asociado como cliente.")
+    except Exception as e:
+        logger.error(f"Error en recibir_telefono: {e}")
+        await update.message.reply_text("Ocurrió un error, por favor intenta nuevamente.")
         return ConversationHandler.END
-
-    # Si no hay cliente, buscar empresa
-    empresa = await sync_to_async(Empresa.objects.filter(telefono=telefono).first)()
-    if empresa:
-        empresa.telegram_chat_id = chat_id
-        await sync_to_async(empresa.save)()
-        await update.message.reply_text("¡Perfecto! Ahora recibirás notificaciones como empresa.")
-        logger.info(f"Chat ID {chat_id} asociado como empresa.")
-        return ConversationHandler.END
-
-    # Si no está en ninguna tabla
-    await update.message.reply_text(
-        "No encontramos tu número en nuestra base de datos. Por favor verifica que te hayas registrado."
-    )
-    logger.warning(f"Teléfono {telefono} no encontrado en la base de datos.")
-    return ConversationHandler.END
 
 async def cancelar(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_text("Proceso cancelado.")
@@ -110,7 +115,7 @@ def main():
     application.add_handler(conv_handler)
 
     logger.info("Bot iniciado. Esperando mensajes...")
-    application.run_polling()
+    application.run_polling(poll_interval=1.0)
 
 if __name__ == '__main__':
     main()
