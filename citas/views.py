@@ -301,7 +301,7 @@ def enviar_mensaje_telegram(chat_id, mensaje):
         logger.error(f"❌ Error de conexión al enviar mensaje: {e}")
         return False
 
-# Vista para recibir mensajes desde Telegram
+# Webhook para recibir mensajes desde Telegram
 @method_decorator(csrf_exempt, name='dispatch')
 class TelegramWebhookView(View):
     def post(self, request: HttpRequest):
@@ -313,41 +313,56 @@ class TelegramWebhookView(View):
 
             logger.info(f"📩 Mensaje recibido: {texto} de chat_id: {chat_id}")
 
-            # Si está esperando el número
-            if chat_id in esperando_telefono:
+            # Paso 1: Verifica si ya está registrado
+            cliente = Cliente.objects.filter(telegram_chat_id=chat_id).first()
+            empresa = Empresa.objects.filter(telegram_chat_id=chat_id).first()
+
+            # Paso 2: Comando /start
+            if texto == "/start":
+                if cliente:
+                    enviar_mensaje_telegram(chat_id, "👤 Ya estás registrado como <b>Cliente</b>. Recibirás notificaciones aquí.")
+                    return JsonResponse({"ok": True})
+
+                elif empresa:
+                    enviar_mensaje_telegram(chat_id, "🏢 Ya estás registrado como <b>Empresa</b>. Recibirás notificaciones aquí.")
+                    return JsonResponse({"ok": True})
+
+                else:
+                    esperando_telefono[chat_id] = True
+                    enviar_mensaje_telegram(chat_id, "📱 Bienvenido. Por favor, responde con el número de teléfono con el que te registraste.")
+                    return JsonResponse({"ok": True})
+
+            # Paso 3: Si está esperando el número
+            if chat_id in esperando_telefono and texto and texto.isdigit():
                 telefono = texto.strip()
 
-                # Buscar si el teléfono existe en Cliente o Empresa
+                # Verifica si el número existe
                 cliente = Cliente.objects.filter(telefono=telefono).first()
                 empresa = Empresa.objects.filter(telefono=telefono).first()
 
                 if cliente:
-                    cliente.telegram_chat_id = chat_id
-                    cliente.save()
+                    if cliente.telegram_chat_id:
+                        enviar_mensaje_telegram(chat_id, "❌ Este número ya está asociado a otro chat. Si esto es un error, contacta al soporte técnico.")
+                    else:
+                        cliente.telegram_chat_id = chat_id
+                        cliente.save()
+                        enviar_mensaje_telegram(chat_id, "✅ Registro exitoso como <b>Cliente</b>. Recibirás notificaciones aquí.")
                     del esperando_telefono[chat_id]
-                    enviar_mensaje_telegram(chat_id, "✅ Registro completado como <b>Cliente</b>. Recibirás notificaciones aquí.")
+                    return JsonResponse({"ok": True})
+
                 elif empresa:
-                    empresa.telegram_chat_id = chat_id
-                    empresa.save()
+                    if empresa.telegram_chat_id:
+                        enviar_mensaje_telegram(chat_id, "❌ Este número ya está asociado a otro chat. Si esto es un error, contacta al soporte técnico.")
+                    else:
+                        empresa.telegram_chat_id = chat_id
+                        empresa.save()
+                        enviar_mensaje_telegram(chat_id, "✅ Registro exitoso como <b>Empresa</b>. Recibirás notificaciones aquí.")
                     del esperando_telefono[chat_id]
-                    enviar_mensaje_telegram(chat_id, "✅ Registro completado como <b>Empresa</b>. Recibirás notificaciones aquí.")
-                else:
-                    enviar_mensaje_telegram(chat_id, "❌ Número no registrado. Intenta nuevamente o contacta soporte.")
-                return JsonResponse({"ok": True})
+                    return JsonResponse({"ok": True})
 
-            # Comando /start
-            if texto == "/start":
-                cliente = Cliente.objects.filter(telegram_chat_id=chat_id).first()
-                empresa = Empresa.objects.filter(telegram_chat_id=chat_id).first()
-
-                if cliente:
-                    enviar_mensaje_telegram(chat_id, "👤 Hola <b>Cliente</b>. Recibirás notificaciones sobre tus citas aquí.")
-                elif empresa:
-                    enviar_mensaje_telegram(chat_id, "🏢 Hola <b>Empresa</b>. Recibirás notificaciones sobre tus clientes aquí.")
                 else:
-                    esperando_telefono[chat_id] = True
-                    enviar_mensaje_telegram(chat_id, "📱 No estás registrado. Por favor, responde con el número de teléfono con el que te registraste.")
-                return JsonResponse({"ok": True})
+                    enviar_mensaje_telegram(chat_id, "❌ Número no encontrado. Verifica o contacta al soporte.")
+                    return JsonResponse({"ok": True})
 
             return JsonResponse({"ok": True})
 
@@ -355,7 +370,7 @@ class TelegramWebhookView(View):
             logger.error(f"❌ Error procesando mensaje: {e}")
             return JsonResponse({"error": str(e)}, status=500)
 
-# Vista para enviar mensaje manualmente
+# Vista para enviar mensaje manualmente desde un formulario o endpoint
 @method_decorator(csrf_exempt, name='dispatch')
 class EnviarMensajeTelegramView(View):
     def post(self, request: HttpRequest):
