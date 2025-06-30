@@ -246,7 +246,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views import View
 from django.utils.decorators import method_decorator
 
-from citas.models import Cliente, Empresa  # Asegúrate de que estos modelos existan
+from citas.models import Cliente, Empresa
 
 # Configuración básica de logging
 logging.basicConfig(
@@ -260,7 +260,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Función para enviar mensajes a Telegram
-def enviar_mensaje_telegram(chat_id, mensaje):
+def enviar_mensaje_telegram(chat_id, mensaje, reply_markup=None):
     try:
         TELEGRAM_BOT_TOKEN = config('TELEGRAM_BOT_TOKEN')
         if not TELEGRAM_BOT_TOKEN:
@@ -277,8 +277,11 @@ def enviar_mensaje_telegram(chat_id, mensaje):
     data = {
         "chat_id": chat_id,
         "text": mensaje,
-        "parse_mode": "HTML"
+        "parse_mode": "Markdown",
     }
+
+    if reply_markup:
+        data["reply_markup"] = json.dumps(reply_markup)
 
     logger.info(f"📤 Intentando enviar mensaje a chat_id {chat_id}...")
 
@@ -298,7 +301,7 @@ def enviar_mensaje_telegram(chat_id, mensaje):
         logger.error(f"❌ Error de conexión al enviar mensaje: {e}")
         return False
 
-# Vista para enviar mensaje desde un formulario
+# Vista para enviar mensaje desde un formulario (opcional)
 @method_decorator(csrf_exempt, name='dispatch')
 class EnviarMensajeTelegramView(View):
     def post(self, request: HttpRequest):
@@ -324,25 +327,48 @@ class TelegramWebhookView(View):
             body = json.loads(request.body.decode('utf-8'))
             mensaje = body.get('message', {})
             texto = mensaje.get('text')
-            chat_id = mensaje.get('chat', {}).get('id')
+            chat = mensaje.get('chat', {})
+            chat_id = chat.get('id')
 
             logger.info(f"📩 Mensaje recibido: {texto} de chat_id: {chat_id}")
 
-            if texto == "/start":
+            if texto and texto.lower() == "/start":
                 cliente = Cliente.objects.filter(telegram_chat_id=chat_id).first()
                 empresa = Empresa.objects.filter(telegram_chat_id=chat_id).first()
 
-                #cliente = Cliente.objects.filter(chat_id=chat_id).first()
-               # empresa = Empresa.objects.filter(chat_id=chat_id).first()
-
                 if cliente:
-                    mensaje_respuesta = "👤 Hola *Cliente*. Recibirás notificaciones sobre tus citas aquí."
+                    mensaje_respuesta = (
+                        "👤 *Hola Cliente.*\n"
+                        "Estás registrado correctamente y recibirás notificaciones sobre tus *citas* aquí."
+                    )
                 elif empresa:
-                    mensaje_respuesta = "🏢 Hola *Empresa*. Recibirás notificaciones sobre tus clientes aquí."
+                    mensaje_respuesta = (
+                        "🏢 *Hola Empresa.*\n"
+                        "Estás registrada correctamente y recibirás notificaciones sobre tus *clientes* aquí."
+                    )
                 else:
-                    mensaje_respuesta = "❌ No estás registrado. Contacta con soporte para registrarte."
+                    mensaje_respuesta = (
+                        "❌ No estás registrado aún.\n"
+                        "Por favor, comparte tu número de teléfono para registrarte."
+                    )
+                    # Mostrar teclado para compartir número de teléfono
+                    reply_markup = {
+                        "keyboard": [[
+                            {
+                                "text": "📱 Enviar número de teléfono",
+                                "request_contact": True
+                            }
+                        ]],
+                        "one_time_keyboard": True,
+                        "resize_keyboard": True
+                    }
+                    enviar_mensaje_telegram(chat_id, mensaje_respuesta, reply_markup)
+                    return JsonResponse({"ok": True})
 
+                # Si está registrado como cliente o empresa
                 enviar_mensaje_telegram(chat_id, mensaje_respuesta)
+            else:
+                logger.info("📨 Otro mensaje recibido. Puedes manejarlo si lo deseas.")
 
             return JsonResponse({"ok": True})
 
