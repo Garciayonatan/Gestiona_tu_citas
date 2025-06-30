@@ -248,7 +248,7 @@ from django.utils.decorators import method_decorator
 
 from citas.models import Cliente, Empresa
 
-# Configuración básica de logging
+# Configuración de logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s',
@@ -263,14 +263,8 @@ logger = logging.getLogger(__name__)
 def enviar_mensaje_telegram(chat_id, mensaje, reply_markup=None):
     try:
         TELEGRAM_BOT_TOKEN = config('TELEGRAM_BOT_TOKEN')
-        if not TELEGRAM_BOT_TOKEN:
-            raise ValueError("TOKEN de Telegram vacío o no definido.")
     except Exception as e:
-        logger.error(f"❌ No se pudo obtener el TOKEN de Telegram: {e}")
-        return False
-
-    if not chat_id or not mensaje:
-        logger.error("❌ chat_id o mensaje está vacío.")
+        logger.error(f"❌ Error al obtener el TOKEN: {e}")
         return False
 
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
@@ -283,94 +277,70 @@ def enviar_mensaje_telegram(chat_id, mensaje, reply_markup=None):
     if reply_markup:
         data["reply_markup"] = json.dumps(reply_markup)
 
-    logger.info(f"📤 Intentando enviar mensaje a chat_id {chat_id}...")
-
     try:
         response = requests.post(url, data=data)
         response.raise_for_status()
         result = response.json()
-
         if result.get("ok"):
-            logger.info(f"✅ Mensaje enviado correctamente a chat_id {chat_id}")
+            logger.info(f"✅ Mensaje enviado a {chat_id}")
             return True
         else:
-            logger.error(f"❌ Telegram respondió con error: {result}")
+            logger.error(f"❌ Telegram error: {result}")
             return False
-
     except requests.exceptions.RequestException as e:
-        logger.error(f"❌ Error de conexión al enviar mensaje: {e}")
+        logger.error(f"❌ Error de conexión: {e}")
         return False
 
-# Vista para enviar mensaje desde un formulario (opcional)
-@method_decorator(csrf_exempt, name='dispatch')
-class EnviarMensajeTelegramView(View):
-    def post(self, request: HttpRequest):
-        chat_id = request.POST.get('chat_id')
-        mensaje = request.POST.get('mensaje')
-
-        if not chat_id or not mensaje:
-            logger.warning("⚠️ chat_id o mensaje faltante en la solicitud.")
-            return JsonResponse({'error': 'chat_id y mensaje son requeridos.'}, status=400)
-
-        enviado = enviar_mensaje_telegram(chat_id, mensaje)
-
-        if enviado:
-            return JsonResponse({'status': 'mensaje enviado'})
-        else:
-            return JsonResponse({'error': 'error enviando mensaje'}, status=500)
-
-# Webhook para recibir mensajes de Telegram
+# Webhook para recibir mensajes
 @method_decorator(csrf_exempt, name='dispatch')
 class TelegramWebhookView(View):
     def post(self, request: HttpRequest):
         try:
             body = json.loads(request.body.decode('utf-8'))
-            mensaje = body.get('message', {})
-            texto = mensaje.get('text')
-            chat = mensaje.get('chat', {})
-            chat_id = chat.get('id')
+            message = body.get("message", {})
+            chat_id = message.get("chat", {}).get("id")
+            text = message.get("text")
+            contact = message.get("contact")
 
-            logger.info(f"📩 Mensaje recibido: {texto} de chat_id: {chat_id}")
+            logger.info(f"📩 Mensaje recibido: {text or '[Contacto]'} de chat_id: {chat_id}")
 
-            if texto and texto.lower() == "/start":
-                cliente = Cliente.objects.filter(telegram_chat_id=chat_id).first()
-                empresa = Empresa.objects.filter(telegram_chat_id=chat_id).first()
+            if text and text.lower() == "/start":
+                # Pedir el número de teléfono
+                reply_markup = {
+                    "keyboard": [[{
+                        "text": "📱 Enviar número de teléfono",
+                        "request_contact": True
+                    }]],
+                    "one_time_keyboard": True,
+                    "resize_keyboard": True
+                }
+                enviar_mensaje_telegram(chat_id, "Por favor, comparte tu número de teléfono para verificar tu registro:", reply_markup)
+                return JsonResponse({"ok": True})
+
+            elif contact:
+                telefono = contact.get("phone_number")
+                telefono = telefono[-10:]  # tomar solo los últimos 10 dígitos
+                logger.info(f"📞 Número recibido: {telefono}")
+
+                cliente = Cliente.objects.filter(telefono__endswith=telefono).first()
+                empresa = Empresa.objects.filter(telefono__endswith=telefono).first()
 
                 if cliente:
-                    mensaje_respuesta = (
-                        "👤 *Hola Cliente.*\n"
-                        "Estás registrado correctamente y recibirás notificaciones sobre tus *citas* aquí."
-                    )
+                    cliente.telegram_chat_id = chat_id
+                    cliente.save()
+                    enviar_mensaje_telegram(chat_id, "✅ Estás registrado como *Cliente*. Recibirás notificaciones de tus *citas* aquí.")
                 elif empresa:
-                    mensaje_respuesta = (
-                        "🏢 *Hola Empresa.*\n"
-                        "Estás registrada correctamente y recibirás notificaciones sobre tus *clientes* aquí."
-                    )
+                    empresa.telegram_chat_id = chat_id
+                    empresa.save()
+                    enviar_mensaje_telegram(chat_id, "✅ Estás registrado como *Empresa*. Recibirás notificaciones de tus *clientes* aquí.")
                 else:
-                    mensaje_respuesta = (
-                        "❌ No estás registrado aún.\n"
-                        "Por favor, comparte tu número de teléfono para registrarte."
-                    )
-                    # Mostrar teclado para compartir número de teléfono
-                    reply_markup = {
-                        "keyboard": [[
-                            {
-                                "text": "📱 Enviar número de teléfono",
-                                "request_contact": True
-                            }
-                        ]],
-                        "one_time_keyboard": True,
-                        "resize_keyboard": True
-                    }
-                    enviar_mensaje_telegram(chat_id, mensaje_respuesta, reply_markup)
-                    return JsonResponse({"ok": True})
+                    enviar_mensaje_telegram(chat_id, "❌ No encontramos tu número en nuestros registros. Contacta con soporte.")
 
-                # Si está registrado como cliente o empresa
-                enviar_mensaje_telegram(chat_id, mensaje_respuesta)
+                return JsonResponse({"ok": True})
+
             else:
-                logger.info("📨 Otro mensaje recibido. Puedes manejarlo si lo deseas.")
-
-            return JsonResponse({"ok": True})
+                enviar_mensaje_telegram(chat_id, "❗ Por favor, envía el comando /start para comenzar.")
+                return JsonResponse({"ok": True})
 
         except Exception as e:
             logger.error(f"❌ Error procesando mensaje: {e}")
