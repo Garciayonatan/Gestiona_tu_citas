@@ -237,12 +237,18 @@ def empresa_panel(request):
 #telegram noti
 # Configurar el logger
 # Configuración del logger
+import logging
+import requests
+import json
+from decouple import config
 from django.http import JsonResponse, HttpRequest
-from django.views import View
 from django.views.decorators.csrf import csrf_exempt
+from django.views import View
 from django.utils.decorators import method_decorator
 
-# Configuración del logger
+from citas.models import Cliente, Empresa  # Asegúrate de que estos modelos existan
+
+# Configuración básica de logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s',
@@ -253,8 +259,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-
-# Función general para enviar mensajes a Telegram
+# Función para enviar mensajes a Telegram
 def enviar_mensaje_telegram(chat_id, mensaje):
     try:
         TELEGRAM_BOT_TOKEN = config('TELEGRAM_BOT_TOKEN')
@@ -293,8 +298,7 @@ def enviar_mensaje_telegram(chat_id, mensaje):
         logger.error(f"❌ Error de conexión al enviar mensaje: {e}")
         return False
 
-
-# Vista para manejar POST y enviar mensaje por Telegram
+# Vista para enviar mensaje desde un formulario
 @method_decorator(csrf_exempt, name='dispatch')
 class EnviarMensajeTelegramView(View):
     def post(self, request: HttpRequest):
@@ -302,6 +306,7 @@ class EnviarMensajeTelegramView(View):
         mensaje = request.POST.get('mensaje')
 
         if not chat_id or not mensaje:
+            logger.warning("⚠️ chat_id o mensaje faltante en la solicitud.")
             return JsonResponse({'error': 'chat_id y mensaje son requeridos.'}, status=400)
 
         enviado = enviar_mensaje_telegram(chat_id, mensaje)
@@ -310,6 +315,37 @@ class EnviarMensajeTelegramView(View):
             return JsonResponse({'status': 'mensaje enviado'})
         else:
             return JsonResponse({'error': 'error enviando mensaje'}, status=500)
+
+# Webhook para recibir mensajes de Telegram
+@method_decorator(csrf_exempt, name='dispatch')
+class TelegramWebhookView(View):
+    def post(self, request: HttpRequest):
+        try:
+            body = json.loads(request.body.decode('utf-8'))
+            mensaje = body.get('message', {})
+            texto = mensaje.get('text')
+            chat_id = mensaje.get('chat', {}).get('id')
+
+            logger.info(f"📩 Mensaje recibido: {texto} de chat_id: {chat_id}")
+
+            if texto == "/start":
+                cliente = Cliente.objects.filter(chat_id=chat_id).first()
+                empresa = Empresa.objects.filter(chat_id=chat_id).first()
+
+                if cliente:
+                    mensaje_respuesta = "👤 Hola *Cliente*. Recibirás notificaciones sobre tus citas aquí."
+                elif empresa:
+                    mensaje_respuesta = "🏢 Hola *Empresa*. Recibirás notificaciones sobre tus clientes aquí."
+                else:
+                    mensaje_respuesta = "❌ No estás registrado. Contacta con soporte para registrarte."
+
+                enviar_mensaje_telegram(chat_id, mensaje_respuesta)
+
+            return JsonResponse({"ok": True})
+
+        except Exception as e:
+            logger.error(f"❌ Error procesando mensaje: {e}")
+            return JsonResponse({"error": str(e)}, status=500)
 
 # Editar horario
 @login_required(login_url='app:login')
