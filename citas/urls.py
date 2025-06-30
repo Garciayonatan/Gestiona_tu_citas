@@ -20,7 +20,7 @@ urlpatterns = [
    #path('logout/', views.logout_view, name='logout'),             # Cerrar sesión
 
   # path('telegram-webhook/', webhook_telegram, name='telegram_webhook'),
-   path('enviar-mensaje/', EnviarMensajeTelegramView.as_view(), name='enviar_mensaje_telegram'),
+    path('enviar-mensaje-telegram/', EnviarMensajeTelegramView.as_view(), name='enviar_mensaje_telegram'),
   
 
     # Página principal después del inicio de sesión
