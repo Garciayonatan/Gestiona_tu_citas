@@ -3,6 +3,7 @@ from . import views
 from .views import obtener_servicios_por_empresa 
 from .views import EnviarMensajeTelegramView
 #from citas.views import webhook_telegram
+from citas.views import TelegramWebhookView
 
 
 app_name = 'app'
@@ -21,8 +22,9 @@ urlpatterns = [
 
   # path('telegram-webhook/', webhook_telegram, name='telegram_webhook'),
    # path('enviar-mensaje-telegram/', EnviarMensajeTelegramView.as_view(), name='enviar_mensaje_telegram'),
-   path('enviar-mensaje-telegram/', EnviarMensajeTelegramView.as_view(), name='enviar_mensaje_telegram'),
-  
+   #path('enviar-mensaje-telegram/', EnviarMensajeTelegramView.as_view(), name='enviar_mensaje_telegram'),
+
+   path('telegram-webhook/', TelegramWebhookView.as_view(), name='telegram_webhook'),
 
     # Página principal después del inicio de sesión
     #path('', views.home, name='inicio'),  # ← Ruta raíz que carga home.html
