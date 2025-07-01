@@ -122,7 +122,9 @@ class Cita(models.Model):
         if self.fecha == hoy and self.hora <= ahora:
             raise ValidationError("La hora de la cita debe ser en el futuro.")
 
-        dias_codigo = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom']
+        #dias_codigo = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom']
+        dias_codigo = ['LUN', 'MAR', 'MIE', 'JUE', 'VIE', 'SAB', 'DOM']
+     
         codigo_dia_cita = dias_codigo[self.fecha.weekday()]
         if not self.empresa.dias_laborables.filter(codigo=codigo_dia_cita).exists():
             dia_nombre = dict((d.codigo, d.nombre) for d in DiaLaborable.objects.all()).get(codigo_dia_cita, "Día desconocido")
