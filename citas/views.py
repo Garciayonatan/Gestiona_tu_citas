@@ -983,20 +983,19 @@ def nueva_cita(request):
 
 logger = logging.getLogger(__name__)
 
-logger = logging.getLogger(__name__)
-
 @login_required(login_url='app:login')
 def editar_cita(request, cita_id):
     cita = get_object_or_404(Cita, id=cita_id, cliente__user=request.user)
 
-    # ✅ Verificar si la cita está vencida y actualizar estado automáticamente
-    cita_datetime = make_aware(datetime.combine(cita.fecha, cita.hora))
     ahora = timezone.now()
+    cita_datetime = make_aware(datetime.combine(cita.fecha, cita.hora))
+
+    # ✅ Actualizar estado automáticamente si está vencida al entrar o recargar
     if cita.estado not in ['completada', 'rechazada', 'vencida'] and cita_datetime < ahora:
         cita.estado = 'vencida'
         cita.save()
 
-    # 🚫 Bloquear edición si está completada, rechazada o vencida
+    # 🚫 Bloquear edición si ya está en un estado que no lo permite
     if cita.estado == 'completada':
         messages.error(request, "❌ No se puede editar una cita que ya está completada.")
         return redirect('app:cliente_panel')
@@ -1015,7 +1014,7 @@ def editar_cita(request, cita_id):
             cita_nueva = form.save(commit=False)
             servicio = cita_nueva.servicio
 
-            # 🚫 No permitir seleccionar nueva hora vencida
+            # 🚫 No permitir nueva hora vencida
             nueva_fecha_hora = make_aware(datetime.combine(cita_nueva.fecha, cita_nueva.hora))
             if nueva_fecha_hora < ahora:
                 form.add_error(None, "❌ No puedes seleccionar una fecha y hora pasada.")
@@ -1038,7 +1037,7 @@ def editar_cita(request, cita_id):
                     form.add_error(None, "❌ Ya tienes una cita en otra empresa en este horario.")
                     return render(request, 'app/editar_cita.html', {'form': form, 'cita': cita})
 
-            # Buscar conflictos con otras citas en la misma empresa
+            # Verificar conflictos con otras citas en la misma empresa
             citas_conflictivas = Cita.objects.filter(
                 empresa=cita_nueva.empresa,
                 fecha=cita_nueva.fecha,
