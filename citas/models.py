@@ -155,9 +155,9 @@ class Cita(models.Model):
         inicio = datetime.datetime.combine(self.fecha, self.hora)
 
         if is_naive(inicio):
-            #inicio = make_aware(inicio)
+            inicio = make_aware(inicio)
 
-         if ahora >= inicio and self.estado == 'pendiente':
+        if ahora >= inicio and self.estado == 'pendiente':
            self.estado = 'vencida'
            self.save()
            #aqui es para que se marque como vecida a la empresa
