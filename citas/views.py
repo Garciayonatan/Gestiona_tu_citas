@@ -1141,8 +1141,8 @@ def eliminar_cita(request, cita_id):
             return redirect('app:cliente_panel')
         
          # 🚫 Si estaba vencida, no enviar notificaciones
-        if estado == 'vencida':
-            return redirect('app:cliente_panel')
+        #if estado == 'vencida':
+         #   return redirect('app:cliente_panel')
 
         if estado != 'rechazada':
             errores = []
