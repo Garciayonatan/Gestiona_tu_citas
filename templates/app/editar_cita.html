@@ -87,12 +87,14 @@
                 </div>
             {% endif %}
 
-            <!-- Mostrar campo fijo de empresa -->
+            <!-- Mostrar campo fijo de empresa (solo visual) -->
             <div class="mb-3">
                 <label class="form-label fw-semibold">Empresa</label>
                 <input type="text" class="form-control" value="{{ cita.empresa.nombre_empresa }}" disabled>
-                {{ form.empresa }}  <!-- Campo oculto agregado aquí -->
             </div>
+
+            <!-- Campo oculto para empresa (para que se envíe en el POST) -->
+            {{ form.empresa }}
 
             <!-- Campos del formulario -->
             {% for field in form %}
