@@ -1327,6 +1327,26 @@ def empresa_panel(request):
     cuya bandera visible_para_empresa esté en True.
     """
     empresa = get_object_or_404(Empresa, user=request.user)
+
+    # borrar si no funciona
+    citas_pendientes = Cita.objects.filter( 
+        empresa=empresa, 
+        visible_para_empresa=True, 
+        estado='pendiente' 
+    ) 
+
+    # Verificar si alguna ya pasó su hora → marcar como vencida
+    for cita in citas_pendientes: 
+        cita.marcar_vencida_si_paso()
+    # borrar si no funciona
+
+    citas = Cita.objects.filter(empresa=empresa, visible_para_empresa=True)
+    return render(request, 'app/empresa_panel.html', {
+        'empresa': empresa,
+        'citas': citas,
+    })
+
+
     citas = Cita.objects.filter(empresa=empresa, visible_para_empresa=True)
     return render(request, 'app/empresa_panel.html', {
         'empresa': empresa,
