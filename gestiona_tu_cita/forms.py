@@ -88,11 +88,7 @@ class EmpresaForm(forms.ModelForm):
 class CitaForm(forms.ModelForm):
     empresa = forms.ModelChoiceField(
         queryset=Empresa.objects.all(),
-        widget=forms.Select(attrs={
-            'class': 'form-control',
-            'required': True,
-        }),
-        empty_label="Seleccione una empresa",
+        widget=forms.HiddenInput(),  # Campo oculto pero se envía en POST
         label="Empresa"
     )
 
@@ -137,7 +133,6 @@ class CitaForm(forms.ModelForm):
     class Meta:
         model = Cita
         fields = ['empresa', 'fecha', 'hora', 'servicio', 'comentarios']
-
 # Formulario para datos de servicio
 class ServicioForm(forms.ModelForm):
     class Meta:
