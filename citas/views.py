@@ -983,16 +983,6 @@ def nueva_cita(request):
 
 logger = logging.getLogger(__name__)
 
-from django.utils.timezone import make_aware
-from django.utils import timezone
-from datetime import datetime, timedelta
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-import logging
-
-logger = logging.getLogger(__name__)
-
 @login_required(login_url='app:login')
 def editar_cita(request, cita_id):
     cita = get_object_or_404(Cita, id=cita_id, cliente__user=request.user)
@@ -1005,10 +995,11 @@ def editar_cita(request, cita_id):
     if cita.estado == 'rechazada':
         messages.error(request, "❌ No se puede editar una cita que ya está rechazada.")
         return redirect('app:cliente_panel')
-    
-    # 🚫 Verificar si la cita ya venció (fecha y hora pasadas)
+
+    # 🚫 Verificar si la cita ya venció
     cita_datetime = make_aware(datetime.combine(cita.fecha, cita.hora))
-    if cita_datetime < timezone.now():
+    ahora = timezone.now()
+    if cita_datetime < ahora:
         messages.error(request, "❌ No se puede editar una cita que ya ha vencido.")
         return redirect('app:cliente_panel')
 
@@ -1018,8 +1009,13 @@ def editar_cita(request, cita_id):
             cita_nueva = form.save(commit=False)
             servicio = cita_nueva.servicio
 
-            # Calcular el rango de tiempo del nuevo horario
-            fecha_hora_inicio = make_aware(datetime.combine(cita_nueva.fecha, cita_nueva.hora))
+            # 🚫 Verificar si el nuevo horario también está vencido
+            nueva_fecha_hora = make_aware(datetime.combine(cita_nueva.fecha, cita_nueva.hora))
+            if nueva_fecha_hora < ahora:
+                form.add_error(None, "❌ No puedes seleccionar una fecha y hora pasada.")
+                return render(request, 'app/editar_cita.html', {'form': form, 'cita': cita})
+
+            fecha_hora_inicio = nueva_fecha_hora
             fecha_hora_fin = fecha_hora_inicio + timedelta(minutes=servicio.duracion)
 
             # Verificar si el cliente ya tiene otra cita en otra empresa a la misma hora
@@ -1123,7 +1119,6 @@ def notificar_cita(cita, cliente, empresa, servicio, comentarios, accion):
             enviar_mensaje_telegram(empresa.telegram_chat_id, mensajes["empresa"])
     except Exception as e:
         logger.error(f"Error al enviar mensajes por Telegram: {e}")
-
 
 
 
