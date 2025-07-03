@@ -199,10 +199,23 @@ def cliente_panel(request):
     """
     cliente = get_object_or_404(Cliente, user=request.user)
 
-    # Obtener las citas del cliente y actualizar el estado si ya pasaron
+    # Obtener las citas del cliente
     citas = Cita.objects.filter(cliente=cliente).select_related('empresa', 'servicio').order_by('fecha', 'hora')
+
+    ahora = timezone.now()
     for cita in citas:
-        cita.marcar_completada_si_paso()
+        # Combinar fecha y hora de la cita
+        fecha_hora_cita = timezone.make_aware(datetime.combine(cita.fecha, cita.hora))
+
+        # Si está aceptada y ya pasó, se marca como completada
+        if cita.estado == 'aceptada' and fecha_hora_cita <= ahora:
+            cita.estado = 'completada'
+            cita.save()
+
+        # Si está pendiente y ya pasó, se marca como vencida
+        elif cita.estado == 'pendiente' and fecha_hora_cita <= ahora:
+            cita.estado = 'vencida'
+            cita.save()
 
     # Consultar las empresas y días laborables para mostrarlas en el panel
     empresas = Empresa.objects.prefetch_related('dias_laborables')
