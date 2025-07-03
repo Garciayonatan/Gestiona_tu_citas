@@ -93,7 +93,7 @@ class Cita(models.Model):
         ("rechazada", "Rechazada"),
         ("cancelada", "Cancelada"),
         ("completada", "Completada")
-       # ("vencida", "Vencida"),
+        ("vencida", "Vencida"),
     ]
 
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='citas', verbose_name="Cliente")
@@ -147,6 +147,22 @@ class Cita(models.Model):
             self.estado = 'completada'
             self.save()
 
+            # borrar si no funciona
+    def marcar_vencida_si_paso(self):
+        """Marca la cita como vencida si ya pasó y aún está pendiente."""
+        ahora = localtime(now())
+        inicio = datetime.datetime.combine(self.fecha, self.hora)
+
+        if is_naive(inicio):
+            #inicio = make_aware(inicio)
+
+         if ahora >= inicio and self.estado == 'pendiente':
+           self.estado = 'vencida'
+           self.save()
+           #aqui es para que se marque como vecida a la empresa
+    
+
+            
 class PasswordResetCode(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Usuario")
     code = models.CharField(max_length=6, verbose_name="Código")
