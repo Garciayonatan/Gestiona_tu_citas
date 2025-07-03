@@ -983,23 +983,29 @@ def nueva_cita(request):
 
 logger = logging.getLogger(__name__)
 
+logger = logging.getLogger(__name__)
+
 @login_required(login_url='app:login')
 def editar_cita(request, cita_id):
     cita = get_object_or_404(Cita, id=cita_id, cliente__user=request.user)
 
-    # 🚫 Verificar si la cita ya está completada
+    # ✅ Verificar si la cita está vencida y actualizar estado automáticamente
+    cita_datetime = make_aware(datetime.combine(cita.fecha, cita.hora))
+    ahora = timezone.now()
+    if cita.estado not in ['completada', 'rechazada', 'vencida'] and cita_datetime < ahora:
+        cita.estado = 'vencida'
+        cita.save()
+
+    # 🚫 Bloquear edición si está completada, rechazada o vencida
     if cita.estado == 'completada':
         messages.error(request, "❌ No se puede editar una cita que ya está completada.")
         return redirect('app:cliente_panel')
-    
+
     if cita.estado == 'rechazada':
         messages.error(request, "❌ No se puede editar una cita que ya está rechazada.")
         return redirect('app:cliente_panel')
 
-    # 🚫 Verificar si la cita ya venció
-    cita_datetime = make_aware(datetime.combine(cita.fecha, cita.hora))
-    ahora = timezone.now()
-    if cita_datetime < ahora:
+    if cita.estado == 'vencida':
         messages.error(request, "❌ No se puede editar una cita que ya ha vencido.")
         return redirect('app:cliente_panel')
 
@@ -1009,7 +1015,7 @@ def editar_cita(request, cita_id):
             cita_nueva = form.save(commit=False)
             servicio = cita_nueva.servicio
 
-            # 🚫 Verificar si el nuevo horario también está vencido
+            # 🚫 No permitir seleccionar nueva hora vencida
             nueva_fecha_hora = make_aware(datetime.combine(cita_nueva.fecha, cita_nueva.hora))
             if nueva_fecha_hora < ahora:
                 form.add_error(None, "❌ No puedes seleccionar una fecha y hora pasada.")
@@ -1032,7 +1038,7 @@ def editar_cita(request, cita_id):
                     form.add_error(None, "❌ Ya tienes una cita en otra empresa en este horario.")
                     return render(request, 'app/editar_cita.html', {'form': form, 'cita': cita})
 
-            # Buscar todas las citas aceptadas o pendientes que se crucen con la nueva
+            # Buscar conflictos con otras citas en la misma empresa
             citas_conflictivas = Cita.objects.filter(
                 empresa=cita_nueva.empresa,
                 fecha=cita_nueva.fecha,
