@@ -92,8 +92,9 @@ class Cita(models.Model):
         ("aceptada", "Aceptada"),
         ("rechazada", "Rechazada"),
         ("cancelada", "Cancelada"),
-        ("completada", "Completada")
         ("vencida", "Vencida"),
+        ("completada", "Completada")
+        #("vencida", "Vencida"),
     ]
 
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='citas', verbose_name="Cliente")
