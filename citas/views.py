@@ -1642,37 +1642,6 @@ def csrf_failure(request, reason=""):
 #def enviar_recordatorios_pendientes():
 
 
-
-    """
-    Envía recordatorios para todas las citas aceptadas que cumplen
-    con las condiciones de tiempo para los recordatorios configurados.
-    """
-    ahora = now()
-    citas = Cita.objects.filter(fecha__gte=ahora.date(), estado="aceptada").exclude(
-        fecha=ahora.date(), hora__lt=ahora.time()
-    )
-
-    for cita in citas:
-
-        fecha_hora_cita = make_aware(datetime.combine(cita.fecha, cita.hora))
-        minutos_para_cita = (fecha_hora_cita - ahora).total_seconds() / 60
-
-        logger.info(f"Procesando cita ID {cita.id} - Minutos para la cita: {minutos_para_cita:.2f}")
-
-        # Primer recordatorio: 15 minutos antes
-        if not cita.primer_recordatorio_enviado and 0 <= minutos_para_cita <= 15:
-            enviar_recordatorio_cita(cita)
-            cita.primer_recordatorio_enviado = True
-            cita.save()
-            logger.info(f"Primer recordatorio enviado para la cita ID {cita.id}.")
-
-        # Segundo recordatorio: 10 minutos antes
-        if not cita.segundo_recordatorio_enviado and 0 <= minutos_para_cita <= 10:
-            enviar_recordatorio_cita(cita)
-            cita.segundo_recordatorio_enviado = True
-            cita.save()
-            logger.info(f"Segundo recordatorio enviado para la cita ID {cita.id}.")
-
 #borrar
 #from django.http import JsonResponse
 #from django.core.management import call_command
