@@ -4,6 +4,7 @@ from .views import obtener_servicios_por_empresa
 from .views import EnviarMensajeTelegramView
 #from citas.views import webhook_telegram
 from citas.views import TelegramWebhookView
+#from .views import ejecutar_recordatorios
 
 
 app_name = 'app'
@@ -70,8 +71,11 @@ urlpatterns = [
      path('api/servicios/', obtener_servicios_por_empresa, name='api_servicios'),
 
    
- 
-
+     #path('ejecutar-recordatorios/', ejecutar_recordatorios, name='ejecutar_recordatorios'),
+     #usar
+      path('ejecutar-recordatorios/', ejecutar_recordatorios),
+     
+     #usar
         
 
      

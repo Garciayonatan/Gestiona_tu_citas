@@ -1653,6 +1653,7 @@ def csrf_failure(request, reason=""):
     )
 
     for cita in citas:
+
         fecha_hora_cita = make_aware(datetime.combine(cita.fecha, cita.hora))
         minutos_para_cita = (fecha_hora_cita - ahora).total_seconds() / 60
 
@@ -1672,5 +1673,16 @@ def csrf_failure(request, reason=""):
             cita.save()
             logger.info(f"Segundo recordatorio enviado para la cita ID {cita.id}.")
 
+#borrar
+from django.http import JsonResponse
+from django.core.management import call_command
+from django.views.decorators.csrf import csrf_exempt
 
-            
+@csrf_exempt
+def ejecutar_recordatorios(request):
+    if request.GET.get("token") != "secreto123":
+        return JsonResponse({"error": "No autorizado"}, status=401)
+
+    call_command("enviar_recordatorios")
+    return JsonResponse({"mensaje": "Recordatorios enviados"})
+           #probar solamente
