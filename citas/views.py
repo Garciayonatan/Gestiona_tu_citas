@@ -1674,15 +1674,15 @@ def csrf_failure(request, reason=""):
             logger.info(f"Segundo recordatorio enviado para la cita ID {cita.id}.")
 
 #borrar
-from django.http import JsonResponse
-from django.core.management import call_command
-from django.views.decorators.csrf import csrf_exempt
+#from django.http import JsonResponse
+#from django.core.management import call_command
+#from django.views.decorators.csrf import csrf_exempt
 
-@csrf_exempt
-def ejecutar_recordatorios(request):
-    if request.GET.get("token") != "secreto123":
-        return JsonResponse({"error": "No autorizado"}, status=401)
+#@csrf_exempt
+#def ejecutar_recordatorios(request):
+    #if request.GET.get("token") != "secreto123":
+       # return JsonResponse({"error": "No autorizado"}, status=401)
 
-    call_command("enviar_recordatorios")
-    return JsonResponse({"mensaje": "Recordatorios enviados"})
+    #call_command("enviar_recordatorios")
+   # return JsonResponse({"mensaje": "Recordatorios enviados"})
            #probar solamente
