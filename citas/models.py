@@ -107,8 +107,12 @@ class Cita(models.Model):
     visible_para_empresa = models.BooleanField(default=True, verbose_name="Visible para Empresa", help_text="Si es True, la empresa verá esta cita en su panel; si es False, no.")
    # primer_recordatorio_enviado = models.BooleanField(default=False)
     servicio = models.ForeignKey(Servicio, on_delete=models.CASCADE, null=True, blank=True)
+    # citas/models.py
+    #recordatorio_enviado = models.BooleanField(default=False) #usar este solamente
+
 
     #segundo_recordatorio_enviado = models.BooleanField(default=False)
+     
     def __str__(self):
         return (
             f"Cita: {self.cliente.nombre_completo} con {self.empresa.nombre_empresa} - {self.servicio.nombre} "
