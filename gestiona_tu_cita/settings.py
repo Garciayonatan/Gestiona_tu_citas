@@ -125,9 +125,12 @@ TELEGRAM_CHAT_ID = config('TELEGRAM_CHAT_ID', default=None)
 
 
 #enviar mensaje a whatsapp
+import os
+
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_WHATSAPP_NUMBER = os.getenv("TWILIO_WHATSAPP_NUMBER")
+
 #whatsapp
 
 # LOGIN Y LOGOUT

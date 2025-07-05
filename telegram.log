@@ -8455,3 +8455,4 @@ django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: '192.168.100.10
 2025-07-05 10:35:36,315 [WARNING] ⚠️ Error al enviar correos: [WinError 10060] Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder
 2025-07-05 10:35:36,317 [INFO] 📤 Intentando enviar mensaje a chat_id 5776033843...
 2025-07-05 10:35:36,985 [INFO] ✅ Mensaje enviado correctamente a chat_id 5776033843
+2025-07-05 11:48:31,936 [INFO] C:\Users\MACBOOK\OneDrive\Desktop\Djando\gestiona_tu_cita\settings.py changed, reloading.
