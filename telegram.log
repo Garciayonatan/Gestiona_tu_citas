@@ -8443,3 +8443,15 @@ django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: '192.168.100.10
 2025-06-29 08:24:48,755 [WARNING] Not Found: /favicon.ico
 2025-07-04 21:30:23,682 [WARNING] Not Found: /favicon.ico
 2025-07-04 22:36:10,305 [INFO] C:\Users\MACBOOK\OneDrive\Desktop\Djando\citas\models.py changed, reloading.
+2025-07-04 22:40:16,435 [WARNING] Not Found: /favicon.ico
+2025-07-04 22:41:02,735 [WARNING] Not Found: /api/servicios/
+2025-07-05 08:24:01,242 [WARNING] Not Found: /favicon.ico
+2025-07-05 08:43:19,459 [INFO] C:\Users\MACBOOK\OneDrive\Desktop\Djando\gestiona_tu_cita\settings.py changed, reloading.
+2025-07-05 08:52:00,483 [INFO] C:\Users\MACBOOK\OneDrive\Desktop\Djando\gestiona_tu_cita\settings.py changed, reloading.
+2025-07-05 10:01:21,483 [WARNING] Not Found: /favicon.ico
+2025-07-05 10:02:03,922 [WARNING] ⚠️ Error al enviar correos: [WinError 10060] Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder
+2025-07-05 10:02:03,928 [INFO] 📤 Intentando enviar mensaje a chat_id 5776033843...
+2025-07-05 10:02:04,627 [INFO] ✅ Mensaje enviado correctamente a chat_id 5776033843
+2025-07-05 10:35:36,315 [WARNING] ⚠️ Error al enviar correos: [WinError 10060] Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder
+2025-07-05 10:35:36,317 [INFO] 📤 Intentando enviar mensaje a chat_id 5776033843...
+2025-07-05 10:35:36,985 [INFO] ✅ Mensaje enviado correctamente a chat_id 5776033843
