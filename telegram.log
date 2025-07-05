@@ -8441,3 +8441,5 @@ django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: '192.168.100.10
 2025-06-29 00:55:30,672 [INFO] C:\Users\MACBOOK\OneDrive\Desktop\Djando\citas\views.py changed, reloading.
 2025-06-29 01:05:14,223 [INFO] C:\Users\MACBOOK\OneDrive\Desktop\Djando\citas\views.py changed, reloading.
 2025-06-29 08:24:48,755 [WARNING] Not Found: /favicon.ico
+2025-07-04 21:30:23,682 [WARNING] Not Found: /favicon.ico
+2025-07-04 22:36:10,305 [INFO] C:\Users\MACBOOK\OneDrive\Desktop\Djando\citas\models.py changed, reloading.
