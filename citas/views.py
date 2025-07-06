@@ -36,6 +36,7 @@ from telegram import Bot
 from telegram.error import TelegramError
 from asgiref.sync import async_to_sync
 from django.utils.timezone import now
+from .utils.enviar_whatsapp import enviar_whatsapp, formatear_numero
 
 
 
@@ -976,6 +977,29 @@ def nueva_cita(request):
                 logger.warning(f"⚠️ Error al enviar Telegram: {e}")
                 messages.warning(request, "Cita creada, pero no se pudo enviar mensaje por Telegram.")
 
+                #what borrar por sia acaso
+                            # Enviar mensaje por WhatsApp al cliente
+            try:
+                if cliente.telefono:
+                    numero = formatear_numero(cliente.telefono)
+                    if numero:
+                        enviar_whatsapp(numero, mensaje_cliente)
+
+
+                if empresa.telefono:
+                   numero_empresa = formatear_numero(empresa.telefono)
+                   if numero_empresa:
+                      enviar_whatsapp(numero_empresa, mensaje_empresa)
+                               
+            except Exception as e:
+                logger.warning(f"⚠️ Error al enviar WhatsApp: {e}")
+                messages.warning(request, "Cita creada, pero no se pudo enviar mensaje por WhatsApp.")
+                
+
+                
+
+                #what
+
             messages.success(request, "✅ Cita solicitada exitosamente.")
             return redirect('app:cliente_panel')
 
@@ -1078,7 +1102,6 @@ def editar_cita(request, cita_id):
                 cita_nueva.comentarios,
                 "actualizada"
             )
-
             messages.success(request, "✅ Cita actualizada correctamente.")
             return redirect('app:cliente_panel')
         else:
@@ -1137,7 +1160,32 @@ def notificar_cita(cita, cliente, empresa, servicio, comentarios, accion):
             enviar_mensaje_telegram(empresa.telegram_chat_id, mensajes["empresa"])
     except Exception as e:
         logger.error(f"Error al enviar mensajes por Telegram: {e}")
+    #whatsapp
+    try:
+        if cliente.telefono:
+            numero_cliente = formatear_numero(cliente.telefono)
+            if numero_cliente:
+                enviar_whatsapp(numero_cliente, mensajes["cliente"])
+                logger.info(f"✅ WhatsApp enviado al cliente: {numero_cliente}")
+            else:
+                logger.warning(f"❌ Número inválido del cliente: {cliente.telefono}")
+        else:
+            logger.warning("❌ El cliente no tiene número de teléfono registrado.")
 
+        if empresa.telefono:
+            numero_empresa = formatear_numero(empresa.telefono)
+            if numero_empresa:
+                enviar_whatsapp(numero_empresa, mensajes["empresa"])
+                logger.info(f"✅ WhatsApp enviado a la empresa: {numero_empresa}")
+            else:
+                logger.warning(f"❌ Número inválido de la empresa: {empresa.telefono}")
+        else:
+            logger.warning("❌ La empresa no tiene número de teléfono registrado.")
+
+    except Exception as e:
+        logger.warning(f"⚠️ Error al enviar WhatsApp: {e}")
+       
+       #whatsapp
 
 
 @login_required(login_url='app:login')
@@ -1235,34 +1283,62 @@ def eliminar_cita(request, cita_id):
                 logger.error(f"Error al enviar correo a la empresa: {e}")
                 errores.append("correo a la empresa")
 
-            # Enviar mensajes por Telegram
-            try:
-                if cliente_chat_id:
-                    enviado = enviar_mensaje_telegram(cliente_chat_id, mensaje_cliente)
-                    if not enviado:
-                        errores.append("Telegram al cliente")
-            except Exception as e:
-                logger.error(f"Error al enviar Telegram al cliente: {e}")
-                errores.append("Telegram al cliente")
+                errores = []  # Asegúrate de que esta línea esté antes de cualquier intento de enviar mensajes
 
-            try:
-                if empresa_chat_id:
-                    enviado = enviar_mensaje_telegram(empresa_chat_id, mensaje_empresa)
-                    if not enviado:
-                        errores.append("Telegram a la empresa")
-            except Exception as e:
-                logger.error(f"Error al enviar Telegram a la empresa: {e}")
-                errores.append("Telegram a la empresa")
+        # Enviar mensajes por Telegram
+        try:
+            if cliente_chat_id:
+                enviado = enviar_mensaje_telegram(cliente_chat_id, mensaje_cliente)
+                if not enviado:
+                    errores.append("Telegram al cliente")
+        except Exception as e:
+            logger.error(f"Error al enviar Telegram al cliente: {e}")
+            errores.append("Telegram al cliente")
 
-            # Notificación visual
-            if errores:
-                messages.warning(request, f"⚠️ Cita eliminada, pero fallaron: {', '.join(errores)}")
-            else:
-                messages.success(request, "✉️ Notificaciones enviadas correctamente.")
+        try:
+            if empresa_chat_id:
+                enviado = enviar_mensaje_telegram(empresa_chat_id, mensaje_empresa)
+                if not enviado:
+                    errores.append("Telegram a la empresa")
+        except Exception as e:
+            logger.error(f"Error al enviar Telegram a la empresa: {e}")
+            errores.append("Telegram a la empresa")
 
-        return redirect('app:cliente_panel')
+        # Enviar mensajes por WhatsApp
+        try:
+            if cita.cliente.telefono:
+                numero_cliente = formatear_numero(cita.cliente.telefono)
+                if numero_cliente:
+                    enviar_whatsapp(numero_cliente, mensaje_cliente)
+                    logger.info(f"✅ WhatsApp enviado al cliente: {numero_cliente}")
+                else:
+                    errores.append("WhatsApp (número cliente inválido)")
+                    logger.warning("⚠️ Número de WhatsApp del cliente inválido.")
+        except Exception as e:
+            logger.error(f"Error al enviar WhatsApp al cliente: {e}")
+            errores.append("WhatsApp al cliente")
 
-    return render(request, 'app/eliminar_cita.html', {'cita': cita})
+        try:
+            if empresa.telefono:
+                numero_empresa = formatear_numero(empresa.telefono)
+                if numero_empresa:
+                    enviar_whatsapp(numero_empresa, mensaje_empresa)
+                    logger.info(f"✅ WhatsApp enviado a la empresa: {numero_empresa}")
+                else:
+                    errores.append("WhatsApp (número empresa inválido)")
+                    logger.warning("⚠️ Número de WhatsApp de la empresa inválido.")
+        except Exception as e:
+            logger.error(f"Error al enviar WhatsApp a la empresa: {e}")
+            errores.append("WhatsApp a la empresa")
+
+        # Notificación visual
+        if errores:
+            messages.warning(request, f"⚠️ Cita eliminada, pero fallaron: {', '.join(errores)}")
+        else:
+            messages.success(request, "✉️ Notificaciones enviadas correctamente.")
+
+        return redirect('app:cliente_panel')  # ✅ Esta línea es OBLIGATORIA para que retorne HttpResponse
+
 
 
 # servicios administrar 
