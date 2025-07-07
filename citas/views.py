@@ -36,7 +36,7 @@ from telegram import Bot
 from telegram.error import TelegramError
 from asgiref.sync import async_to_sync
 from django.utils.timezone import now
-from .utils.enviar_whatsapp import enviar_whatsapp, formatear_numero
+#from .utils.enviar_whatsapp import enviar_whatsapp, formatear_numero
 
 
 
@@ -403,6 +403,7 @@ class EnviarMensajeTelegramView(View):
             return JsonResponse({'error': 'error enviando mensaje'}, status=500)
 
 # Editar horario
+# Editar horario
 @login_required(login_url='app:login')
 def editar_horario(request):
     empresa = get_object_or_404(Empresa, user=request.user)
@@ -432,43 +433,27 @@ def editar_horario(request):
         mensaje_empresa = (
             f"<html>\n"
             f"<body style=\"font-family: Arial, sans-serif; color: #333;\">\n"
-            f"<h2 style=\"color: #0056b3;\">Actualización de Horario</h2>\n"
-            f"<p>Hola <b>{empresa.nombre_dueno}</b>,</p>\n"
-            f"<p>Te informamos que el horario de tu empresa <b>{nombre_empresa}</b> ha sido actualizado exitosamente. A continuación, te mostramos los nuevos detalles:</p>\n"
+            f"<h2 style=\"color: #0056b3;\">\u00a1Hola {empresa.nombre_dueno}!</h2>\n"
+            f"<p>Queremos informarte que el horario de tu empresa <b>{nombre_empresa}</b> ha sido <b>actualizado correctamente</b>.</p>\n"
+            f"<p>🔔 Aquí tienes los nuevos horarios de atención:</p>\n"
             f"<table style=\"border-collapse: collapse; margin: 20px 0;\">\n"
             f"<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><b>Hora de inicio:</b></td><td style=\"padding: 8px; border: 1px solid #ddd;\">{hora_inicio.strftime('%H:%M')}</td></tr>\n"
             f"<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><b>Hora de cierre:</b></td><td style=\"padding: 8px; border: 1px solid #ddd;\">{hora_cierre.strftime('%H:%M')}</td></tr>\n"
             f"</table>\n"
-            f"<p>Gracias por confiar en nuestro sistema.</p>\n"
-            f"<p style=\"color: #0056b3;\">El equipo de Gestiona tu Cita</p>\n"
+            f"<p>Gracias por mantener tu información al día. Esto ayuda a ofrecer un mejor servicio a tus clientes. 🙌</p>\n"
+            f"<p style=\"color: #0056b3;\">— El equipo de Gestiona tu Cita</p>\n"
             f"</body>\n"
             f"</html>"
         )
 
-        mensaje_cliente = (
-            f"<html>\n"
-            f"<body style=\"font-family: Arial, sans-serif; color: #333;\">\n"
-            f"<h2 style=\"color: #0056b3;\">Notificación de Cambio de Horario</h2>\n"
-            f"<p>Hola,</p>\n"
-            f"<p>Te informamos que la empresa <b>{nombre_empresa}</b> ha actualizado su horario de atención. A continuación, te mostramos los nuevos detalles:</p>\n"
-            f"<table style=\"border-collapse: collapse; margin: 20px 0;\">\n"
-            f"<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><b>Hora de inicio:</b></td><td style=\"padding: 8px; border: 1px solid #ddd;\">{hora_inicio.strftime('%H:%M')}</td></tr>\n"
-            f"<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><b>Hora de cierre:</b></td><td style=\"padding: 8px; border: 1px solid #ddd;\">{hora_cierre.strftime('%H:%M')}</td></tr>\n"
-            f"</table>\n"
-            f"<p>Esperamos que este cambio sea de tu conveniencia. Gracias por confiar en nosotros.</p>\n"
-            f"<p style=\"color: #0056b3;\">El equipo de Gestiona tu Cita</p>\n"
-            f"</body>\n"
-            f"</html>"
-        )
-
-        mensaje_telegram = (
-            f"🕒 La empresa {nombre_empresa} actualizó su horario:\n"
-            f"{hora_inicio.strftime('%H:%M')} a {hora_cierre.strftime('%H:%M')}"
+        mensaje_telegram_empresa = (
+            f"🔔 ¡Hola! Tu empresa *{nombre_empresa}* ha actualizado su horario de atención:\n"
+            f"🕒 *Horario:* {hora_inicio.strftime('%H:%M')} - {hora_cierre.strftime('%H:%M')}\n"
+            f"Gracias por mantener tu información al día con *Gestiona tu Cita* 💼"
         )
 
         errores = []
 
-        # Enviar correo a la empresa
         try:
             send_mail(
                 asunto,
@@ -481,13 +466,30 @@ def editar_horario(request):
             logger.error(f"Error al enviar correo a la empresa: {e}")
             errores.append("correo a la empresa")
 
-        # Obtener clientes con citas pendientes o aceptadas
         clientes_con_citas = Cliente.objects.filter(
             citas__empresa=empresa,
             citas__estado__in=['pendiente', 'aceptada']
         ).distinct()
 
         for cliente in clientes_con_citas:
+            nombre_cliente = cliente.nombre_completo or "cliente"
+
+            mensaje_cliente = (
+                f"<html>\n"
+                f"<body style=\"font-family: Arial, sans-serif; color: #333;\">\n"
+                f"<h2 style=\"color: #0056b3;\">Estimado/a {nombre_cliente},</h2>\n"
+                f"<p>Queremos informarte que la empresa <b>{nombre_empresa}</b> ha actualizado su horario de atención.</p>\n"
+                f"<p>🕒 Los nuevos horarios son:</p>\n"
+                f"<table style=\"border-collapse: collapse; margin: 20px 0;\">\n"
+                f"<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><b>Hora de inicio:</b></td><td style=\"padding: 8px; border: 1px solid #ddd;\">{hora_inicio.strftime('%H:%M')}</td></tr>\n"
+                f"<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><b>Hora de cierre:</b></td><td style=\"padding: 8px; border: 1px solid #ddd;\">{hora_cierre.strftime('%H:%M')}</td></tr>\n"
+                f"</table>\n"
+                f"<p>Gracias por confiar en nuestros servicios.</p>\n"
+                f"<p style=\"color: #0056b3;\">— El equipo de Gestiona tu Cita</p>\n"
+                f"</body>\n"
+                f"</html>"
+            )
+
             if cliente.user.email:
                 try:
                     send_mail(
@@ -503,17 +505,22 @@ def editar_horario(request):
 
             if cliente.telegram_chat_id:
                 try:
-                    enviado = enviar_mensaje_telegram(cliente.telegram_chat_id, mensaje_cliente)
+                    mensaje_telegram_cliente = (
+                        f"👋 Hola {nombre_cliente},\n"
+                        f"📢 La empresa *{nombre_empresa}* ha actualizado su horario de atención.\n"
+                        f"🕒 Nuevo horario: {hora_inicio.strftime('%H:%M')} - {hora_cierre.strftime('%H:%M')}\n"
+                        f"Gracias por preferirnos 💙"
+                    )
+                    enviado = enviar_mensaje_telegram(cliente.telegram_chat_id, mensaje_telegram_cliente)
                     if not enviado:
                         errores.append(f"Telegram al cliente {cliente.id}")
                 except Exception as e:
                     logger.error(f"Error al enviar Telegram al cliente {cliente.id}: {e}")
                     errores.append(f"Telegram al cliente {cliente.id}")
 
-        # Enviar mensaje Telegram a la empresa
         if empresa.telegram_chat_id:
             try:
-                enviado = enviar_mensaje_telegram(empresa.telegram_chat_id, mensaje_telegram)
+                enviado = enviar_mensaje_telegram(empresa.telegram_chat_id, mensaje_telegram_empresa)
                 if not enviado:
                     errores.append("Telegram a la empresa")
             except Exception as e:
@@ -529,6 +536,7 @@ def editar_horario(request):
         return redirect('app:empresa_panel')
 
     return render(request, 'app/editar_horario.html', {'empresa': empresa})
+
 
 # Editar días laborables
 @login_required(login_url='app:login')
@@ -554,57 +562,78 @@ def editar_dias_laborables(request):
             asunto = f"Actualización de días laborables - {empresa.nombre_empresa}"
 
             mensaje_empresa = (
-                f"Hola {empresa.nombre_dueno},\n\n"
-                f"Has actualizado los días laborables de tu empresa {empresa.nombre_empresa}.\n"
-                f"Días seleccionados: {dias_lista}.\n\n"
-                f"Gracias por gestionar tu negocio."
+                f"<html>\n"
+                f"<body style=\"font-family: Arial, sans-serif; color: #333;\">\n"
+                f"<h2 style=\"color: #0056b3;\">Días Laborables Actualizados</h2>\n"
+                f"<p>Hola <b>{empresa.nombre_dueno}</b>,</p>\n"
+                f"<p>Queremos informarte que tu empresa <b>{empresa.nombre_empresa}</b> ha actualizado sus días laborables. A continuación, te mostramos los nuevos días seleccionados:</p>\n"
+                f"<p><b>{dias_lista}</b></p>\n"
+                f"<p>Gracias por seguir utilizando nuestro sistema. ¡Te deseamos muchos éxitos!</p>\n"
+                f"<p style=\"color: #0056b3;\">El equipo de Gestiona tu Cita</p>\n"
+                f"</body>\n"
+                f"</html>"
             )
-            mensaje_cliente = (
-                f"Hola,\n\n"
-                f"La empresa {empresa.nombre_empresa} ha actualizado sus días laborables.\n"
-                f"Nuevos días: {dias_lista}.\n\n"
+
+            mensaje_telegram_empresa = (
+                f"🏢 ¡Hola! Tu empresa <b>{empresa.nombre_empresa}</b> ha actualizado sus días laborables.\n"
+                f"📅 Nuevos días activos: {dias_lista}.\n"
                 f"Gracias por confiar en nosotros."
             )
-            mensaje_telegram = f"📅 {empresa.nombre_empresa} actualizó sus días laborables:\n{dias_lista}"
 
             errores = []
 
-            # Enviar correo a la empresa
             try:
-                send_mail(asunto, mensaje_empresa, settings.DEFAULT_FROM_EMAIL, [empresa.user.email])
+                send_mail(asunto, '', settings.DEFAULT_FROM_EMAIL, [empresa.user.email], html_message=mensaje_empresa)
             except Exception as e:
                 logger.error(f"Error al enviar correo a la empresa: {e}")
                 errores.append("correo a la empresa")
 
-            # Enviar correos y mensajes Telegram a clientes con citas pendientes o aceptadas
             clientes_con_citas = Cliente.objects.filter(
                 citas__empresa=empresa,
                 citas__estado__in=['pendiente', 'aceptada']
             ).distinct()
 
             for cliente in clientes_con_citas:
-                # Enviar correo al cliente
+                nombre_cliente = cliente.nombre_completo or "cliente"
+
+                mensaje_cliente = (
+                    f"<html>\n"
+                    f"<body style=\"font-family: Arial, sans-serif; color: #333;\">\n"
+                    f"<h2 style=\"color: #0056b3;\">Actualización de Días Laborables</h2>\n"
+                    f"<p>Hola <b>{nombre_cliente}</b>,</p>\n"
+                    f"<p>Queremos informarte que la empresa <b>{empresa.nombre_empresa}</b> ha actualizado sus días de atención. Ahora estarán disponibles en los siguientes días:</p>\n"
+                    f"<p><b>{dias_lista}</b></p>\n"
+                    f"<p>Esperamos que estos cambios mejoren tu experiencia. Gracias por ser parte de Gestiona tu Cita.</p>\n"
+                    f"<p style=\"color: #0056b3;\">El equipo de Gestiona tu Cita</p>\n"
+                    f"</body>\n"
+                    f"</html>"
+                )
+
                 if cliente.user.email:
                     try:
-                        send_mail(asunto, mensaje_cliente, settings.DEFAULT_FROM_EMAIL, [cliente.user.email])
+                        send_mail(asunto, '', settings.DEFAULT_FROM_EMAIL, [cliente.user.email], html_message=mensaje_cliente)
                     except Exception as e:
                         logger.error(f"Error al enviar correo al cliente {cliente.id}: {e}")
                         errores.append(f"correo al cliente {cliente.id}")
 
-                # Enviar Telegram al cliente
                 if cliente.telegram_chat_id:
                     try:
-                        enviado = enviar_mensaje_telegram(cliente.telegram_chat_id, mensaje_cliente)
+                        mensaje_telegram_cliente = (
+                            f"👋 ¡Hola {nombre_cliente}!,\n"
+                            f"📢 La empresa {empresa.nombre_empresa} ha actualizado sus días de atención.\n"
+                            f"📅 Ahora atenderán los días: {dias_lista}.\n"
+                            f"¡Gracias por confiar en nosotros!"
+                        )
+                        enviado = enviar_mensaje_telegram(cliente.telegram_chat_id, mensaje_telegram_cliente)
                         if not enviado:
                             errores.append(f"Telegram al cliente {cliente.id}")
                     except Exception as e:
                         logger.error(f"Error al enviar Telegram al cliente {cliente.id}: {e}")
                         errores.append(f"Telegram al cliente {cliente.id}")
 
-            # Enviar mensaje Telegram a la empresa
             if empresa.telegram_chat_id:
                 try:
-                    enviado = enviar_mensaje_telegram(empresa.telegram_chat_id, mensaje_telegram)
+                    enviado = enviar_mensaje_telegram(empresa.telegram_chat_id, mensaje_telegram_empresa)
                     if not enviado:
                         errores.append("Telegram a la empresa")
                 except Exception as e:
@@ -624,8 +653,6 @@ def editar_dias_laborables(request):
         'dias': dias,
         'dias_seleccionados': empresa.dias_laborables.values_list('codigo', flat=True),
     })
-
-
 
 # Aceptar cita
 
@@ -694,12 +721,34 @@ def aceptar_cita(request, cita_id):
         logger.error(f"Error al enviar Telegram al cliente: {e}")
 
     # Enviar mensaje Telegram a la empresa
-    try:
+   # try:
         if cita.empresa.telegram_chat_id:
             enviar_mensaje_telegram(cita.empresa.telegram_chat_id, mensaje_empresa)
-    except Exception as e:
+   # except Exception as e:
         errores.append("Telegram a la empresa")
         logger.error(f"Error al enviar Telegram a la empresa: {e}")
+
+
+           
+           # Enviar WhatsApp al cliente
+   # try:
+   #    if cita.cliente.telefono:
+     
+          #  enviar_whatsapp(cita.cliente.telefono, mensaje_cliente)
+    #except Exception as e:
+      #errores.append("WhatsApp al cliente")
+      #logger.error(f"Error al enviar WhatsApp al cliente: {e}")
+
+# Enviar WhatsApp a la empresa
+    
+    try:
+         if cita.empresa.telefono:
+
+              enviar_whatsapp(cita.empresa.telefono, mensaje_empresa)
+    except Exception as e:
+      errores.append("WhatsApp a la empresa")
+      logger.error(f"Error al enviar WhatsApp a la empresa: {e}")
+
 
     # Mostrar notificación final
     if errores:
@@ -800,6 +849,25 @@ def rechazar_cita(request, cita_id):
             errores.append("Telegram a la empresa")
     else:
         logger.warning(f"Empresa {nombre_empresa} no tiene chat_id de Telegram asociado.")
+                 
+
+                    # WhatsApp al cliente
+   # try:
+     # if cita.cliente.telefono:
+          #enviar_whatsapp(cita.cliente.telefono, mensaje_cliente)
+    #except Exception as e:
+      #errores.append("WhatsApp al cliente")
+      #logger.error(f"Error al enviar WhatsApp al cliente {nombre_cliente}: {e}")
+
+# WhatsApp a la empresa
+   # try:
+       #  if cita.empresa.telefono:
+        #  enviar_whatsapp(cita.empresa.telefono, mensaje_empresa)
+        
+    #except Exception as e:
+      #errores.append("WhatsApp a la empresa")
+      #logger.error(f"Error al enviar WhatsApp a la empresa {nombre_empresa}: {e}")
+       #whatsapp , aqui termina
 
     if errores:
         mensajes_errores = ', '.join(errores)
@@ -979,25 +1047,19 @@ def nueva_cita(request):
 
                 #what borrar por sia acaso
                             # Enviar mensaje por WhatsApp al cliente
-            try:
-                if cliente.telefono:
-                    numero = formatear_numero(cliente.telefono)
-                    if numero:
-                        enviar_whatsapp(numero, mensaje_cliente)
+           # try:
+               # if cliente.telefono:
+                  #  numero = formatear_numero(cliente.telefono)
+                    #if numero:
+                       # enviar_whatsapp(numero, mensaje_cliente)
 
 
-                if empresa.telefono:
-                   numero_empresa = formatear_numero(empresa.telefono)
-                   if numero_empresa:
-                      enviar_whatsapp(numero_empresa, mensaje_empresa)
-                               
-            except Exception as e:
-                logger.warning(f"⚠️ Error al enviar WhatsApp: {e}")
-                messages.warning(request, "Cita creada, pero no se pudo enviar mensaje por WhatsApp.")
+               # if empresa.telefono:
+                  ###           
+            #except Exception as e:
+               # logger.warning(f"⚠️ Error al enviar WhatsApp: {e}")
+                #messages.warning(request, "Cita creada, pero no se pudo enviar mensaje por WhatsApp.")
                 
-
-                
-
                 #what
 
             messages.success(request, "✅ Cita solicitada exitosamente.")
@@ -1161,7 +1223,7 @@ def notificar_cita(cita, cliente, empresa, servicio, comentarios, accion):
     except Exception as e:
         logger.error(f"Error al enviar mensajes por Telegram: {e}")
     #whatsapp
-    try:
+   # try:
         if cliente.telefono:
             numero_cliente = formatear_numero(cliente.telefono)
             if numero_cliente:
@@ -1182,7 +1244,7 @@ def notificar_cita(cita, cliente, empresa, servicio, comentarios, accion):
         else:
             logger.warning("❌ La empresa no tiene número de teléfono registrado.")
 
-    except Exception as e:
+   # except Exception as e:
         logger.warning(f"⚠️ Error al enviar WhatsApp: {e}")
        
        #whatsapp
@@ -1305,7 +1367,7 @@ def eliminar_cita(request, cita_id):
             errores.append("Telegram a la empresa")
 
         # Enviar mensajes por WhatsApp
-        try:
+       # try:
             if cita.cliente.telefono:
                 numero_cliente = formatear_numero(cita.cliente.telefono)
                 if numero_cliente:
@@ -1314,11 +1376,11 @@ def eliminar_cita(request, cita_id):
                 else:
                     errores.append("WhatsApp (número cliente inválido)")
                     logger.warning("⚠️ Número de WhatsApp del cliente inválido.")
-        except Exception as e:
+       # except Exception as e:
             logger.error(f"Error al enviar WhatsApp al cliente: {e}")
             errores.append("WhatsApp al cliente")
 
-        try:
+       # try:
             if empresa.telefono:
                 numero_empresa = formatear_numero(empresa.telefono)
                 if numero_empresa:
@@ -1327,7 +1389,7 @@ def eliminar_cita(request, cita_id):
                 else:
                     errores.append("WhatsApp (número empresa inválido)")
                     logger.warning("⚠️ Número de WhatsApp de la empresa inválido.")
-        except Exception as e:
+       # except Exception as e:
             logger.error(f"Error al enviar WhatsApp a la empresa: {e}")
             errores.append("WhatsApp a la empresa")
 
