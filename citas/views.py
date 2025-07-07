@@ -741,13 +741,13 @@ def aceptar_cita(request, cita_id):
 
 # Enviar WhatsApp a la empresa
     
-    try:
-         if cita.empresa.telefono:
+    #try:
+         #if cita.empresa.telefono:
 
-              enviar_whatsapp(cita.empresa.telefono, mensaje_empresa)
-    except Exception as e:
-      errores.append("WhatsApp a la empresa")
-      logger.error(f"Error al enviar WhatsApp a la empresa: {e}")
+             # enviar_whatsapp(cita.empresa.telefono, mensaje_empresa)
+   # except Exception as e:
+      #errores.append("WhatsApp a la empresa")
+      #logger.error(f"Error al enviar WhatsApp a la empresa: {e}")
 
 
     # Mostrar notificación final
@@ -1224,28 +1224,19 @@ def notificar_cita(cita, cliente, empresa, servicio, comentarios, accion):
         logger.error(f"Error al enviar mensajes por Telegram: {e}")
     #whatsapp
    # try:
-        if cliente.telefono:
-            numero_cliente = formatear_numero(cliente.telefono)
-            if numero_cliente:
-                enviar_whatsapp(numero_cliente, mensajes["cliente"])
-                logger.info(f"✅ WhatsApp enviado al cliente: {numero_cliente}")
-            else:
-                logger.warning(f"❌ Número inválido del cliente: {cliente.telefono}")
-        else:
-            logger.warning("❌ El cliente no tiene número de teléfono registrado.")
+        ## else:
+           # logger.warning("❌ El cliente no tiene número de teléfono registrado.")
 
-        if empresa.telefono:
-            numero_empresa = formatear_numero(empresa.telefono)
-            if numero_empresa:
-                enviar_whatsapp(numero_empresa, mensajes["empresa"])
-                logger.info(f"✅ WhatsApp enviado a la empresa: {numero_empresa}")
-            else:
-                logger.warning(f"❌ Número inválido de la empresa: {empresa.telefono}")
-        else:
-            logger.warning("❌ La empresa no tiene número de teléfono registrado.")
+        #if empresa.telefono:
+           ### enviar_whatsapp(numero_empresa, mensajes["empresa"])
+               # logger.info(f"✅ WhatsApp enviado a la empresa: {numero_empresa}")
+            #else:
+               # logger.warning(f"❌ Número inválido de la empresa: {empresa.telefono}")
+        #else:
+           #logger.warning("❌ La empresa no tiene número de teléfono registrado.")
 
-   # except Exception as e:
-        logger.warning(f"⚠️ Error al enviar WhatsApp: {e}")
+    #except Exception as e:
+        #logger.warning(f"⚠️ Error al enviar WhatsApp: {e}")
        
        #whatsapp
 
@@ -1368,30 +1359,29 @@ def eliminar_cita(request, cita_id):
 
         # Enviar mensajes por WhatsApp
        # try:
-            if cita.cliente.telefono:
-                numero_cliente = formatear_numero(cita.cliente.telefono)
-                if numero_cliente:
-                    enviar_whatsapp(numero_cliente, mensaje_cliente)
-                    logger.info(f"✅ WhatsApp enviado al cliente: {numero_cliente}")
-                else:
-                    errores.append("WhatsApp (número cliente inválido)")
-                    logger.warning("⚠️ Número de WhatsApp del cliente inválido.")
+           # if cita.cliente.telefono:
+              #  numero_cliente = formatear_numero(cita.cliente.telefono)
+               # if numero_cliente:
+                  #  enviar_whatsapp(numero_cliente, mensaje_cliente)
+                   # logger.info(f"✅ WhatsApp enviado al cliente: {numero_cliente}")
+                #else:
+                    #errores.append("WhatsApp (número cliente inválido)")
+                    #logger.warning("⚠️ Número de WhatsApp del cliente inválido.")
        # except Exception as e:
             logger.error(f"Error al enviar WhatsApp al cliente: {e}")
             errores.append("WhatsApp al cliente")
 
        # try:
-            if empresa.telefono:
-                numero_empresa = formatear_numero(empresa.telefono)
-                if numero_empresa:
-                    enviar_whatsapp(numero_empresa, mensaje_empresa)
-                    logger.info(f"✅ WhatsApp enviado a la empresa: {numero_empresa}")
-                else:
-                    errores.append("WhatsApp (número empresa inválido)")
-                    logger.warning("⚠️ Número de WhatsApp de la empresa inválido.")
+           ## numero_empresa = formatear_numero(empresa.telefono)
+               # if numero_empresa:
+                   # enviar_whatsapp(numero_empresa, mensaje_empresa)
+                    #logger.info(f"✅ WhatsApp enviado a la empresa: {numero_empresa}")
+                #else:
+                    #errores.append("WhatsApp (número empresa inválido)")
+                    #logger.warning("⚠️ Número de WhatsApp de la empresa inválido.")
        # except Exception as e:
-            logger.error(f"Error al enviar WhatsApp a la empresa: {e}")
-            errores.append("WhatsApp a la empresa")
+            #logger.error(f"Error al enviar WhatsApp a la empresa: {e}")
+           # errores.append("WhatsApp a la empresa")
 
         # Notificación visual
         if errores:
