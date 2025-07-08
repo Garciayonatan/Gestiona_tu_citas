@@ -36,7 +36,7 @@ from telegram import Bot
 from telegram.error import TelegramError
 from asgiref.sync import async_to_sync
 from django.utils.timezone import now
-#from .utils.enviar_whatsapp import enviar_whatsapp, formatear_numero
+from .utils.enviar_whatsapp import enviar_whatsapp, formatear_numero
 
 
 
@@ -721,33 +721,35 @@ def aceptar_cita(request, cita_id):
         logger.error(f"Error al enviar Telegram al cliente: {e}")
 
     # Enviar mensaje Telegram a la empresa
-   # try:
+    try:
         if cita.empresa.telegram_chat_id:
             enviar_mensaje_telegram(cita.empresa.telegram_chat_id, mensaje_empresa)
-   # except Exception as e:
+    except Exception as e:
         errores.append("Telegram a la empresa")
         logger.error(f"Error al enviar Telegram a la empresa: {e}")
 
 
            
            # Enviar WhatsApp al cliente
-   # try:
-   #    if cita.cliente.telefono:
-     
-          #  enviar_whatsapp(cita.cliente.telefono, mensaje_cliente)
-    #except Exception as e:
-      #errores.append("WhatsApp al cliente")
-      #logger.error(f"Error al enviar WhatsApp al cliente: {e}")
+    try:
+       if cita.cliente.telefono:
+          enviar_whatsapp(cita.cliente.telefono, mensaje_cliente)
+    except Exception as e:
+      errores.append("WhatsApp al cliente")
+      logger.error(f"Error al enviar WhatsApp al cliente: {e}")
 
 # Enviar WhatsApp a la empresa
     
-    #try:
-         #if cita.empresa.telefono:
+    try:
+         if cita.empresa.telefono:
 
-             # enviar_whatsapp(cita.empresa.telefono, mensaje_empresa)
-   # except Exception as e:
-      #errores.append("WhatsApp a la empresa")
-      #logger.error(f"Error al enviar WhatsApp a la empresa: {e}")
+            enviar_whatsapp(cita.empresa.telefono, mensaje_empresa)
+    except Exception as e:
+      errores.append("WhatsApp a la empresa")
+      logger.error(f"Error al enviar WhatsApp a la empresa: {e}")
+       
+       #fin de mensaje de whatsapp en esta parte
+
 
 
     # Mostrar notificación final
