@@ -694,7 +694,7 @@ def aceptar_cita(request, cita_id):
     cita = get_object_or_404(Cita, id=cita_id)
 
     ahora = timezone.now()
-    cita_datetime = datetime.combine(cita.fecha, cita.hora)
+    cita_datetime = make_aware(datetime.combine(cita.fecha, cita.hora))
 
     if cita.estado == 'pendiente' and cita_datetime < ahora:
         messages.error(request, '⚠️ Esta cita ya venció. Recarga la página.')
