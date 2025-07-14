@@ -140,8 +140,8 @@
         <form method="post" action="{% url 'app:restablecer_contraseña' %}">
             {% csrf_token %}
 
-            <label for="codigo">📨 Código de recuperación que te enviamos al correo:</label>
-            <input type="text" id="codigo" name="codigo" placeholder="Ej: dXNlcmlk::token123" required />
+            <label for="codigo">📨 Código de recuperación:</label>
+            <input type="text" id="codigo" name="codigo" placeholder="Ej: 123456" required />
 
             <label for="nueva_password">🔑 Nueva Contraseña:</label>
             <input type="password" id="nueva_password" name="nueva_password" placeholder="Tu nueva contraseña" required />

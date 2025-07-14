@@ -7,7 +7,6 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      /* Fondo degradado bonito */
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       display: flex;
       justify-content: center;
@@ -21,7 +20,7 @@
       border-radius: 8px;
       box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
       width: 400px;
-      max-width: 90vw;
+      max-width: 95vw;
     }
     h2 { text-align: center; }
     label {
@@ -69,11 +68,30 @@
     }
     .message.error { background: #f8d7da; color: #842029; }
     .message.success { background: #d1e7dd; color: #0f5132; }
-    a { 
-      display: block; 
-      margin-top: 15px; 
-      text-align: center; 
-      color: #007bff; /* azul brillante */
+    .servicio-detalle {
+      margin-top: 10px;
+      background: #f1f1f1;
+      padding: 10px;
+      border-left: 5px solid #764ba2;
+      border-radius: 4px;
+      font-size: 0.95em;
+      display: none;
+    }
+    .direccion-empresa {
+      margin-top: 10px;
+      font-size: 0.95em;
+      background: #eef2ff;
+      padding: 8px;
+      border-left: 5px solid #667eea;
+      border-radius: 4px;
+      color: #333;
+      display: none;
+    }
+    a {
+      display: block;
+      margin-top: 15px;
+      text-align: center;
+      color: #007bff;
       font-weight: 600;
       text-decoration: none;
     }
@@ -92,6 +110,7 @@
 
     <form method="POST" action="{% url 'app:nueva_cita' %}" id="form-cita" novalidate>
       {% csrf_token %}
+
       <label for="empresa">Empresa:</label>
       <select name="empresa" id="empresa" required>
         <option value="" disabled selected>Seleccione una empresa</option>
@@ -100,10 +119,15 @@
         {% endfor %}
       </select>
 
+      <!-- Dirección de la empresa -->
+      <div class="direccion-empresa" id="direccion-empresa"></div>
+
       <label for="servicio">Servicio:</label>
       <select name="servicio" id="servicio" required disabled>
         <option value="" disabled selected>Seleccione una empresa primero</option>
       </select>
+
+      <div class="servicio-detalle" id="detalle-servicio"></div>
 
       <label for="fecha_hora">Fecha y Hora:</label>
       <input type="datetime-local" name="fecha_hora" id="fecha_hora" required />
@@ -117,49 +141,80 @@
     <a href="{% url 'app:cliente_panel' %}">Volver al Panel</a>
   </div>
 
-  <script>
+  <script type="text/javascript">
     document.addEventListener('DOMContentLoaded', () => {
       const selEmp = document.getElementById('empresa');
       const selSvc = document.getElementById('servicio');
+      const detalle = document.getElementById('detalle-servicio');
+      const direccionDiv = document.getElementById('direccion-empresa');
+      let serviciosMap = {};
 
-      function recortarTexto(texto, maxLength) {
-        if (!texto) return 'Sin descripción';
-        return texto.length > maxLength ? texto.substring(0, maxLength) + '…' : texto;
-      }
+      const empresasMap = {
+        {% for empresa in empresas %}
+          "{{ empresa.id }}": {
+            direccion: "{{ empresa.direccion|escapejs }}"
+          },
+        {% endfor %}
+      };
 
       selEmp.addEventListener('change', () => {
         const id = selEmp.value;
+
+        // Mostrar dirección de la empresa seleccionada
+        if (empresasMap[id]) {
+          direccionDiv.textContent = "📍 Dirección: " + empresasMap[id].direccion;
+          direccionDiv.style.display = 'block';
+        } else {
+          direccionDiv.style.display = 'none';
+        }
+
+        // Cargar servicios
         selSvc.innerHTML = '<option>Cargando servicios...</option>';
         selSvc.disabled = true;
+        detalle.style.display = 'none';
+        detalle.innerHTML = '';
+        serviciosMap = {};
 
         fetch(`/api/servicios/?empresa_id=${id}`)
           .then(res => {
-            if (!res.ok) {
-              throw new Error('No se pudo obtener los servicios. Intente nuevamente.');
-            }
+            if (!res.ok) throw new Error('Error en la respuesta');
             return res.json();
           })
           .then(data => {
             selSvc.innerHTML = '<option value="" disabled selected>Seleccione un servicio</option>';
+
             if (data.servicios && data.servicios.length > 0) {
               data.servicios.forEach(s => {
-                const nombreCortado = recortarTexto(s.nombre, 30);
-                const descripcion = s.descripcion ? s.descripcion : 'Sin descripción';
                 const opt = document.createElement('option');
                 opt.value = s.id;
-                opt.textContent = `${nombreCortado} – ${descripcion} – RD$${s.precio} – Duración: ${s.duracion} min`;
+                opt.textContent = s.nombre;
                 selSvc.appendChild(opt);
+                serviciosMap[s.id] = s;
               });
               selSvc.disabled = false;
             } else {
-              selSvc.innerHTML = '<option value="" disabled>No hay servicios disponibles para esta empresa.</option>';
+              selSvc.innerHTML = '<option value="" disabled>No hay servicios disponibles.</option>';
             }
           })
           .catch(err => {
             console.error('Error al cargar servicios:', err);
-            selSvc.innerHTML = '<option disabled>Error al cargar servicios. Intente nuevamente.</option>';
-            selSvc.disabled = true;
+            selSvc.innerHTML = '<option value="" disabled>Error al cargar servicios.</option>';
           });
+      });
+
+      selSvc.addEventListener('change', () => {
+        const id = selSvc.value;
+        const s = serviciosMap[id];
+        if (s) {
+          detalle.innerHTML = `
+            <strong>Descripción:</strong> ${s.descripcion || 'Sin descripción'}<br>
+            <strong>Precio:</strong> RD$${s.precio}<br>
+            <strong>Duración:</strong> ${s.duracion} minutos
+          `;
+          detalle.style.display = 'block';
+        } else {
+          detalle.style.display = 'none';
+        }
       });
     });
   </script>

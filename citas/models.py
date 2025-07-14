@@ -4,6 +4,8 @@ from django.core.exceptions import ValidationError
 from django.utils.timezone import now, localtime, make_aware, is_naive
 import datetime
 
+
+
 # Tipos de empresa disponibles
 TIPOS_EMPRESA = [
     ("Peluquería", "Peluquería"),
@@ -167,14 +169,32 @@ class Cita(models.Model):
            #aqui es para que se marque como vecida a la empresa
     
 
-            
+
 class PasswordResetCode(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Usuario")
     code = models.CharField(max_length=6, verbose_name="Código")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Creado en")
+    used = models.BooleanField(default=False, verbose_name="Usado")
 
     def is_valid(self):
-        return now() < self.created_at + datetime.timedelta(minutes=15)
+        """
+        Devuelve True si el código no ha sido usado y fue creado hace menos de 15 minutos.
+        """
+        return not self.used and now() < self.created_at + datetime.timedelta(minutes=15)
+
+    def __str__(self):
+        return f"Código de reinicio para {self.user.username} creado el {self.created_at.strftime('%Y-%m-%d %H:%M:%S')}"
+#class PasswordResetCode(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Usuario")
+    code = models.CharField(max_length=6, verbose_name="Código")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Creado en")
+    used = models.BooleanField(default=False, verbose_name="Usado")
+
+    def is_valid(self):
+        """
+        Devuelve True si el código no ha sido usado y fue creado hace menos de 15 minutos.
+        """
+        return not self.used and now() < self.created_at + datetime.timedelta(minutes=15)
 
     def __str__(self):
         return f"Código de reinicio para {self.user.username} creado en {self.created_at}"

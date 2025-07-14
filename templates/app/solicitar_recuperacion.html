@@ -102,11 +102,15 @@
 <body>
     <div class="login-box">
         <h2>Recuperar Contraseña</h2>
+
         {% if messages %}
             {% for message in messages %}
-                <p class="message {% if message.tags %}{{ message.tags }}{% endif %}">{{ message }}</p>
+                <div class="message {% if message.tags %}{{ message.tags }}{% endif %}">
+                    {{ message }}
+                </div>
             {% endfor %}
         {% endif %}
+
         <form method="POST" autocomplete="off">
             {% csrf_token %}
             <label for="email">Correo Electrónico</label>

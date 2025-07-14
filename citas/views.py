@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.conf import settings
-from .forms import UserForm, ClienteForm, EmpresaForm, CitaForm
+from .forms import UserForm, ClienteForm, EmpresaForm, EditarCitaForm
 from .models import Cliente, Empresa, Cita, DiaLaborable
 from datetime import datetime, time
 from django.utils import timezone
@@ -37,6 +37,11 @@ from telegram.error import TelegramError
 from asgiref.sync import async_to_sync
 from django.utils.timezone import now
 from .utils.enviar_whatsapp import enviar_whatsapp, formatear_numero
+from .models import PasswordResetCode
+import random  
+# views.py
+#from .forms import EditarCitaForm
+
 
 
 
@@ -62,11 +67,13 @@ def home(request):
     
 
 # Login de usuarios
+
 def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
         user = authenticate(request, username=username, password=password)
+        
         if user:
             login(request, user)
             if hasattr(user, 'cliente'):
@@ -81,6 +88,11 @@ def login_view(request):
                 return redirect('app:login')
         else:
             messages.error(request, 'Usuario o contraseña incorrectos.')
+
+    # ✅ Aquí se limpian los mensajes anteriores (de otras vistas)
+    storage = messages.get_messages(request)
+    storage.used = True  # Marcar todos como usados y eliminar
+
     return render(request, 'app/login.html')
 
 # Cierre de sesión
@@ -231,21 +243,40 @@ def cliente_panel(request):
     })
 
 # Panel de empresa
+
 @login_required(login_url='app:login')
 def empresa_panel(request):
     if not hasattr(request.user, 'empresa'):
-        return redirect('app:cliente_panel')  # o un mensaje de error personalizado
+        return redirect('app:cliente_panel')
 
     empresa = request.user.empresa
     citas = Cita.objects.filter(empresa=empresa).order_by('fecha', 'hora')
+    ahora = timezone.now()
+
+    for cita in citas:
+        # Combinar fecha y hora
+        fecha_hora_cita = datetime.combine(cita.fecha, cita.hora)
+        
+        # Hacerla timezone-aware solo si no lo es
+        if timezone.is_naive(fecha_hora_cita):
+            fecha_hora_cita = timezone.make_aware(fecha_hora_cita)
+
+        # Actualizar estado si aplica
+        if cita.estado == 'aceptada' and fecha_hora_cita <= ahora:
+            cita.estado = 'completada'
+            cita.save()
+        elif cita.estado == 'pendiente' and fecha_hora_cita <= ahora:
+            cita.estado = 'vencida'
+            cita.save()
+
     dias_laborables = empresa.dias_laborables.all()
-    servicios = Servicio.objects.filter(empresa=empresa)  # Agregado
+    servicios = Servicio.objects.filter(empresa=empresa)
 
     return render(request, 'app/empresa_panel.html', {
         'empresa': empresa,
         'citas': citas,
         'dias_laborables': dias_laborables,
-        'servicios': servicios,  # Agregado
+        'servicios': servicios,
     })
 
 #telegram noti
@@ -731,26 +762,21 @@ def aceptar_cita(request, cita_id):
 
            
            # Enviar WhatsApp al cliente
-    try:
-       if cita.cliente.telefono:
-          enviar_whatsapp(cita.cliente.telefono, mensaje_cliente)
-    except Exception as e:
-      errores.append("WhatsApp al cliente")
-      logger.error(f"Error al enviar WhatsApp al cliente: {e}")
+    #if cita.cliente.telefono:
+          #enviar_whatsapp(cita.cliente.telefono, mensaje_cliente)
+    #except Exception as e:
+      #errores.append("WhatsApp al cliente")
+      #logger.error(f"Error al enviar WhatsApp al cliente: {e}")
 
 # Enviar WhatsApp a la empresa
     
-    try:
-         if cita.empresa.telefono:
+    #  if cita.empresa.telefono:
 
-            enviar_whatsapp(cita.empresa.telefono, mensaje_empresa)
-    except Exception as e:
-      errores.append("WhatsApp a la empresa")
-      logger.error(f"Error al enviar WhatsApp a la empresa: {e}")
+           # enviar_whatsapp(cita.empresa.telefono, mensaje_empresa)
+    #except Exception as e:
+      #logger.error(f"Error al enviar WhatsApp a la empresa: {e}")
        
        #fin de mensaje de whatsapp en esta parte
-
-
 
     # Mostrar notificación final
     if errores:
@@ -936,7 +962,7 @@ def nueva_cita(request):
             # Convertir fecha y hora
             fecha_hora_naive = datetime.strptime(fecha_hora_str, '%Y-%m-%dT%H:%M')
             fecha_hora = make_aware(fecha_hora_naive)
-
+            #aqui voy a modificar los del cliente cita repetida  el mismo dia
             # Validar que la fecha no sea en el pasado
             if fecha_hora < timezone.now():
                 messages.error(request, 'No puedes agendar una cita en el pasado.')
@@ -1006,6 +1032,7 @@ def nueva_cita(request):
                 f"Hola {cliente.nombre_completo},\n\n"
                 f"Has solicitado una nueva cita:\n"
                 f"🏢 Empresa: {empresa.nombre_empresa}\n"
+                f"🏷️ Tipo de Empresa: {empresa.get_tipo_empresa_display()}\n"
                 f"📜 Descripción: {servicio.descripcion}\n"
                 f"🕒 Duración: {servicio.duracion} minutos\n"
                 f"📅 Fecha: {cita.fecha}\n"
@@ -1019,6 +1046,7 @@ def nueva_cita(request):
             mensaje_empresa = (
                 f"Hola {empresa.nombre_dueno},\n\n"
                 f"Se ha solicitado una nueva cita en tu empresa {empresa.nombre_empresa}:\n"
+                f"🏷️ Tipo de Empresa: {empresa.get_tipo_empresa_display()}\n"
                 f"👤 Cliente: {cliente.nombre_completo}\n"
                 f"📜 Descripción del servicio: {servicio.descripcion}\n"
                 f"🕒 Duración: {servicio.duracion} minutos\n"
@@ -1049,18 +1077,18 @@ def nueva_cita(request):
 
                 #what borrar por sia acaso
                             # Enviar mensaje por WhatsApp al cliente
-           # try:
-               # if cliente.telefono:
-                  #  numero = formatear_numero(cliente.telefono)
+            #try:
+                #if cliente.telefono:
+                   # numero = formatear_numero(cliente.telefono)
                     #if numero:
                        # enviar_whatsapp(numero, mensaje_cliente)
 
 
                # if empresa.telefono:
-                  ###           
-            #except Exception as e:
-               # logger.warning(f"⚠️ Error al enviar WhatsApp: {e}")
-                #messages.warning(request, "Cita creada, pero no se pudo enviar mensaje por WhatsApp.")
+                             
+             #except Exception as e:
+               #logger.warning(f"⚠️ Error al enviar WhatsApp: {e}")
+               #messages.warning(request, "Cita creada, pero no se pudo enviar mensaje por WhatsApp.")
                 
                 #what
 
@@ -1088,34 +1116,27 @@ logger = logging.getLogger(__name__)
 def editar_cita(request, cita_id):
     cita = get_object_or_404(Cita, id=cita_id, cliente__user=request.user)
 
-    ahora = timezone.now()
+    ahora = now()
     cita_datetime = make_aware(datetime.combine(cita.fecha, cita.hora))
 
-    # ✅ Actualizar estado automáticamente si está vencida al entrar o recargar
+    # Cambiar estado a vencida si corresponde
     if cita.estado not in ['completada', 'rechazada', 'vencida'] and cita_datetime < ahora:
         cita.estado = 'vencida'
         cita.save()
 
-    # 🚫 Bloquear edición si ya está en un estado que no lo permite
-    if cita.estado == 'completada':
-        messages.error(request, "❌ No se puede editar una cita que ya está completada.")
-        return redirect('app:cliente_panel')
-
-    if cita.estado == 'rechazada':
-        messages.error(request, "❌ No se puede editar una cita que ya está rechazada.")
-        return redirect('app:cliente_panel')
-
-    if cita.estado == 'vencida':
-        messages.error(request, "❌ No se puede editar una cita que ya ha vencido.")
+    # Bloquear edición si el estado no permite
+    if cita.estado in ['completada', 'rechazada', 'vencida']:
+        messages.error(request, f"❌ No se puede editar una cita que está {cita.estado}.")
         return redirect('app:cliente_panel')
 
     if request.method == 'POST':
-        form = CitaForm(request.POST, instance=cita)
+        form = EditarCitaForm(request.POST, instance=cita)
+
         if form.is_valid():
             cita_nueva = form.save(commit=False)
+            cita_nueva.empresa = cita.empresa  # Mantener empresa original
             servicio = cita_nueva.servicio
 
-            # 🚫 No permitir nueva hora vencida
             nueva_fecha_hora = make_aware(datetime.combine(cita_nueva.fecha, cita_nueva.hora))
             if nueva_fecha_hora < ahora:
                 form.add_error(None, "❌ No puedes seleccionar una fecha y hora pasada.")
@@ -1124,7 +1145,7 @@ def editar_cita(request, cita_id):
             fecha_hora_inicio = nueva_fecha_hora
             fecha_hora_fin = fecha_hora_inicio + timedelta(minutes=servicio.duracion)
 
-            # Verificar si el cliente ya tiene otra cita en otra empresa a la misma hora
+            # Verificar si el cliente tiene otra cita que se cruza
             citas_cliente = Cita.objects.filter(
                 cliente=cita_nueva.cliente,
                 fecha=cita_nueva.fecha,
@@ -1135,10 +1156,10 @@ def editar_cita(request, cita_id):
                 otra_inicio = make_aware(datetime.combine(otra_cita.fecha, otra_cita.hora))
                 otra_fin = otra_inicio + timedelta(minutes=otra_cita.servicio.duracion)
                 if fecha_hora_inicio < otra_fin and fecha_hora_fin > otra_inicio:
-                    form.add_error(None, "❌ Ya tienes una cita en otra empresa en este horario.")
+                    form.add_error(None, "❌ Ya tienes una cita en ese horario.")
                     return render(request, 'app/editar_cita.html', {'form': form, 'cita': cita})
 
-            # Verificar conflictos con otras citas en la misma empresa
+            # Verificar conflictos en la empresa
             citas_conflictivas = Cita.objects.filter(
                 empresa=cita_nueva.empresa,
                 fecha=cita_nueva.fecha,
@@ -1153,49 +1174,57 @@ def editar_cita(request, cita_id):
                     conflictos += 1
 
             if conflictos >= cita_nueva.empresa.capacidad:
-                form.add_error(None, "❌ Ya hay otras citas que se cruzan con ese horario. Intenta con otro.")
+                form.add_error(None, "❌ Ya hay otras citas que se cruzan con ese horario.")
                 return render(request, 'app/editar_cita.html', {'form': form, 'cita': cita})
 
-            cita_actualizada = form.save()
+            cita_nueva.save()
 
+            # Notificar cambios
             notificar_cita(
-                cita_actualizada,
+                cita_nueva,
                 cita_nueva.cliente,
                 cita_nueva.empresa,
                 servicio,
                 cita_nueva.comentarios,
                 "actualizada"
             )
+
             messages.success(request, "✅ Cita actualizada correctamente.")
             return redirect('app:cliente_panel')
+
         else:
-            messages.error(request, "❌ Por favor, corrige los errores en el formulario.")
+            messages.error(request, "❌ Por favor, corrige los errores del formulario.")
+            logger.error(f"Errores en formulario editar_cita: {form.errors}")
+
     else:
-        form = CitaForm(instance=cita)
+        form = EditarCitaForm(instance=cita)
 
     return render(request, 'app/editar_cita.html', {'form': form, 'cita': cita})
 
-
 def notificar_cita(cita, cliente, empresa, servicio, comentarios, accion):
+    comentarios = comentarios.strip() if comentarios else "Sin comentarios"
     asunto = f"Cita {accion.capitalize()} - {empresa.nombre_empresa}"
+    
     mensajes = {
         "cliente": (
             f"Hola {cliente.nombre_completo},\n\n"
             f"Tu cita ha sido {accion}:\n"
             f"🏢 Empresa: {empresa.nombre_empresa}\n"
+            f"🏷️ Tipo de Empresa: {empresa.get_tipo_empresa_display()}\n"
             f"📜 Descripción: {servicio.descripcion}\n"
             f"🕒 Duración: {servicio.duracion} minutos\n"
             f"💰 Precio: {servicio.precio:.2f} DOP\n"
             f"📅 Fecha: {cita.fecha}\n"
             f"🕒 Hora: {cita.hora.strftime('%H:%M')}\n"
             f"💼 Servicio: {servicio.nombre}\n"
-            f"📝 Comentarios: {comentarios or 'Sin comentarios'}\n"
+            f"📝 Comentarios: {comentarios}\n"
             f"📌 Estado: {cita.get_estado_display()}\n\n"
             f"Gracias por usar nuestro servicio."
         ),
         "empresa": (
             f"Hola {empresa.nombre_dueno},\n\n"
             f"Se ha actualizado una cita en tu empresa {empresa.nombre_empresa}:\n"
+            f"🏷️ Tipo de Empresa: {empresa.get_tipo_empresa_display()}\n"
             f"👤 Cliente: {cliente.nombre_completo}\n"
             f"📜 Descripción: {servicio.descripcion}\n"
             f"🕒 Duración: {servicio.duracion} minutos\n"
@@ -1203,9 +1232,9 @@ def notificar_cita(cita, cliente, empresa, servicio, comentarios, accion):
             f"📅 Fecha: {cita.fecha}\n"
             f"🕒 Hora: {cita.hora.strftime('%H:%M')}\n"
             f"💼 Servicio: {servicio.nombre}\n"
-            f"📝 Comentarios: {comentarios or 'Sin comentarios'}\n"
+            f"📝 Comentarios: {comentarios}\n"
             f"📌 Estado: {cita.get_estado_display()}\n\n"
-            f"Gracias por usar nuestro servicio."
+            f"Gracias por usar nuestro sistema."
         )
     }
 
@@ -1248,7 +1277,7 @@ def eliminar_cita(request, cita_id):
     cita = get_object_or_404(Cita, id=cita_id, cliente__user=request.user)
 
     if request.method == 'POST':
-        # Guardar datos antes de eliminar
+        # Guardar datos antes de eliminar       #aqui poner los de validacion de que no -20 no            
         cliente = request.user
         cliente_nombre = cita.cliente.nombre_completo or cliente.username
         cliente_email = cliente.email
@@ -1263,7 +1292,7 @@ def eliminar_cita(request, cita_id):
         fecha = cita.fecha
         hora = cita.hora
         estado = cita.estado
-
+        
         # Eliminar la cita
         cita.delete()
         messages.success(request, '✅ Cita eliminada exitosamente.')
@@ -1300,7 +1329,6 @@ def eliminar_cita(request, cita_id):
                 f"📌 *Estado:* Cancelada\n\n"
                 f"Gracias por usar nuestro sistema. 😊"
             )
-
             # ✉️ Mensaje para la empresa
             mensaje_empresa = (
                 f"Hola {empresa_dueno},\n\n"
@@ -1447,39 +1475,8 @@ def administrar_servicios(request):
     
           #solicitar cita 
 
-def solicitar_recuperacion(request):
-    if request.method == 'POST':
-        email = request.POST.get('email')
-        try:
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            messages.error(request, 'No existe una cuenta con ese correo electrónico.')
-            return redirect('solicitar_recuperacion')
 
-        token = default_token_generator.make_token(user)
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
 
-        reset_path = reverse('restablecer_contraseña', kwargs={'codigo': f'{uid}-{token}'})
-        reset_url = request.build_absolute_uri(reset_path)
-
-        asunto = 'Restablecer tu contraseña'
-        mensaje = render_to_string('citas/recuperacion_email.html', { #revisar
-            'user': user,
-            'reset_url': reset_url,
-        })
-
-        send_mail(
-            asunto,
-            mensaje,
-            settings.DEFAULT_FROM_EMAIL,
-            [user.email],
-            fail_silently=False,
-        )
-
-        messages.success(request, 'Te hemos enviado un correo con las instrucciones para restablecer tu contraseña.')
-        return redirect('solicitar_recuperacion')
-
-    return render(request, 'citas/recuperar.html')
 
 #cita eliminar empresa
 # views.py
@@ -1529,6 +1526,12 @@ def eliminar_cita_empresa(request, cita_id):
         if cita.estado == 'pendiente':
             messages.error(request, 'No se puede eliminar una cita que aún está pendiente.')
             return redirect(reverse('app:empresa_panel'))
+        
+        #esto es para que no me permita borrar una cita aceptada , solo cuando este completada o vencida
+        #if cita.estado == 'aceptada':
+           # messages.error(request, 'No se puede eliminar una cita que aún está aceptada.')
+            #return redirect(reverse('app:empresa_panel'))
+
 
         cita.visible_para_empresa = False
         cita.save()
@@ -1540,113 +1543,170 @@ def eliminar_cita_empresa(request, cita_id):
         return redirect(reverse('app:empresa_panel'))
 
     
+# Asumo que tienes definida esta función y que lanza excepción si no puede enviar mensaje
+# def enviar_mensaje_telegram(user, mensaje):
+#     ...
 
+
+
+import socket
+
+# Generar código de 6 dígitos
+def generar_codigo_6_digitos():
+    return str(random.randint(100000, 999999))
+
+
+# Solicitar recuperación de contraseña
 def solicitar_recuperacion(request):
     if request.method == 'POST':
         email = request.POST.get('email')
 
         try:
-            # Buscar usuario por correo
             user = User.objects.get(email=email)
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
-            token = default_token_generator.make_token(user)
-            codigo = f"{uid}::{token}"
-
-            asunto = 'Código para restablecer tu contraseña'
-            mensaje = (
-                f"Hola {user.username},\n\n"
-                f"Para restablecer tu contraseña, usa este código:\n\n"
-                f"{codigo}\n\n"
-                "Ve a la página de restablecimiento y pega este código para cambiar tu contraseña.\n\n"
-                "Si no solicitaste este correo, ignóralo."
-            )
-
-            # Intentar enviar por correo
-            try:
-                send_mail(
-                    asunto,
-                    mensaje,
-                    'noreply@tusitio.com',  # Asegúrate de que este remitente esté autorizado por tu proveedor SMTP
-                    [email],
-                    fail_silently=False,
-                )
-                messages.success(request, 'Te hemos enviado un correo con el código para restablecer tu contraseña.')
-
-            except (smtplib.SMTPException, socket.error, BadHeaderError):
-                # Intentar enviar por Telegram si falla el correo
-                try:
-                    bot_token = settings.TELEGRAM_BOT_TOKEN
-                    chat_id = settings.TELEGRAM_CHAT_ID
-                    bot = Bot(token=bot_token)
-
-                    mensaje_telegram = (
-                        f"Hola {user.username},\n\n"
-                        f"Tu código de recuperación es:\n\n"
-                        f"{codigo}\n\n"
-                        "Por favor, úsalo en la página de restablecimiento de contraseña."
-                    )
-
-                    # Llamar al método asíncrono usando async_to_sync
-                    async_to_sync(bot.send_message)(chat_id=chat_id, text=mensaje_telegram)
-
-                    messages.success(request, 'No pudimos enviarte un correo. Te hemos enviado el código de recuperación por Telegram.')
-
-                except TelegramError as e:
-                    messages.error(request, f'No se pudo enviar el mensaje por Telegram: {e}')
-
-            return redirect('app:ingresar_codigo')
-
         except User.DoesNotExist:
-            messages.error(request, 'No se encontró una cuenta con ese correo.')
+            messages.error(request, '❌ No existe una cuenta con ese correo electrónico.')
+            return redirect('app:solicitar_recuperacion')
 
+        # Generar y guardar código
+        codigo = generar_codigo_6_digitos()
+        PasswordResetCode.objects.create(user=user, code=codigo)
+
+        asunto = '🔐 Código de recuperación de contraseña'
+        mensaje = f"""
+🔐 ¡Hola {user.username}!
+
+Hemos recibido una solicitud para restablecer tu contraseña.
+
+Tu código de seguridad es: <strong>{codigo}</strong> ✅
+
+⏳ Este código es válido por 15 minutos.
+
+⚠️ Si tú no solicitaste este código, puedes ignorar este mensaje de forma segura.
+
+Gracias por confiar en nosotros.
+"""
+
+        # También una versión sin HTML para el correo
+        mensaje_plano = f"""
+🔐 ¡Hola {user.username}!
+
+Hemos recibido una solicitud para restablecer tu contraseña.
+
+Tu código de seguridad es: {codigo} ✅
+
+Este código es válido por 15 minutos.
+
+⚠️ Si tú no solicitaste este código, puedes ignorar este mensaje de forma segura.
+
+Gracias por confiar en nosotros.
+"""
+
+        enviado = False
+
+        # Enviar por correo
+        try:
+            send_mail(
+                asunto,
+                mensaje_plano,  # solo texto plano
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+                fail_silently=False,
+            )
+            messages.success(request, '✅ Te hemos enviado un código de 6 dígitos al correo.')
+            enviado = True
+            request.session['recuperacion_user_id'] = user.id
+        except (socket.timeout, socket.error):
+            messages.warning(request, '⚠️ No se pudo enviar el correo por problemas de conexión. Intentando vía Telegram...')
         except Exception as e:
-            messages.error(request, f'Ocurrió un error inesperado. Por favor, intenta más tarde: {str(e)}')
+            messages.warning(request, f'⚠️ Error al enviar el correo: {str(e)}. Intentando vía Telegram...')
+
+        # Enviar por Telegram si no se pudo por correo
+        if not enviado:
+            chat_id = None
+            cliente = Cliente.objects.filter(user=user).first()
+            empresa = Empresa.objects.filter(user=user).first()
+
+            if cliente and cliente.telegram_chat_id:
+                chat_id = str(cliente.telegram_chat_id)
+            elif empresa and empresa.telegram_chat_id:
+                chat_id = str(empresa.telegram_chat_id)
+
+            if chat_id:
+                try:
+                    enviado = enviar_mensaje_telegram(chat_id, mensaje)
+                    if enviado:
+                        messages.success(request, '✅ Te hemos enviado el código por Telegram.')
+                        request.session['recuperacion_user_id'] = user.id
+                    else:
+                        messages.error(request, '❌ Error al enviar el código por Telegram.')
+                except Exception as e:
+                    messages.error(request, f'❌ Error enviando a Telegram: {str(e)}')
+            else:
+                messages.error(request, '❌ Este usuario no tiene Telegram registrado.')
+
+        # Si se envió correctamente
+        if enviado:
+            return redirect('app:ingresar_codigo')
+        else:
+            # Borra el código si no fue enviado para no dejar códigos inválidos en la DB
+            PasswordResetCode.objects.filter(user=user, code=codigo).delete()
+            return redirect('app:solicitar_recuperacion')
 
     return render(request, 'app/solicitar_recuperacion.html')
 
-def ingresar_codigo(request):
+
+# Mostrar formulario para ingresar el código
+def verificar_codigo(request):
     return render(request, 'app/ingresar_codigo.html')
 
 
+# Restablecer la contraseña con código
 def restablecer_contraseña_con_codigo(request):
     if request.method == 'POST':
         codigo = request.POST.get('codigo')
         nueva_password = request.POST.get('nueva_password')
         confirmar_password = request.POST.get('confirmar_password')
 
-        if not codigo:
-            messages.error(request, '⚠️ Debes ingresar el código que te enviamos por correo.')
-            return redirect('app:restablecer_contraseña')  # Se puede redirigir a la misma vista
-
-        if not nueva_password or not confirmar_password:
-            messages.error(request, '⚠️ Debes ingresar y confirmar tu nueva contraseña.')
-            return redirect('app:restablecer_contraseña')
+        if not codigo or not nueva_password or not confirmar_password:
+            messages.error(request, '⚠️ Todos los campos son obligatorios.')
+            return redirect('app:ingresar_codigo')
 
         if nueva_password != confirmar_password:
             messages.error(request, '❌ Las contraseñas no coinciden.')
-            return redirect('app:restablecer_contraseña')
+            return redirect('app:ingresar_codigo')
 
         try:
-            uidb64, token = codigo.split('::')
-            uid = force_str(urlsafe_base64_decode(uidb64))
-            user = User.objects.get(pk=uid)
-        except (User.DoesNotExist, ValueError, TypeError, OverflowError):
-            user = None
+            user_id = request.session.get('recuperacion_user_id')
+            if not user_id:
+                messages.error(request, '⚠️ Sesión expirada. Por favor, solicita el código de nuevo.')
+                return redirect('app:solicitar_recuperacion')
 
-        if user is not None and default_token_generator.check_token(user, token):
+            user = User.objects.get(id=user_id)
+            reset_entry = PasswordResetCode.objects.filter(user=user, code=codigo).last()
+
+            if not reset_entry or not reset_entry.is_valid():
+                messages.error(request, '❌ Código inválido o expirado.')
+                return redirect('app:ingresar_codigo')
+
+            # Guardar nueva contraseña
             user.set_password(nueva_password)
             user.save()
-            messages.success(request, '✅ ¡Contraseña restablecida correctamente! Ahora puedes iniciar sesión.')
+
+            # Eliminar código usado
+            reset_entry.delete()
+
+            # Limpiar sesión
+            if 'recuperacion_user_id' in request.session:
+                del request.session['recuperacion_user_id']
+
+            messages.success(request, '✅ Contraseña restablecida correctamente. Ya puedes iniciar sesión.')
             return redirect('app:login')
-        else:
-            messages.error(request, '❌ El código es inválido o ha expirado.')
-            return redirect('app:restablecer_contraseña')
 
-    # Si es GET, muestra el formulario ingresar_codigo.html
+        except Exception as e:
+            messages.error(request, f'Ocurrió un error: {str(e)}')
+            return redirect('app:ingresar_codigo')
+
     return render(request, 'app/ingresar_codigo.html')
-
-    # Mostrar formulario de restablecer contraseña con código
-    return render(request, 'app/restablecer_contraseña.html')
 
 def obtener_servicios_por_empresa(request):
     """
@@ -1785,3 +1845,70 @@ def csrf_failure(request, reason=""):
     #call_command("enviar_recordatorios")
    # return JsonResponse({"mensaje": "Recordatorios enviados"})
            #probar solamente
+
+
+
+from django.db.models.functions import TruncMonth
+
+from django.db.models import Sum
+
+
+@login_required
+def historial_citas_empresa(request):
+    empresa = Empresa.objects.filter(user=request.user).first()
+    if not empresa:
+        return render(request, 'app/no_empresa.html')
+
+    historial = Cita.objects.filter(empresa=empresa).order_by('-fecha', '-hora')
+
+    ahora = datetime.now()
+
+    for cita in historial:
+        # Verificamos si la cita ya pasó y actualizamos el estado si es necesario
+        fecha_hora_cita = datetime.combine(cita.fecha, cita.hora)
+
+        if cita.estado == 'aceptada' and fecha_hora_cita <= ahora:
+            cita.estado = 'completada'
+            cita.save()
+        elif cita.estado == 'pendiente' and fecha_hora_cita <= ahora:
+            cita.estado = 'vencida'
+            cita.save()
+
+        # Calculamos el total del servicio si existe
+        cita.total_servicios = cita.servicio.precio if cita.servicio else 0
+
+    # Generamos el resumen mensual de ingresos por servicios completados
+    resumen_qs = (
+        Cita.objects.filter(empresa=empresa, estado='completada')
+        .annotate(mes=TruncMonth('fecha'))
+        .values('mes')
+        .annotate(total=Sum('servicio__precio'))
+        .order_by('mes')
+    )
+
+    resumen_mensual = {}
+    total_ingresos = 0
+    ingreso_actual_mes = 0
+    mes_actual = datetime.now().strftime('%b %Y')
+
+    for item in resumen_qs:
+        if item['mes']:
+            mes_str = item['mes'].strftime('%b %Y')
+            total_mes = float(item['total'] or 0)
+            resumen_mensual[mes_str] = total_mes
+            total_ingresos += total_mes
+            if mes_str == mes_actual:
+                ingreso_actual_mes = total_mes
+
+    context = {
+        'historial': historial,
+        'total_ingresos': total_ingresos,
+        'ingreso_actual_mes': ingreso_actual_mes,
+        'mes_actual': mes_actual,
+        'resumen_mensual_labels': list(resumen_mensual.keys()),
+        'resumen_mensual_values': list(resumen_mensual.values()),
+    }
+
+    return render(request, 'app/historial_citas.html', context)
+
+

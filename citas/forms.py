@@ -119,7 +119,10 @@ class EmpresaForm(forms.ModelForm):
 
 
 # Formulario para agendar citas
-class CitaForm(forms.ModelForm):
+
+
+#class CitaForm(forms.ModelForm):
+#class EditarCitaForm(forms.ModelForm):
     empresa = forms.ModelChoiceField(
         queryset=Empresa.objects.all(),
         widget=forms.Select(attrs={'class': 'form-control'}),
@@ -138,9 +141,14 @@ class CitaForm(forms.ModelForm):
         model = Cita
         fields = ['empresa', 'fecha', 'hora']
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Deshabilitar empresa para que no se pueda cambiar al editar
+        self.fields['empresa'].disabled = True
 
 # Formulario para crear o editar servicios
-class ServicioForm(forms.ModelForm):
+
+#class ServicioForm(forms.ModelForm):
     class Meta:
         model = Servicio
         fields = ['nombre', 'descripcion', 'precio', 'duracion']
@@ -170,3 +178,57 @@ class ServicioForm(forms.ModelForm):
             }),
         }
 
+class EditarCitaForm(forms.ModelForm):
+    fecha = forms.DateField(
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        label="Fecha"
+    )
+    hora = forms.TimeField(
+        widget=forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
+        label="Hora"
+    )
+
+    class Meta:
+        model = Cita
+        fields = ['fecha', 'hora']  # empresa NO va aquí
+
+    # Ya no necesitas __init__ para deshabilitar empresa porque no está en el form
+
+
+
+class ServicioForm(forms.ModelForm):
+    class Meta:
+        model = Servicio
+        fields = ['nombre', 'descripcion', 'precio', 'duracion']
+        widgets = {
+            'nombre': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Nombre del servicio',
+                'required': True,
+            }),
+            'descripcion': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Descripción del servicio (máx. 120 caracteres)',
+                'maxlength': 120,  # Limita visualmente en el navegador
+                'required': False,
+            }),
+            'precio': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Precio del servicio',
+                'min': 0,
+                'required': True,
+            }),
+            'duracion': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Duración en minutos',
+                'min': 1,
+                'required': True,
+            }),
+        }
+
+    def clean_descripcion(self):
+        descripcion = self.cleaned_data.get('descripcion', '')
+        if len(descripcion) > 120:
+            raise forms.ValidationError("La descripción no debe superar los 120 caracteres.")
+        return descripcion
