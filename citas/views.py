@@ -698,6 +698,12 @@ def aceptar_cita(request, cita_id):
 
     if cita.estado == 'pendiente' and cita_datetime < ahora:
         messages.error(request, '⚠️ Esta cita ya venció. Recarga la página.')
+        # Si no está vencida, acepta la cita
+     
+    cita.estado = 'aceptada'
+    cita.save()   
+    
+
 
     if request.user != cita.empresa.user:
         messages.error(request, '❌ No tienes permiso para aceptar esta cita.')
