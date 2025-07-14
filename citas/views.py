@@ -699,7 +699,7 @@ def aceptar_cita(request, cita_id):
     if cita.estado == 'pendiente' and cita_datetime < ahora:
         messages.error(request, '⚠️ Esta cita ya venció. Recarga la página.')
         # Si no está vencida, acepta la cita
-          return redirect('app:empresa_panel')
+        return redirect('app:empresa_panel')
      
     cita.estado = 'aceptada'
     cita.save()   
