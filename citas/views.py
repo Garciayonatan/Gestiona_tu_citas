@@ -693,6 +693,13 @@ logger = logging.getLogger(__name__)
 def aceptar_cita(request, cita_id):
     cita = get_object_or_404(Cita, id=cita_id)
 
+     # Verificar si la cita ya está vencida
+    ahora = timezone.now()
+    cita_datetime = datetime.combine(cita.fecha, cita.hora)
+
+    if cita.estado == 'pendiente' and cita_datetime < ahora:
+        messages.error(request, '⚠️ Esta cita ya está vencida y no puede ser aceptada.')
+
     if request.user != cita.empresa.user:
         messages.error(request, '❌ No tienes permiso para aceptar esta cita.')
         return redirect('app:empresa_panel')
