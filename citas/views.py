@@ -1303,7 +1303,8 @@ def eliminar_cita(request, cita_id):
          # Validar que si la cita está aceptada y faltan 20 minutos o menos no se pueda
          #comienza aqui
         ahora = timezone.now()
-        cita_datetime = timezone.make_aware(
+        cita_datetime = cita.fecha_hora (
+                                       
             datetime.combine(fecha, hora),
             timezone.get_current_timezone()
         )
