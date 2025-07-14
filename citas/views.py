@@ -1297,7 +1297,23 @@ def eliminar_cita(request, cita_id):
     cita = get_object_or_404(Cita, id=cita_id, cliente__user=request.user)
 
     if request.method == 'POST':
-        # Guardar datos antes de eliminar       #aqui poner los de validacion de que no -20 no            
+        # Guardar datos antes de eliminar       #aqui poner los de validacion de que no -20 no 
+
+
+         # Validar que si la cita está aceptada y faltan 20 minutos o menos no se pueda
+         #comienza aqui
+        ahora = timezone.now()
+        cita_datetime = timezone.make_aware(
+            datetime.combine(fecha, hora),
+            timezone.get_current_timezone()
+        )
+        if estado == 'aceptada' and (cita_datetime - ahora) <= timedelta(minutes=20):
+            messages.error(
+                request,
+                "🚫 No puedes eliminar una cita aceptada si faltan 20 minutos o menos para su inicio."
+            )
+            return redirect('app:cliente_panel')        
+            #termina aqui la validacion   
         cliente = request.user
         cliente_nombre = cita.cliente.nombre_completo or cliente.username
         cliente_email = cliente.email
