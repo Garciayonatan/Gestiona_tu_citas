@@ -809,6 +809,13 @@ def rechazar_cita(request, cita_id):
     if request.user != cita.empresa.user:
         messages.error(request, '❌ No tienes permiso para rechazar esta cita.')
         return redirect('app:empresa_panel')
+        # Verificar si la cita ya venció
+    ahora = now()
+    cita_datetime = make_aware(datetime.combine(cita.fecha, cita.hora))
+
+    if cita.estado == 'pendiente' and cita_datetime < ahora:
+        messages.error(request, '⚠️ Esta cita ya venció. Recarga la página.')
+        return redirect('app:empresa_panel')
 
     # Rechazar la cita
     cita.estado = 'rechazada'
