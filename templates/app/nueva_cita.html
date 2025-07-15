@@ -113,7 +113,7 @@
 
       <label for="empresa">Empresa:</label>
       <select name="empresa" id="empresa" required>
-        <option value="" disabled selected>Seleccione una empresa</option>
+        <option value="" disabled {% if not empresa_seleccionada %}selected{% endif %}>Seleccione una empresa</option>
         {% for empresa in empresas %}
           <option value="{{ empresa.id }}"
             {% if empresa_seleccionada and empresa_seleccionada|stringformat:"s" == empresa.id|stringformat:"s" %}selected{% endif %}>
@@ -156,7 +156,7 @@
       <!-- BLOQUE para confirmar repetición de servicio -->
       {% if servicio_repetido %}
         <div class="message error" id="mensaje-repetido" style="margin-top:20px;">
-          ⚠️ Ya has realizado este servicio antes con esta empresa.<br>
+          ⚠️ Ya has realizado este servicio antes con esta empresa el mismo día.<br>
           ¿Deseas reservarlo nuevamente?
         </div>
 
