@@ -1331,7 +1331,13 @@ def notificar_cita(cita, cliente, empresa, servicio, comentarios, accion):
 
 @login_required(login_url='app:login')
 def eliminar_cita(request, cita_id):
-    cita = get_object_or_404(Cita, id=cita_id, cliente__user=request.user)
+    #cita = get_object_or_404(Cita, id=cita_id, cliente__user=request.user)
+    try:
+            cita = Cita.objects.get(id=cita_id, cliente__user=request.user)
+    except Cita.DoesNotExist:
+             messages.error(request, "❌ Esta cita ya fue eliminada o no existe.")
+             return redirect('app:cliente_panel')
+              #aqui termina , esto es por el error que salia al borrar
 
     if request.method == 'POST':
         # Guardar datos antes de eliminar    
