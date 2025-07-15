@@ -115,7 +115,10 @@
       <select name="empresa" id="empresa" required>
         <option value="" disabled selected>Seleccione una empresa</option>
         {% for empresa in empresas %}
-          <option value="{{ empresa.id }}">{{ empresa.nombre_empresa }}</option>
+          <option value="{{ empresa.id }}"
+            {% if empresa_seleccionada and empresa_seleccionada|stringformat:"s" == empresa.id|stringformat:"s" %}selected{% endif %}>
+            {{ empresa.nombre_empresa }}
+          </option>
         {% endfor %}
       </select>
 
@@ -123,19 +126,54 @@
       <div class="direccion-empresa" id="direccion-empresa"></div>
 
       <label for="servicio">Servicio:</label>
-      <select name="servicio" id="servicio" required disabled>
-        <option value="" disabled selected>Seleccione una empresa primero</option>
+      <select name="servicio" id="servicio" required {% if not empresa_seleccionada %}disabled{% endif %}>
+        {% if not empresa_seleccionada %}
+          <option value="" disabled selected>Seleccione una empresa primero</option>
+        {% else %}
+          <option value="" disabled selected>Seleccione un servicio</option>
+          <!-- Opciones se llenarán con JS -->
+        {% endif %}
       </select>
 
       <div class="servicio-detalle" id="detalle-servicio"></div>
 
       <label for="fecha_hora">Fecha y Hora:</label>
-      <input type="datetime-local" name="fecha_hora" id="fecha_hora" required />
+      <input
+        type="datetime-local"
+        name="fecha_hora"
+        id="fecha_hora"
+        required
+        value="{{ fecha_hora|default:'' }}"
+      />
 
       <label for="comentarios">Comentarios (opcional):</label>
-      <textarea name="comentarios" id="comentarios" placeholder="Agrega algún comentario adicional..."></textarea>
+      <textarea
+        name="comentarios"
+        id="comentarios"
+        placeholder="Agrega algún comentario adicional..."
+      >{{ comentarios|default:'' }}</textarea>
 
-      <button type="submit">Solicitar Cita</button>
+      <!-- BLOQUE para confirmar repetición de servicio -->
+      {% if servicio_repetido %}
+        <div class="message error" id="mensaje-repetido" style="margin-top:20px;">
+          ⚠️ Ya has realizado este servicio antes con esta empresa.<br>
+          ¿Deseas reservarlo nuevamente?
+        </div>
+
+        <!-- Campos ocultos para mantener datos -->
+        <input type="hidden" name="empresa" value="{{ empresa_seleccionada }}">
+        <input type="hidden" name="servicio" value="{{ servicio_seleccionado }}">
+        <input type="hidden" name="fecha_hora" value="{{ fecha_hora }}">
+        <input type="hidden" name="comentarios" value="{{ comentarios }}">
+        <input type="hidden" name="confirmar_repeticion" value="1">
+
+        <button type="submit">
+          Sí, quiero reservar de nuevo
+        </button>
+      {% else %}
+        <button type="submit">Solicitar Cita</button>
+      {% endif %}
+
     </form>
 
     <a href="{% url 'app:cliente_panel' %}">Volver al Panel</a>
@@ -156,6 +194,40 @@
           },
         {% endfor %}
       };
+
+      // Mostrar dirección y cargar servicios si hay empresa seleccionada (para mantener estado en recarga)
+      if(selEmp.value){
+        if (empresasMap[selEmp.value]) {
+          direccionDiv.textContent = "📍 Dirección: " + empresasMap[selEmp.value].direccion;
+          direccionDiv.style.display = 'block';
+        }
+        fetch(`/api/servicios/?empresa_id=${selEmp.value}`)
+          .then(res => {
+            if (!res.ok) throw new Error('Error en la respuesta');
+            return res.json();
+          })
+          .then(data => {
+            selSvc.innerHTML = '<option value="" disabled selected>Seleccione un servicio</option>';
+            if (data.servicios && data.servicios.length > 0) {
+              data.servicios.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.id;
+                opt.textContent = s.nombre;
+                if("{{ servicio_seleccionado }}" == s.id.toString()) opt.selected = true;
+                selSvc.appendChild(opt);
+                serviciosMap[s.id] = s;
+              });
+              selSvc.disabled = false;
+            } else {
+              selSvc.innerHTML = '<option value="" disabled>No hay servicios disponibles.</option>';
+              selSvc.disabled = true;
+            }
+          })
+          .catch(err => {
+            console.error('Error al cargar servicios:', err);
+            selSvc.innerHTML = '<option value="" disabled>Error al cargar servicios.</option>';
+          });
+      }
 
       selEmp.addEventListener('change', () => {
         const id = selEmp.value;

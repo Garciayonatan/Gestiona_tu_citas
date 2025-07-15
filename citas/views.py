@@ -982,7 +982,36 @@ def nueva_cita(request):
             # Convertir fecha y hora
             fecha_hora_naive = datetime.strptime(fecha_hora_str, '%Y-%m-%dT%H:%M')
             fecha_hora = make_aware(fecha_hora_naive)
+
             #aqui voy a modificar los del cliente cita repetida  el mismo dia
+
+                                                                # ------------------------------------------------------------------
+             # Si el cliente ya completó este mismo servicio con esta empresa,
+            # pedimos confirmación antes de crear otra cita.
+            confirmar_repeticion = request.POST.get('confirmar_repeticion') == '1'
+
+            cita_completada = Cita.objects.filter(
+             cliente=cliente,
+             empresa=empresa,
+             servicio=servicio,
+             estado='completada'  # estado que marca la cita finalizada
+             ).exists()
+
+            if cita_completada and not confirmar_repeticion:
+              # Todavía NO confirmó ⇒ mostramos mensaje y botón de confirmar
+                    return render(
+               request,
+                'app/nueva_cita.html',
+        {
+            'empresas': empresas,
+            'servicio_repetido': True,
+            'empresa_seleccionada': empresa.id,
+            'servicio_seleccionado': servicio.id,
+            'fecha_hora': fecha_hora_str,
+            'comentarios': comentarios,
+        }   #aqui termina la validacion
+    )
+        
             # Validar que la fecha no sea en el pasado
             if fecha_hora < timezone.now():
                 messages.error(request, 'No puedes agendar una cita en el pasado.')
