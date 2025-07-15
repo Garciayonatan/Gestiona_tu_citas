@@ -1145,12 +1145,12 @@ def editar_cita(request, cita_id):
         cita.save()
     #aqui esta la validacion de que no puede eliminar faltando 20 minuto
 
-    if cita.estado == 'aceptada' and (cita_datetime - ahora) <= timedelta(minutes=20):
-      messages.error(request, "🚫 No puedes modificar una cita faltando 20 minutos o menos para su inicio.")
-      return redirect('app:cliente_panel')
+    # Obtener la hora actual
+       # ahora = now()
 
+# Combinar fecha y hora de la cita
+# Obtener la hora actual
     #y aqui termina esto 
-
 
     # Bloquear edición si el estado no permite
     if cita.estado in ['completada', 'rechazada', 'vencida']:
