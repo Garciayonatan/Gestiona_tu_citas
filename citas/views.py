@@ -1316,7 +1316,7 @@ def eliminar_cita(request, cita_id):
          # Validar que si la cita está aceptada y faltan 20 minutos o menos no se pueda
          #comienza aqui
  
-       
+    
             #termina aqui la validacion   
         cliente = request.user
         cliente_nombre = cita.cliente.nombre_completo or cliente.username
