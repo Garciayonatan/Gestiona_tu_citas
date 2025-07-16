@@ -28,6 +28,8 @@ urlpatterns = [
     path('cliente/panel/', views.cliente_panel, name='cliente_panel'),
     path('empresa/panel/', views.empresa_panel, name='empresa_panel'),
 
+    path('empresa/<int:empresa_id>/editar/', views.editar_empresa, name='editar_empresa'),
+
     # Gestión de citas
     path('cita/nueva/', views.nueva_cita, name='nueva_cita'),
     path('cita/aceptar/<int:cita_id>/', views.aceptar_cita, name='aceptar_cita'),
@@ -52,6 +54,9 @@ urlpatterns = [
     # API servicios
     path('api/servicios/', obtener_servicios_por_empresa, name='api_servicios'),
 
+#''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+                 #'''''''                                                                         #borrar
       #borrar esto hoy 10 del 7 
     path('empresa/historial-citas/', historial_citas_empresa, name='historial_citas_empresa'),
     #borrar si no quiero esto de historial

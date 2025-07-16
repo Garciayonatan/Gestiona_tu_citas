@@ -120,9 +120,7 @@ class EmpresaForm(forms.ModelForm):
 
 # Formulario para agendar citas
 
-
-#class CitaForm(forms.ModelForm):
-#class EditarCitaForm(forms.ModelForm):
+class CitaForm(forms.ModelForm):
     empresa = forms.ModelChoiceField(
         queryset=Empresa.objects.all(),
         widget=forms.Select(attrs={'class': 'form-control'}),
@@ -145,6 +143,7 @@ class EmpresaForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         # Deshabilitar empresa para que no se pueda cambiar al editar
         self.fields['empresa'].disabled = True
+
 
 # Formulario para crear o editar servicios
 
@@ -178,6 +177,7 @@ class EmpresaForm(forms.ModelForm):
             }),
         }
 
+
 class EditarCitaForm(forms.ModelForm):
     fecha = forms.DateField(
         widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
@@ -193,7 +193,6 @@ class EditarCitaForm(forms.ModelForm):
         fields = ['fecha', 'hora']  # empresa NO va aquí
 
     # Ya no necesitas __init__ para deshabilitar empresa porque no está en el form
-
 
 
 class ServicioForm(forms.ModelForm):
@@ -232,3 +231,61 @@ class ServicioForm(forms.ModelForm):
         if len(descripcion) > 120:
             raise forms.ValidationError("La descripción no debe superar los 120 caracteres.")
         return descripcion
+    
+
+#borrar si no funciona ahora mismo
+class EditarEmpresaForm(forms.ModelForm):
+    username = forms.CharField(label='Nombre de Usuario', max_length=150)
+    email = forms.EmailField(label='Correo Electrónico')
+
+    class Meta:
+        model = Empresa
+        fields = ['username', 'email', 'nombre_empresa', 'nombre_dueno', 'tipo_empresa', 'direccion', 'telefono']
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+
+        self.user_instance = user  # guarda referencia al usuario actual
+
+        # Inicializar campos username y email si se pasa el usuario
+        if self.user_instance:
+            self.fields['username'].initial = self.user_instance.username
+            self.fields['email'].initial = self.user_instance.email
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        # Excluir el usuario actual al verificar si ya existe
+        if User.objects.exclude(pk=self.user_instance.pk).filter(username=username).exists():
+            raise forms.ValidationError("❌ Este nombre de usuario ya está en uso.")
+        return username
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        # Excluir el usuario actual al verificar si ya existe el email
+        if User.objects.exclude(pk=self.user_instance.pk).filter(email=email).exists():
+            raise forms.ValidationError("❌ Este correo electrónico ya está en uso.")
+        return email
+
+    def save(self, commit=True):
+        empresa = super().save(commit=False)
+
+        # Actualizar el usuario vinculado
+        if self.user_instance:
+            self.user_instance.username = self.cleaned_data.get('username')
+            self.user_instance.email = self.cleaned_data.get('email')
+            if commit:
+                self.user_instance.save()
+
+        if commit:
+            empresa.user = self.user_instance  # aseguramos que esté asignado
+            empresa.save()
+            self.save_m2m()
+
+        return empresa
+
+#class EditarEmpresaForm(forms.ModelForm):
+
+    class Meta:
+        model = Empresa
+        fields = ['nombre_empresa', 'nombre_dueno', 'tipo_empresa', 'direccion', 'telefono']

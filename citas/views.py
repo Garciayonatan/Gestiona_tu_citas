@@ -39,6 +39,9 @@ from django.utils.timezone import now
 from .utils.enviar_whatsapp import enviar_whatsapp, formatear_numero
 from .models import PasswordResetCode
 import random  
+from .forms import EditarEmpresaForm
+
+
 # views.py
 #from .forms import EditarCitaForm
 
@@ -1995,3 +1998,28 @@ def historial_citas_empresa(request):
     return render(request, 'app/historial_citas.html', context)
 
 
+
+   # borrar sino funciona editar empresa
+
+
+@login_required
+def editar_empresa(request, empresa_id):
+    empresa = get_object_or_404(Empresa, pk=empresa_id)
+
+    # Verificar que el usuario autenticado es el dueño de la empresa
+    if request.user != empresa.user:
+        messages.error(request, "❌ No tienes permiso para editar esta empresa.")
+        return redirect('app:empresa_panel')  # Asegúrate que esta URL exista
+
+    if request.method == 'POST':
+        form = EditarEmpresaForm(request.POST, instance=empresa, user=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "✅ Empresa actualizada correctamente.")
+            return redirect('app:editar_empresa', empresa_id=empresa.id)
+        else:
+            messages.error(request, "❌ Por favor corrige los errores del formulario.")
+    else:
+        form = EditarEmpresaForm(instance=empresa, user=request.user)
+
+    return render(request, 'editar_empresa.html', {'form': form})
