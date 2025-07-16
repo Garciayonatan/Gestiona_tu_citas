@@ -50,6 +50,7 @@ class Empresa(models.Model):
     nombre_dueno = models.CharField(max_length=150, verbose_name="Nombre del Dueño")
     tipo_empresa = models.CharField(max_length=50, choices=TIPOS_EMPRESA, verbose_name="Tipo de Empresa")
     telefono = models.CharField(max_length=20, verbose_name="Teléfono")
+    email_empresa = models.EmailField(verbose_name="Correo Electrónico de la Empresa", max_length=255, blank=True, null=True)
     direccion = models.CharField(max_length=255, verbose_name="Dirección", blank=True, null=True)
     telegram_chat_id = models.CharField(max_length=50, blank=True, null=True)
     hora_inicio = models.TimeField(default=datetime.time(8, 0), verbose_name="Hora de Apertura")
