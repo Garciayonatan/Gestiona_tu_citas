@@ -288,6 +288,7 @@ def empresa_panel(request):
 import logging
 import requests
 import json
+import re
 from decouple import config
 from django.http import JsonResponse, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
@@ -377,16 +378,23 @@ class TelegramWebhookView(View):
 
                 else:
                     esperando_telefono[chat_id] = True
-                    enviar_mensaje_telegram(chat_id, "📱 Bienvenido. Por favor, responde con el número de teléfono con el que te registraste.")
+                    enviar_mensaje_telegram(chat_id, "📱 Bienvenido. Por favor, responde con el número de teléfono con el que te registraste (puede incluir guiones).")
                     return JsonResponse({"ok": True})
 
             # Paso 3: Si está esperando el número
-            if chat_id in esperando_telefono and texto and texto.isdigit():
-                telefono = texto.strip()
+            if chat_id in esperando_telefono and texto:
+                telefono_original = texto.strip()
 
-                # Verifica si el número existe
-                cliente = Cliente.objects.filter(telefono=telefono).first()
-                empresa = Empresa.objects.filter(telefono=telefono).first()
+                # Normalizar el número: eliminar cualquier carácter que no sea número
+                telefono_limpio = re.sub(r'\D', '', telefono_original)
+
+                if not telefono_limpio.isdigit():
+                    enviar_mensaje_telegram(chat_id, "❌ El número ingresado no es válido. Por favor, intenta de nuevo.")
+                    return JsonResponse({"ok": True})
+
+                # Buscar por número limpio
+                cliente = Cliente.objects.filter(telefono=telefono_limpio).first()
+                empresa = Empresa.objects.filter(telefono=telefono_limpio).first()
 
                 if cliente:
                     if cliente.telegram_chat_id:
@@ -435,6 +443,7 @@ class EnviarMensajeTelegramView(View):
             return JsonResponse({'status': 'mensaje enviado'})
         else:
             return JsonResponse({'error': 'error enviando mensaje'}, status=500)
+
 
 # Editar horario
 # Editar horario
