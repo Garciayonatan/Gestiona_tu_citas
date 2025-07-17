@@ -1804,10 +1804,19 @@ def formatear_con_coma_miles(valor):
     except Exception:
         return valor
 
+def formatear_con_coma_miles(valor):
+    try:
+        # Convierte a entero si es decimal, formatea con coma como separador de miles
+        return f"{int(round(valor)):,}".replace(",", ".")
+    except:
+        return valor
+
+
 def obtener_servicios_por_empresa(request):
     """
     Endpoint para obtener servicios por ID de empresa.
-    Devuelve los servicios con sus detalles: nombre, descripción, precio y duración.
+    Devuelve los servicios con sus detalles: nombre, descripción, precio y duración,
+    y el precio está formateado con coma para los miles.
     """
     empresa_id = request.GET.get('empresa_id')
 
@@ -1827,16 +1836,16 @@ def obtener_servicios_por_empresa(request):
             servicios_list.append({
                 'id': servicio['id'],
                 'nombre': servicio['nombre'],
-                'descripcion': servicio['descripcion'],
-                'precio': formatear_con_coma_miles(servicio['precio']),
-                'duracion': servicio['duracion']
+                'descripcion': servicio['descripcion'] or 'Sin descripción',
+                'precio': f"RD$ {formatear_con_coma_miles(servicio['precio'])}",
+                'duracion': f"{servicio['duracion']} min" if servicio['duracion'] else "No especificado"
             })
 
         return JsonResponse({'servicios': servicios_list}, status=200)
 
     except Exception as e:
         return JsonResponse({'message': 'Error al procesar la solicitud.', 'error': str(e)}, status=500)
-
+    
 @requires_csrf_token
 def csrf_failure(request, reason=""):
     return render(request, "csrf_failure.html", status=403)
