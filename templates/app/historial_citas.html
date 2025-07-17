@@ -266,12 +266,14 @@
       <tbody>
         {% for cita in historial %}
         <tr>
-          <td data-label="Cliente">{{ cita.cliente.nombre_completo }}</td>
-          <td data-label="Servicio">{{ cita.servicio.nombre }} (RD$ {{ cita.servicio.precio|floatformat:2 }})</td>
-          <td data-label="Fecha">{{ cita.fecha }}</td>
-          <td data-label="Hora">{{ cita.hora }}</td>
-          <td data-label="Estado">{{ cita.get_estado_display }}</td>
-          <td data-label="Total">RD$ {{ cita.total_servicios|floatformat:2 }}</td>
+          <td data-label="Cliente">{{ cita.cliente.nombre_completo|default:"N/A" }}</td>
+          <td data-label="Servicio">
+            {{ cita.servicio.nombre|default:"Servicio no definido" }} (RD$ {{ cita.servicio.precio|default:0|floatformat:2 }})
+          </td>
+          <td data-label="Fecha">{{ cita.fecha|date:"d/m/Y" }}</td>
+          <td data-label="Hora">{{ cita.hora|time:"H:i" }}</td>
+          <td data-label="Estado">{{ cita.get_estado_display|default:"-" }}</td>
+          <td data-label="Total">RD$ {{ cita.total_servicios|default:0|floatformat:2 }}</td>
         </tr>
         {% empty %}
         <tr>
@@ -285,7 +287,7 @@
   </main>
 
   <section class="resumen" role="region" aria-label="Ingresos del mes">
-    <p><strong>💰 Acumulado durante {{ mes_actual }}:</strong> RD$ {{ ingreso_actual_mes|floatformat:2 }}</p>
+    <p><strong>💰 Acumulado durante {{ mes_actual }}:</strong> RD$ {{ ingreso_actual_mes|default:0|floatformat:2 }}</p>
   </section>
 
 </body>
