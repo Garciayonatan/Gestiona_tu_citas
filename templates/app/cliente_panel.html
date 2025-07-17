@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <title>Panel Cliente</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
         /* Fondo igual para desktop y móvil */
         body {
@@ -186,7 +186,7 @@
         .estado-completada { background-color: #4caf50; }
         .estado-rechazada { background-color: #f44336; }
         .estado-cancelada { background-color: #9e9e9e; }
-        .estado-vencida { background-color: #e53935; }  /* 🔴 NUEVO */
+        .estado-vencida { background-color: #e53935; }
 
         .horario-info {
             font-size: 0.8em;
@@ -253,13 +253,13 @@
         </nav>
     </header>
 
-    <!-- Bloque para mostrar mensajes -->
+    <!-- Bloque para mostrar mensajes flash -->
     {% if messages %}
-        <div>
-            {% for message in messages %}
-                <div class="messages {{ message.tags }}">{{ message }}</div>
-            {% endfor %}
-        </div>
+    <div>
+        {% for message in messages %}
+            <div class="messages {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    </div>
     {% endif %}
 
     <section class="citas">
