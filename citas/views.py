@@ -1509,6 +1509,13 @@ def eliminar_cita(request, cita_id):
 
 
 # servicios administrar 
+def formatear_precio(precio):
+    try:
+        valor = int(round(precio))
+        return f"RD$ {valor:,}".replace(",", ",")
+    except:
+        return "RD$ 0"
+
 @login_required
 def administrar_servicios(request):
     """
@@ -1521,17 +1528,15 @@ def administrar_servicios(request):
         return HttpResponseForbidden("No tienes una empresa asociada para gestionar servicios.")
 
     form = ServicioForm()
-    empleados_rango = range(1, 101)  # Rango para seleccionar capacidad
+    empleados_rango = range(1, 101)
 
     if request.method == 'POST':
-        # Eliminar servicio
         if 'eliminar_servicio' in request.POST:
             servicio_id = request.POST.get('servicio_id')
             servicio = get_object_or_404(Servicio, id=servicio_id, empresa=empresa)
             servicio.delete()
             return redirect('app:servicios_empresa')
 
-        # Actualizar capacidad (cantidad de empleados)
         elif 'cantidad_empleados' in request.POST:
             cantidad_empleados = request.POST.get('cantidad_empleados')
             if cantidad_empleados and cantidad_empleados.isdigit():
@@ -1539,7 +1544,6 @@ def administrar_servicios(request):
                 empresa.save()
                 return redirect('app:servicios_empresa')
 
-        # Agregar nuevo servicio
         else:
             form = ServicioForm(request.POST)
             if form.is_valid():
@@ -1549,6 +1553,10 @@ def administrar_servicios(request):
                 return redirect('app:servicios_empresa')
 
     servicios = Servicio.objects.filter(empresa=empresa)
+
+    # 👉 Formatear el precio para mostrarlo bonito en el HTML
+    for servicio in servicios:
+        servicio.precio_formateado = formatear_precio(servicio.precio)
 
     return render(request, 'app/servicio_empresa.html', {
         'empresa': empresa,
@@ -1793,25 +1801,6 @@ def restablecer_contraseña_con_codigo(request):
 
     return render(request, 'app/ingresar_codigo.html')
 
-def formatear_con_coma_miles(valor):
-    """
-    Formatea un número con separador de miles usando coma y sin decimales.
-    Ej: 2500.0 → 'RD$ 2,500'
-    """
-    try:
-        valor_int = int(round(valor))
-        return f"RD$ {valor_int:,}".replace(",", ".")  # Cambia coma por punto si quieres estilo RD
-    except Exception:
-        return valor
-
-def formatear_con_coma_miles(valor):
-    try:
-        # Convierte a entero si es decimal, formatea con coma como separador de miles
-        return f"{int(round(valor)):,}".replace(",", ".")
-    except:
-        return valor
-
-
 def obtener_servicios_por_empresa(request):
     """
     Endpoint para obtener servicios por ID de empresa.
@@ -1845,7 +1834,7 @@ def obtener_servicios_por_empresa(request):
 
     except Exception as e:
         return JsonResponse({'message': 'Error al procesar la solicitud.', 'error': str(e)}, status=500)
-    
+
 @requires_csrf_token
 def csrf_failure(request, reason=""):
     return render(request, "csrf_failure.html", status=403)

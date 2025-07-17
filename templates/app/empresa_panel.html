@@ -5,144 +5,150 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Panel Empresa</title>
   <style>
-    /* Reset y box‑sizing */
-    ,::before,*::after{box-sizing:border-box;}
+    /* Reset y box-sizing */
+    *, *::before, *::after { box-sizing: border-box; }
 
-    body{
-      margin:0;
-      font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
-      background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);
-      color:#e0e0e0;
-      min-height:100vh;
-      padding:30px 20px;
-      line-height:1.6;
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #e0e0e0;
+      min-height: 100vh;
+      padding: 30px 20px;
+      line-height: 1.6;
     }
 
-    .container{
-      max-width:1100px;
-      margin:0 auto;
-      background:#1e293b;
-      border-radius:24px;
-      box-shadow:0 20px 40px rgba(0,0,0,.7);
-      padding:42px 48px;
-      transition:box-shadow .3s ease;
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: #1e293b;
+      border-radius: 24px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, .7);
+      padding: 42px 48px;
+      transition: box-shadow .3s ease;
     }
-    .container:hover{box-shadow:0 26px 52px rgba(0,0,0,.85);}
+    .container:hover { box-shadow: 0 26px 52px rgba(0, 0, 0, .85); }
 
-    header{
-      display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;
-      margin-bottom:42px;border-bottom:2px solid #334155;padding-bottom:18px;
+    header {
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
+      margin-bottom: 42px; border-bottom: 2px solid #334155; padding-bottom: 18px;
     }
-    header h1{
-      font-size:2.8rem;color:#60a5fa;font-weight:700;letter-spacing:.6px;
-      text-shadow:0 0 8px #60a5fa88;
+    header h1 {
+      font-size: 2.8rem; color: #60a5fa; font-weight: 700; letter-spacing: .6px;
+      text-shadow: 0 0 8px #60a5fa88;
     }
-    nav a{
-      text-decoration:none;color:#1e293b;background:#60a5fa;padding:16px 36px;
-      border-radius:28px;font-weight:700;box-shadow:none;
-      transition:background .4s ease;
-      font-size:1.15rem;
+    nav a {
+      text-decoration: none; color: #1e293b; background: #60a5fa; padding: 16px 36px;
+      border-radius: 28px; font-weight: 700; font-size: 1.15rem;
+      transition: background .4s ease;
     }
-    nav a:hover,nav a:focus{background:#2563eb;color:#fff;outline:none;}
+    nav a:hover, nav a:focus { background: #2563eb; color: #fff; outline: none; }
 
-    /* Mensajes */
-    .messages{margin-bottom:32px;padding:20px 28px;border-radius:20px;font-weight:700;font-size:1.1rem;}
-    .messages.error{background:#dc2626;color:#fff;border:3px solid #b91c1c;}
-    .messages.success{background:#22c55e;color:#fff;border:3px solid #15803d;}
+    .messages { margin-bottom: 32px; padding: 20px 28px; border-radius: 20px; font-weight: 700; font-size: 1.1rem; }
+    .messages.error { background: #dc2626; color: #fff; border: 3px solid #b91c1c; }
+    .messages.success { background: #22c55e; color: #fff; border: 3px solid #15803d; }
 
-    section{margin-bottom:54px;}
-    section h2{
-      font-size:2.2rem;margin-bottom:28px;color:#60a5fa;border-left:8px solid #2563eb;padding-left:18px;
-      text-transform:uppercase;
+    section { margin-bottom: 54px; }
+    section h2 {
+      font-size: 2.2rem; margin-bottom: 28px; color: #60a5fa;
+      border-left: 8px solid #2563eb; padding-left: 18px; text-transform: uppercase;
     }
-    section h3{margin:48px 0 26px;color:#3b82f6;font-size:1.6rem;}
+    section h3 { margin: 48px 0 26px; color: #3b82f6; font-size: 1.6rem; }
 
-    p{margin:12px 0;font-size:1.15rem;color:#cbd5e1;}
+    p { margin: 12px 0; font-size: 1.15rem; color: #cbd5e1; }
 
-    .btn-primary{
-      display:inline-block;margin-top:30px;background:#3b82f6;color:#fff;
-      padding:16px 40px;border:none;border-radius:28px;font-weight:700;
-      transition:background .4s ease;font-size:1.2rem;
+    .btn-primary {
+      display: inline-block; margin-top: 30px; background: #3b82f6; color: #fff;
+      padding: 16px 40px; border: none; border-radius: 28px; font-weight: 700;
+      font-size: 1.2rem; transition: background .4s ease;
     }
-    .btn-primary:hover,.btn-primary:focus{background:#2563eb;}
+    .btn-primary:hover, .btn-primary:focus { background: #2563eb; }
 
-    form label{display:block;margin-top:20px;font-weight:700;color:#93c5fd;font-size:1.25rem;}
-    form input[type="time"]{
-      width:100%;padding:16px 20px;border:2px solid #334155;border-radius:24px;margin-top:10px;
-      font-size:1.15rem;color:#e0e0e0;background:#1e293b;transition:border-color .3s ease;
+    form label {
+      display: block; margin-top: 20px; font-weight: 700; color: #93c5fd; font-size: 1.25rem;
     }
-    form input[type="time"]:focus{border-color:#3b82f6;background:#263544;outline:none;}
-    form button{
-      margin-top:36px;background:#3b82f6;color:#fff;padding:18px 0;border:none;border-radius:28px;
-      font-weight:700;width:100%;font-size:1.25rem;transition:background .4s ease;
+    form input[type="time"] {
+      width: 100%; padding: 16px 20px; border: 2px solid #334155; border-radius: 24px; margin-top: 10px;
+      font-size: 1.15rem; color: #e0e0e0; background: #1e293b; transition: border-color .3s ease;
     }
-    form button:hover,form button:focus{background:#2563eb;}
-
-    /* Tabla */
-    table{width:100%;border-collapse:separate;border-spacing:0 16px;margin-top:36px;font-size:1.1rem;color:#e0e0e0;}
-    thead th{text-align:left;padding:16px 24px;border-bottom:3px solid #3b82f6;color:#93c5fd;font-weight:800;}
-    tbody tr{background:#273449;border-radius:28px;}
-    tbody td{padding:20px 28px;vertical-align:middle;border:none;}
-
-    /* Botones de ACCIÓN sin luz */
-    .actions{
-      display:flex;flex-direction:row;flex-wrap:nowrap;gap:8px;justify-content:center;align-items:center;
+    form input[type="time"]:focus {
+      border-color: #3b82f6; background: #263544; outline: none;
     }
-    .actions form{flex:0 0 auto;}
-    .actions button{
-      padding:10px 20px;border-radius:32px;font-weight:800;font-size:1rem;
-      background:transparent;border:3px solid;text-transform:uppercase;white-space:nowrap;
-      box-shadow:none;                   /* sin luz */
+    form button {
+      margin-top: 36px; background: #3b82f6; color: #fff; padding: 18px 0; border: none;
+      border-radius: 28px; font-weight: 700; width: 100%; font-size: 1.25rem;
+      transition: background .4s ease;
+    }
+    form button:hover, form button:focus { background: #2563eb; }
+
+    table {
+      width: 100%; border-collapse: separate; border-spacing: 0 16px; margin-top: 36px;
+      font-size: 1.1rem; color: #e0e0e0;
+    }
+    thead th {
+      text-align: left; padding: 16px 24px; border-bottom: 3px solid #3b82f6;
+      color: #93c5fd; font-weight: 800;
+    }
+    tbody tr { background: #273449; border-radius: 28px; }
+    tbody td { padding: 20px 28px; vertical-align: middle; border: none; }
+
+    .actions {
+      display: flex; flex-direction: row; flex-wrap: nowrap; gap: 8px; justify-content: center; align-items: center;
+    }
+    .actions form { flex: 0 0 auto; }
+    .actions button {
+      padding: 10px 20px; border-radius: 32px; font-weight: 800; font-size: 1rem;
+      background: transparent; border: 3px solid; text-transform: uppercase;
     }
 
-    .accept{color:#22c55e;border-color:#22c55e;background:linear-gradient(45deg,#dcfce7 0%,#bbf7d0 100%);}
-    .accept:hover,.accept:focus{background:#22c55e;color:#fff;box-shadow:none;}
+    .accept { color: #22c55e; border-color: #22c55e; background: linear-gradient(45deg, #dcfce7 0%, #bbf7d0 100%); }
+    .accept:hover, .accept:focus { background: #22c55e; color: #fff; }
 
-    .reject{color:#ef4444;border-color:#ef4444;background:linear-gradient(45deg,#fee2e2 0%,#fecaca 100%);}
-    .reject:hover,.reject:focus{background:#ef4444;color:#fff;box-shadow:none;}
+    .reject { color: #ef4444; border-color: #ef4444; background: linear-gradient(45deg, #fee2e2 0%, #fecaca 100%); }
+    .reject:hover, .reject:focus { background: #ef4444; color: #fff; }
 
-    .delete{color:#eab308;border-color:#eab308;background:linear-gradient(45deg,#fef3c7 0%,#fde68a 100%);}
-    .delete:hover,.delete:focus{background:#eab308;color:#fff;box-shadow:none;}
+    .delete { color: #eab308; border-color: #eab308; background: linear-gradient(45deg, #fef3c7 0%, #fde68a 100%); }
+    .delete:hover, .delete:focus { background: #eab308; color: #fff; }
 
-    .no-citas{font-style:italic;margin-top:22px;color:#60a5fa;font-weight:700;font-size:1.3rem;text-align:center;}
+    .no-citas {
+      font-style: italic; margin-top: 22px; color: #60a5fa;
+      font-weight: 700; font-size: 1.3rem; text-align: center;
+    }
 
-    /* --- Responsive ≤576 px --- */
-    @media(max-width:576px){
-      body{padding:20px 16px 32px;}
-      nav a,form button,.btn-primary{font-size:1.15rem;}
+    @media (max-width: 576px) {
+      body { padding: 20px 16px 32px; }
+      nav a, form button, .btn-primary { font-size: 1.15rem; }
 
-      table,thead,tbody,th,td,tr{display:block;}
-      thead tr{position:absolute;top:-9999px;left:-9999px;}
+      table, thead, tbody, th, td, tr { display: block; }
+      thead tr { position: absolute; top: -9999px; left: -9999px; }
 
-      tbody tr{margin-bottom:28px;background:#334155;border-radius:28px;padding:28px 34px;}
-      tbody td{padding:18px 12px 18px 55%;font-size:1.1rem;font-weight:700;position:relative;}
-      tbody td::before{
-        position:absolute;top:18px;left:28px;width:48%;white-space:nowrap;
-        color:#60a5fa;font-size:1rem;font-weight:700;content:attr(data-label);
+      tbody tr { margin-bottom: 28px; background: #334155; border-radius: 28px; padding: 28px 34px; }
+      tbody td {
+        padding: 18px 12px 18px 55%; font-size: 1.1rem; font-weight: 700;
+        position: relative;
+      }
+      tbody td::before {
+        position: absolute; top: 18px; left: 28px; width: 48%; white-space: nowrap;
+        color: #60a5fa; font-size: 1rem; font-weight: 700; content: attr(data-label);
       }
 
-      tbody td[data-label="Acciones"]{padding-left:20px;}
-      tbody td[data-label="Acciones"] .actions{gap:6px;margin-top:18px;}
-      tbody td[data-label="Acciones"] .actions button{padding:9px 14px;font-size:.95rem;}
+      tbody td[data-label="Acciones"] { padding-left: 20px; }
+      tbody td[data-label="Acciones"] .actions { gap: 6px; margin-top: 18px; }
+      tbody td[data-label="Acciones"] .actions button { padding: 9px 14px; font-size: .95rem; }
     }
   </style>
 </head>
-
 <body>
   <main class="container" role="main" aria-label="Panel de empresa">
     <header>
       <h1>Bienvenido, {{ request.user.username }}</h1>
-      <nav>
-        <a href="{% url 'app:logout' %}">Cerrar sesión</a>
-      </nav>
+      <nav><a href="{% url 'app:logout' %}">Cerrar sesión</a></nav>
     </header>
 
     {% if messages %}
       <div>
         {% for message in messages %}
-          <div class="messages {% if message.tags %}{{ message.tags }}{% endif %}" role="alert">
-            {{ message }}
-          </div>
+          <div class="messages {% if message.tags %}{{ message.tags }}{% endif %}" role="alert">{{ message }}</div>
         {% endfor %}
       </div>
     {% endif %}
@@ -165,11 +171,9 @@
         <label for="hora_inicio">Hora de inicio</label>
         <input type="time" name="hora_inicio" id="hora_inicio"
                value="{{ empresa.hora_inicio|default_if_none:'' }}" required/>
-
         <label for="hora_cierre">Hora de cierre</label>
         <input type="time" name="hora_cierre" id="hora_cierre"
                value="{{ empresa.hora_cierre|default_if_none:'' }}" required/>
-
         <button type="submit">Guardar horario</button>
       </form>
 
@@ -185,7 +189,6 @@
           {% endfor %}
         </div>
         <button type="submit">Seleccionar días laborables</button>
-
       </form>
 
       <a class="btn-primary" href="{% url 'app:historial_citas_empresa' %}">📋 Ver Historial de Citas</a>
@@ -204,7 +207,7 @@
               <tr>
                 <td data-label="Cliente">{{ cita.cliente.nombre_completo }}</td>
                 <td data-label="Fecha">{{ cita.fecha|date:"d/m/Y" }}</td>
-                <td data-label="Hora">{{ cita.hora|time:"H:i" }}</td>
+                <td data-label="Hora">{{ cita.hora|time:"g:i a" }}</td>
                 <td data-label="Estado">{{ cita.get_estado_display }}</td>
                 <td data-label="Acciones">
                   <div class="actions">
