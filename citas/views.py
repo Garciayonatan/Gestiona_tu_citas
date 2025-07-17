@@ -1938,11 +1938,6 @@ from django.db.models.functions import TruncMonth
 from django.db.models import Sum
 
 
-from django.contrib.auth.decorators import login_required
-from django.db.models import Sum
-from django.db.models.functions import TruncMonth
-from django.utils import timezone
-from datetime import datetime
 
 @login_required
 def historial_citas_empresa(request):
@@ -1952,14 +1947,13 @@ def historial_citas_empresa(request):
 
     ahora = timezone.now()
 
-    # Traemos todas las citas ordenadas
     historial = Cita.objects.filter(empresa=empresa).order_by('-fecha', '-hora')
 
-    # Actualizamos estados solo si es necesario
     for cita in historial:
         fecha_hora_cita = datetime.combine(cita.fecha, cita.hora)
-        # Convertimos a aware datetime con la zona correcta si usas timezone (opcional)
-        # fecha_hora_cita = timezone.make_aware(fecha_hora_cita, timezone.get_current_timezone())
+
+        # Si usas USE_TZ=True, convertir a aware datetime con la zona actual
+        fecha_hora_cita = timezone.make_aware(fecha_hora_cita, timezone.get_current_timezone())
 
         if cita.estado == 'aceptada' and fecha_hora_cita <= ahora:
             cita.estado = 'completada'
@@ -1968,10 +1962,8 @@ def historial_citas_empresa(request):
             cita.estado = 'vencida'
             cita.save()
 
-        # Calculamos total del servicio para cada cita
         cita.total_servicios = cita.servicio.precio if cita.servicio else 0
 
-    # Generar resumen mensual de ingresos por servicios completados
     resumen_qs = (
         Cita.objects.filter(empresa=empresa, estado='completada')
         .annotate(mes=TruncMonth('fecha'))
@@ -1983,35 +1975,48 @@ def historial_citas_empresa(request):
     resumen_mensual = {}
     total_ingresos = 0
     ingreso_actual_mes = 0
-    mes_actual = timezone.now().strftime('%b %Y')  # Ej: Jul 2025
+
+    hoy = timezone.now()
+    anio_actual = hoy.year
+    mes_actual_num = hoy.month
+
+    # Función para meses en español (abreviado)
+    MESES_ES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+
+    # Función para formatear la fecha mes y año en español (ej: "Jul 2025")
+    def formatear_mes(mes_dt):
+        mes_idx = mes_dt.month - 1
+        mes_nombre = MESES_ES[mes_idx]
+        return f"{mes_nombre} {mes_dt.year}"
 
     for item in resumen_qs:
         if item['mes']:
-            mes_str = item['mes'].strftime('%b %Y')
+            mes_dt = item['mes']
+            mes_str = formatear_mes(mes_dt)
             total_mes = float(item['total'] or 0)
             resumen_mensual[mes_str] = total_mes
             total_ingresos += total_mes
-            if mes_str == mes_actual:
+            if mes_dt.year == anio_actual and mes_dt.month == mes_actual_num:
                 ingreso_actual_mes = total_mes
 
-    # Formatear ingreso_actual_mes con separador miles y decimales (estilo RD)
+    # Formatear números al estilo República Dominicana (1.234,56)
     def formatear_rd(valor):
         return f"{valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
     ingreso_actual_mes_fmt = formatear_rd(ingreso_actual_mes)
     total_ingresos_fmt = formatear_rd(total_ingresos)
+    mes_actual_str = formatear_mes(hoy)
 
     context = {
         'historial': historial,
         'total_ingresos': total_ingresos_fmt,
         'ingreso_actual_mes': ingreso_actual_mes_fmt,
-        'mes_actual': mes_actual,
+        'mes_actual': mes_actual_str,
         'resumen_mensual_labels': list(resumen_mensual.keys()),
         'resumen_mensual_values': list(resumen_mensual.values()),
     }
 
     return render(request, 'app/historial_citas.html', context)
-
    # borrar sino funciona editar empresa
 
 
