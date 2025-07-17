@@ -1793,6 +1793,17 @@ def restablecer_contraseña_con_codigo(request):
 
     return render(request, 'app/ingresar_codigo.html')
 
+def formatear_con_coma_miles(valor):
+    """
+    Formatea un número con separador de miles y dos decimales, estilo dominicano.
+    Ej: 1750.0 → 'RD$ 1,750.00'
+    """
+    try:
+        valor_formateado = f"RD$ {valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+        return valor_formateado
+    except:
+        return valor
+
 def obtener_servicios_por_empresa(request):
     """
     Endpoint para obtener servicios por ID de empresa.
@@ -1811,12 +1822,20 @@ def obtener_servicios_por_empresa(request):
         if not servicios.exists():
             return JsonResponse({'message': 'No se encontraron servicios para esta empresa.'}, status=404)
 
-        return JsonResponse({'servicios': list(servicios)}, status=200)
+        servicios_list = []
+        for servicio in servicios:
+            servicios_list.append({
+                'id': servicio['id'],
+                'nombre': servicio['nombre'],
+                'descripcion': servicio['descripcion'],
+                'precio': formatear_con_coma_miles(servicio['precio']),
+                'duracion': servicio['duracion']
+            })
+
+        return JsonResponse({'servicios': servicios_list}, status=200)
+    
     except Exception as e:
-        # Manejo de errores generales para prevenir fallos inesperados
         return JsonResponse({'message': 'Error al procesar la solicitud.', 'error': str(e)}, status=500)
-
-
 
 @requires_csrf_token
 def csrf_failure(request, reason=""):
