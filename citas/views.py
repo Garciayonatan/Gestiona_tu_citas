@@ -1793,7 +1793,7 @@ def restablecer_contraseña_con_codigo(request):
 
     return render(request, 'app/ingresar_codigo.html')
 
-ddef formatear_con_coma_miles(valor):
+def formatear_con_coma_miles(valor):
     """
     Formatea un número con separador de miles usando coma y sin decimales.
     Ej: 2500.0 → 'RD$ 2,500'
