@@ -1938,6 +1938,9 @@ from django.db.models.functions import TruncMonth
 from django.db.models import Sum
 
 
+def formatear_con_coma_miles(valor):
+    return f"{int(valor):,}".replace(",", ",")
+
 @login_required
 def historial_citas_empresa(request):
     empresa = Empresa.objects.filter(user=request.user).first()
@@ -1949,6 +1952,7 @@ def historial_citas_empresa(request):
     ahora = datetime.now()
 
     for cita in historial:
+        # Verificamos si la cita ya pasó y actualizamos el estado si es necesario
         fecha_hora_cita = datetime.combine(cita.fecha, cita.hora)
 
         if cita.estado == 'aceptada' and fecha_hora_cita <= ahora:
@@ -1958,8 +1962,10 @@ def historial_citas_empresa(request):
             cita.estado = 'vencida'
             cita.save()
 
+        # Calculamos el total del servicio si existe
         cita.total_servicios = cita.servicio.precio if cita.servicio else 0
 
+    # Generamos el resumen mensual de ingresos por servicios completados
     resumen_qs = (
         Cita.objects.filter(empresa=empresa, estado='completada')
         .annotate(mes=TruncMonth('fecha'))
@@ -1982,17 +1988,10 @@ def historial_citas_empresa(request):
             if mes_str == mes_actual:
                 ingreso_actual_mes = total_mes
 
-    # Función para formatear números al estilo RD
-    def formatear_rd(valor):
-        return f"{valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-
-    total_ingresos_fmt = formatear_rd(total_ingresos)
-    ingreso_actual_mes_fmt = formatear_rd(ingreso_actual_mes)
-
     context = {
         'historial': historial,
-        'total_ingresos': total_ingresos_fmt,
-        'ingreso_actual_mes': ingreso_actual_mes_fmt,
+        'total_ingresos': formatear_con_coma_miles(total_ingresos),
+        'ingreso_actual_mes': formatear_con_coma_miles(ingreso_actual_mes),
         'mes_actual': mes_actual,
         'resumen_mensual_labels': list(resumen_mensual.keys()),
         'resumen_mensual_values': list(resumen_mensual.values()),
