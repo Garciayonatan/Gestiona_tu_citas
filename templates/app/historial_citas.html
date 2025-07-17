@@ -19,6 +19,7 @@
       line-height: 1.4;
     }
 
+    /* Contenedor header: título y botón */
     .header-container {
       display: flex;
       justify-content: space-between;
@@ -62,6 +63,7 @@
       cursor: pointer;
     }
 
+    /* Contenedor tabla con sombra y padding */
     .tabla-container {
       background: white;
       border-radius: 12px;
@@ -73,10 +75,11 @@
       padding: 0.5rem;
     }
 
+    /* Tabla: estilo base */
     table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 600px;
+      min-width: 600px; /* Para pantallas grandes */
     }
 
     th, td {
@@ -102,6 +105,7 @@
       background-color: #f3e5f5;
     }
 
+    /* Resumen de ingresos */
     .resumen {
       background: white;
       border-radius: 12px;
@@ -116,6 +120,9 @@
       line-height: 1.3;
     }
 
+    /* === Responsive avanzado === */
+
+    /* Pantallas medianas */
     @media (max-width: 900px) {
       h2 {
         font-size: 1.6rem;
@@ -139,7 +146,9 @@
       }
     }
 
+    /* Pantallas móviles (tablet y smartphone) */
     @media (max-width: 600px) {
+      /* Header apilado */
       .header-container {
         flex-direction: column;
         align-items: stretch;
@@ -182,6 +191,7 @@
       }
     }
 
+    /* Móviles muy pequeños (menos de 350px) */
     @media (max-width: 350px) {
       h2 {
         font-size: 1.2rem;
@@ -200,6 +210,7 @@
       }
     }
 
+    /* === Tabla vertical en móviles muy pequeños === */
     @media (max-width: 480px) {
       table, thead, tbody, th, td, tr {
         display: block;
@@ -266,14 +277,12 @@
       <tbody>
         {% for cita in historial %}
         <tr>
-          <td data-label="Cliente">{{ cita.cliente.nombre_completo|default:"N/A" }}</td>
-          <td data-label="Servicio">
-            {{ cita.servicio.nombre|default:"Servicio no definido" }} (RD$ {{ cita.servicio.precio|default:0|floatformat:2 }})
-          </td>
-          <td data-label="Fecha">{{ cita.fecha|date:"d/m/Y" }}</td>
-          <td data-label="Hora">{{ cita.hora|time:"H:i" }}</td>
-          <td data-label="Estado">{{ cita.get_estado_display|default:"-" }}</td>
-          <td data-label="Total">RD$ {{ cita.total_servicios|default:0|floatformat:2 }}</td>
+          <td data-label="Cliente">{{ cita.cliente.nombre_completo }}</td>
+          <td data-label="Servicio">{{ cita.servicio.nombre }} (RD$ {{ cita.servicio.precio }})</td>
+          <td data-label="Fecha">{{ cita.fecha }}</td>
+          <td data-label="Hora">{{ cita.hora }}</td>
+          <td data-label="Estado">{{ cita.get_estado_display }}</td>
+          <td data-label="Total">RD$ {{ cita.total_servicios }}</td>
         </tr>
         {% empty %}
         <tr>
@@ -287,7 +296,7 @@
   </main>
 
   <section class="resumen" role="region" aria-label="Ingresos del mes">
-    <p><strong>💰 Acumulado durante {{ mes_actual }}:</strong> RD$ {{ ingreso_actual_mes|default:0|floatformat:2 }}</p>
+    <p><strong>💰 Acumulado durante {{ mes_actual }}:</strong> RD$ {{ ingreso_actual_mes }}</p>
   </section>
 
 </body>
