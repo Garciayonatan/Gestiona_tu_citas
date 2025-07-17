@@ -967,7 +967,7 @@ def cancelar_cita(request, cita_id):
 
 
 
-# Vista para crear una nueva cita
+
 logger = logging.getLogger(__name__)
 
 @login_required(login_url='app:login')
@@ -1120,10 +1120,17 @@ def nueva_cita(request):
 
             # Enviar telegram
             try:
+                telegram_enviado = False
                 if empresa.telegram_chat_id:
                     enviar_mensaje_telegram(empresa.telegram_chat_id, mensaje_empresa)
+                    telegram_enviado = True
                 if cliente.telegram_chat_id:
                     enviar_mensaje_telegram(cliente.telegram_chat_id, mensaje_cliente)
+                    telegram_enviado = True
+                telegram_ok = telegram_enviado
+                if not telegram_enviado:
+                    # No tienen telegram configurado, no es error
+                    telegram_ok = True
             except Exception as e:
                 telegram_ok = False
                 logger.warning(f"⚠️ Error al enviar Telegram: {e}")
@@ -1131,13 +1138,13 @@ def nueva_cita(request):
 
             # Mensaje éxito para usuario, indicando estado de notificaciones
             if correo_ok and telegram_ok:
-                messages.success(request, "✅ Cita solicitada exitosamente. Las notificaciones se enviaron correctamente.")
+                messages.success(request, "✅ Cita creada correctamente. Las notificaciones se enviaron correctamente por correo y Telegram.")
             elif correo_ok and not telegram_ok:
-                messages.success(request, "✅ Cita solicitada exitosamente. Correo enviado, pero fallo el Telegram.")
+                messages.success(request, "✅ Cita creada correctamente. Notificación enviada por correo, pero fallo el envío por Telegram.")
             elif not correo_ok and telegram_ok:
-                messages.success(request, "✅ Cita solicitada exitosamente. Telegram enviado, pero fallo el correo.")
+                messages.success(request, "✅ Cita creada correctamente. Notificación enviada por Telegram, pero fallo el envío por correo.")
             else:
-                messages.success(request, "✅ Cita solicitada, pero no se pudieron enviar las notificaciones.")
+                messages.success(request, "✅ Cita creada correctamente. No se pudieron enviar las notificaciones.")
 
             return redirect('app:cliente_panel')
 
