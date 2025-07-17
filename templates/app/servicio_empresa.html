@@ -31,6 +31,9 @@
             align-items: center;
             margin-bottom: 20px;
         }
+        .form-label {
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -105,7 +108,7 @@
                         <tr>
                             <td>{{ servicio.nombre }}</td>
                             <td>{{ servicio.descripcion|default:"Sin descripción" }}</td>
-                            <td>{{ servicio.precio }}</td> <!-- Precio ya formateado con RD$ -->
+                            <td>{{ servicio.precio }}</td> <!-- Ya viene con RD$ 2,500 desde la vista -->
                             <td>{{ servicio.duracion|default:"No especificado" }} min</td>
                             <td>
                                 <form method="post" action="" style="display:inline;">
