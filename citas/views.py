@@ -1800,7 +1800,8 @@ def formatear_con_coma_miles(valor):
     """
     try:
         # Convierte el valor a entero redondeado y agrega coma como separador de miles
-        return f"RD$ {int(round(valor)):,}"
+        valor_int = int(round(valor))
+        return f"RD$ {valor_int:,}"
     except Exception:
         return valor
 
@@ -1810,7 +1811,7 @@ def obtener_servicios_por_empresa(request):
     Devuelve los servicios con sus detalles: nombre, descripción, precio y duración.
     """
     empresa_id = request.GET.get('empresa_id')
-    
+
     if not empresa_id:
         return JsonResponse({'message': 'Debe proporcionar un ID de empresa.'}, status=400)
 
@@ -1833,9 +1834,10 @@ def obtener_servicios_por_empresa(request):
             })
 
         return JsonResponse({'servicios': servicios_list}, status=200)
-    
+
     except Exception as e:
         return JsonResponse({'message': 'Error al procesar la solicitud.', 'error': str(e)}, status=500)
+
 @requires_csrf_token
 def csrf_failure(request, reason=""):
     return render(request, "csrf_failure.html", status=403)
