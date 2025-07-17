@@ -1799,9 +1799,8 @@ def formatear_con_coma_miles(valor):
     Ej: 2500.0 → 'RD$ 2,500'
     """
     try:
-        # Convierte el valor a entero redondeado y agrega coma como separador de miles
         valor_int = int(round(valor))
-        return f"RD$ {valor_int:,}"
+        return f"RD$ {valor_int:,}".replace(",", ".")  # Cambia coma por punto si quieres estilo RD
     except Exception:
         return valor
 
