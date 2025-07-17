@@ -1793,30 +1793,24 @@ def restablecer_contraseña_con_codigo(request):
 
     return render(request, 'app/ingresar_codigo.html')
 
+from django.http import JsonResponse
+from .models import Servicio  # Asegúrate de importar tu modelo correctamente
+
 def formatear_con_coma_miles(valor):
     """
-    Formatea un número con separador de miles usando coma y sin decimales.
-    Ej: 2500.0 → 'RD$ 2,500'
+    Formatea un número con separador de miles usando punto como separador.
+    Ej: 2500.0 → '2.500'
     """
     try:
-        valor_int = int(round(valor))
-        return f"RD$ {valor_int:,}".replace(",", ".")  # Cambia coma por punto si quieres estilo RD
+        return f"{int(round(valor)):,}".replace(",", ".")
     except Exception:
         return valor
-
-def formatear_con_coma_miles(valor):
-    try:
-        # Convierte a entero si es decimal, formatea con coma como separador de miles
-        return f"{int(round(valor)):,}".replace(",", ".")
-    except:
-        return valor
-
 
 def obtener_servicios_por_empresa(request):
     """
     Endpoint para obtener servicios por ID de empresa.
-    Devuelve los servicios con sus detalles: nombre, descripción, precio y duración,
-    y el precio está formateado con coma para los miles.
+    Devuelve los servicios con sus detalles: nombre, descripción, precio y duración.
+    El precio se devuelve como RD$ formateado con punto como separador de miles.
     """
     empresa_id = request.GET.get('empresa_id')
 
@@ -1845,7 +1839,7 @@ def obtener_servicios_por_empresa(request):
 
     except Exception as e:
         return JsonResponse({'message': 'Error al procesar la solicitud.', 'error': str(e)}, status=500)
-    
+
 @requires_csrf_token
 def csrf_failure(request, reason=""):
     return render(request, "csrf_failure.html", status=403)
