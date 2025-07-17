@@ -1566,7 +1566,17 @@ def administrar_servicios(request):
         'cantidad_empleados': empresa.cantidad_empleados,
     })
     
-          #solicitar cita 
+          #derigir si no tiene empresa
+def redirigir_panel_empresa(request):
+    if not request.user.is_authenticated:
+        return redirect('login')  # Cambia si usas otro nombre de vista para login
+
+    empresa = Empresa.objects.filter(user=request.user).first()
+
+    if empresa:
+        return redirect('empresa_panel', empresa_id=empresa.id)
+    else:
+        return redirect('home')  # Cambia a 'inicio' o la vista que muestra tu página principal
 
 
 
