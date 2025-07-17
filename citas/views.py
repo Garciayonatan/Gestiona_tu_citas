@@ -1793,7 +1793,7 @@ def restablecer_contraseña_con_codigo(request):
 
     return render(request, 'app/ingresar_codigo.html')
 
-ddef formatear_con_coma_miles(valor):
+def formatear_con_coma_miles(valor):
     """
     Formatea un número con separador de miles y punto decimal.
     Ej: 2500.0 → 'RD$ 2,500.00'
@@ -1836,7 +1836,7 @@ def obtener_servicios_por_empresa(request):
     except Exception as e:
         return JsonResponse({'message': 'Error al procesar la solicitud.', 'error': str(e)}, status=500)
 
-        
+
 @requires_csrf_token
 def csrf_failure(request, reason=""):
     return render(request, "csrf_failure.html", status=403)
