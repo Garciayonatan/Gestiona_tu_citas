@@ -267,11 +267,11 @@
         {% for cita in historial %}
         <tr>
           <td data-label="Cliente">{{ cita.cliente.nombre_completo }}</td>
-          <td data-label="Servicio">{{ cita.servicio.nombre }} (RD$ {{ cita.servicio.precio }})</td>
+          <td data-label="Servicio">{{ cita.servicio.nombre }} (RD$ {{ cita.servicio.precio|floatformat:2 }})</td>
           <td data-label="Fecha">{{ cita.fecha }}</td>
           <td data-label="Hora">{{ cita.hora }}</td>
           <td data-label="Estado">{{ cita.get_estado_display }}</td>
-          <td data-label="Total">RD$ {{ cita.total_servicios }}</td>
+          <td data-label="Total">RD$ {{ cita.total_servicios|floatformat:2 }}</td>
         </tr>
         {% empty %}
         <tr>
@@ -285,7 +285,7 @@
   </main>
 
   <section class="resumen" role="region" aria-label="Ingresos del mes">
-    <p><strong>💰 Acumulado durante {{ mes_actual }}:</strong> RD$ {{ ingreso_actual_mes }}</p>
+    <p><strong>💰 Acumulado durante {{ mes_actual }}:</strong> RD$ {{ ingreso_actual_mes|floatformat:2 }}</p>
   </section>
 
 </body>
