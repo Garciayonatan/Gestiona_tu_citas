@@ -63,7 +63,6 @@
     <div class="container shadow-sm">
         <h2>Editar Cita</h2>
 
-        <!-- Mensajes flash -->
         {% if messages %}
             <div class="mb-3">
                 {% for message in messages %}
@@ -75,11 +74,9 @@
             </div>
         {% endif %}
 
-        <!-- Formulario de edición -->
         <form method="POST" novalidate>
             {% csrf_token %}
 
-            <!-- Errores generales del formulario -->
             {% if form.non_field_errors %}
                 <div class="alert alert-danger">
                     {% for error in form.non_field_errors %}
@@ -88,7 +85,7 @@
                 </div>
             {% endif %}
 
-            <!-- Empresa (solo lectura) -->
+            <!-- Empresa -->
             <div class="mb-3">
                 <label class="form-label fw-semibold">Empresa</label>
                 <input type="text" class="form-control" value="{{ cita.empresa.nombre_empresa }}" disabled>
@@ -106,16 +103,22 @@
                 {% endif %}
             </div>
 
-            <!-- Hora -->
+            <!-- Hora manual -->
             <div class="mb-3">
-                <label class="form-label fw-semibold" for="{{ form.hora.id_for_label }}">Hora</label>
-                {% if form.hora.value %}
-                    <input type="text" class="form-control" 
-                           value="{{ form.hora.value|date:'g:i A' }}" 
-                           name="hora" />
-                {% else %}
-                    {{ form.hora }}
-                {% endif %}
+                <label class="form-label fw-semibold" for="hora">Hora</label>
+                <select name="hora" id="hora" class="form-select" required>
+                    {% comment %} Horario de 8:00 AM a 6:00 PM con intervalos de 30 minutos {% endcomment %}
+                    {% for h in "8,9,10,11"|split:"," %}
+                        <option value="{{ h }}:00 AM" {% if cita.hora|date:"g:i A" == h|add:":00 AM" %}selected{% endif %}>{{ h }}:00 AM</option>
+                        <option value="{{ h }}:30 AM" {% if cita.hora|date:"g:i A" == h|add:":30 AM" %}selected{% endif %}>{{ h }}:30 AM</option>
+                    {% endfor %}
+                    <option value="12:00 PM" {% if cita.hora|date:"g:i A" == "12:00 PM" %}selected{% endif %}>12:00 PM</option>
+                    <option value="12:30 PM" {% if cita.hora|date:"g:i A" == "12:30 PM" %}selected{% endif %}>12:30 PM</option>
+                    {% for h in "1,2,3,4,5"|split:"," %}
+                        <option value="{{ h }}:00 PM" {% if cita.hora|date:"g:i A" == h|add:":00 PM" %}selected{% endif %}>{{ h }}:00 PM</option>
+                        <option value="{{ h }}:30 PM" {% if cita.hora|date:"g:i A" == h|add:":30 PM" %}selected{% endif %}>{{ h }}:30 PM</option>
+                    {% endfor %}
+                </select>
                 {% if form.hora.errors %}
                     <div class="text-danger small mt-1">
                         {{ form.hora.errors|striptags }}
