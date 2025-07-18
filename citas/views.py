@@ -1529,8 +1529,8 @@ def administrar_servicios(request):
     except Empresa.DoesNotExist:
         return HttpResponseForbidden("No tienes una empresa asociada para gestionar servicios.")
 
-    form = ServicioForm()
     empleados_rango = range(1, 101)
+    form = ServicioForm()  # Form vacío por defecto
 
     if request.method == 'POST':
         if 'eliminar_servicio' in request.POST:
@@ -1566,7 +1566,7 @@ def administrar_servicios(request):
 
     servicios = Servicio.objects.filter(empresa=empresa)
 
-    # 👉 Formatear el precio para mostrarlo bonito en el HTML
+    # Formatear el precio para mostrarlo bonito en el HTML
     for servicio in servicios:
         servicio.precio_formateado = formatear_precio(servicio.precio)
 
