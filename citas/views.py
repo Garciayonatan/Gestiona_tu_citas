@@ -1577,12 +1577,12 @@ def empresa_panel(request):
     """
     Muestra el panel de la empresa, listando únicamente las citas
     cuya bandera visible_para_empresa esté en True.
-    Si no tiene empresa asociada, lo manda al home.
+    Si el usuario no tiene empresa asociada, lo redirige al home.
     """
     try:
         empresa = Empresa.objects.get(user=request.user)
     except Empresa.DoesNotExist:
-        return redirect('home')  # Si no tiene empresa, lo manda a home
+        return redirect('home')  # Si no tiene empresa, lo manda al home
 
     # Obtener citas pendientes visibles para la empresa
     citas_pendientes = Cita.objects.filter(
@@ -1595,14 +1595,16 @@ def empresa_panel(request):
     for cita in citas_pendientes:
         cita.marcar_vencida_si_paso()
 
-    # Obtener todas las citas visibles
-    citas = Cita.objects.filter(empresa=empresa, visible_para_empresa=True)
+    # Obtener todas las citas visibles para la empresa
+    citas = Cita.objects.filter(
+        empresa=empresa,
+        visible_para_empresa=True
+    )
 
     return render(request, 'app/empresa_panel.html', {
         'empresa': empresa,
         'citas': citas,
     })
-
 def eliminar_cita_empresa(request, cita_id):
     """
     Marca la cita como no visible en el panel de la empresa en lugar de eliminarla de la base de datos.
