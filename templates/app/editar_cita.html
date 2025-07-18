@@ -110,7 +110,6 @@
             <div class="mb-3">
                 <label class="form-label fw-semibold" for="{{ form.hora.id_for_label }}">Hora</label>
                 {{ form.hora }}
-                <div class="form-text">Formato: 02:30 PM (hora dominicana)</div>
                 {% if form.hora.errors %}
                     <div class="text-danger small mt-1">
                         {{ form.hora.errors|striptags }}
