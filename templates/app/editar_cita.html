@@ -109,7 +109,13 @@
             <!-- Hora -->
             <div class="mb-3">
                 <label class="form-label fw-semibold" for="{{ form.hora.id_for_label }}">Hora</label>
-                {{ form.hora }}
+                {% if form.hora.value %}
+                    <input type="text" class="form-control" 
+                           value="{{ form.hora.value|date:'g:i A' }}" 
+                           name="hora" />
+                {% else %}
+                    {{ form.hora }}
+                {% endif %}
                 {% if form.hora.errors %}
                     <div class="text-danger small mt-1">
                         {{ form.hora.errors|striptags }}
