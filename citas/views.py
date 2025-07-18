@@ -1572,7 +1572,7 @@ def administrar_servicios(request):
 #cita eliminar empresa
 # views.py
 
-@login_required(login_url='login')  # Asegura que el usuario esté logueado
+@login_required(login_url='home')  # Asegura que el usuario esté logueado
 def empresa_panel(request):
     """
     Muestra el panel de la empresa, listando únicamente las citas
