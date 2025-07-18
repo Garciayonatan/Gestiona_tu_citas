@@ -125,7 +125,7 @@
 
         <!-- Selección de empleados -->
         <div class="mb-4">
-            <form method="post" action="">
+            <form method="post">
                 {% csrf_token %}
                 <div class="row align-items-end">
                     <div class="col-md-8">
@@ -147,7 +147,7 @@
         <!-- Formulario para agregar servicio -->
         <div class="card">
             <h5 class="mb-3">Agregar Nuevo Servicio</h5>
-            <form method="post" action="">
+            <form method="post">
                 {% csrf_token %}
                 <div class="mb-3">
                     <label for="{{ form.nombre.id_for_label }}" class="form-label">Nombre del Servicio</label>
@@ -191,7 +191,7 @@
                             <td>{{ servicio.precio_formateado }}</td>
                             <td>{{ servicio.duracion|default:"No especificado" }} min</td>
                             <td>
-                                <form method="post" action="" style="display:inline;">
+                                <form method="post" style="display:inline;">
                                     {% csrf_token %}
                                     <input type="hidden" name="eliminar_servicio" value="1" />
                                     <input type="hidden" name="servicio_id" value="{{ servicio.id }}" />
