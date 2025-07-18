@@ -447,6 +447,8 @@ class EnviarMensajeTelegramView(View):
 
 # Editar horario
 # Editar horario
+logger = logging.getLogger(__name__)
+
 @login_required(login_url='app:login')
 def editar_horario(request):
     empresa = get_object_or_404(Empresa, user=request.user)
@@ -473,15 +475,18 @@ def editar_horario(request):
         nombre_empresa = empresa.nombre_empresa
         asunto = f"Actualización de horario - {nombre_empresa}"
 
+        hora_inicio_fmt = hora_inicio.strftime('%I:%M %p').lower()
+        hora_cierre_fmt = hora_cierre.strftime('%I:%M %p').lower()
+
         mensaje_empresa = (
             f"<html>\n"
             f"<body style=\"font-family: Arial, sans-serif; color: #333;\">\n"
-            f"<h2 style=\"color: #0056b3;\">\u00a1Hola {empresa.nombre_dueno}!</h2>\n"
+            f"<h2 style=\"color: #0056b3;\">¡Hola {empresa.nombre_dueno}!</h2>\n"
             f"<p>Queremos informarte que el horario de tu empresa <b>{nombre_empresa}</b> ha sido <b>actualizado correctamente</b>.</p>\n"
             f"<p>🔔 Aquí tienes los nuevos horarios de atención:</p>\n"
             f"<table style=\"border-collapse: collapse; margin: 20px 0;\">\n"
-            f"<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><b>Hora de inicio:</b></td><td style=\"padding: 8px; border: 1px solid #ddd;\">{hora_inicio.strftime('%H:%M')}</td></tr>\n"
-            f"<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><b>Hora de cierre:</b></td><td style=\"padding: 8px; border: 1px solid #ddd;\">{hora_cierre.strftime('%H:%M')}</td></tr>\n"
+            f"<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><b>Hora de inicio:</b></td><td style=\"padding: 8px; border: 1px solid #ddd;\">{hora_inicio_fmt}</td></tr>\n"
+            f"<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><b>Hora de cierre:</b></td><td style=\"padding: 8px; border: 1px solid #ddd;\">{hora_cierre_fmt}</td></tr>\n"
             f"</table>\n"
             f"<p>Gracias por mantener tu información al día. Esto ayuda a ofrecer un mejor servicio a tus clientes. 🙌</p>\n"
             f"<p style=\"color: #0056b3;\">— El equipo de Gestiona tu Cita</p>\n"
@@ -491,7 +496,7 @@ def editar_horario(request):
 
         mensaje_telegram_empresa = (
             f"🔔 ¡Hola! Tu empresa *{nombre_empresa}* ha actualizado su horario de atención:\n"
-            f"🕒 *Horario:* {hora_inicio.strftime('%H:%M')} - {hora_cierre.strftime('%H:%M')}\n"
+            f"🕒 *Horario:* {hora_inicio_fmt} - {hora_cierre_fmt}\n"
             f"Gracias por mantener tu información al día con *Gestiona tu Cita* 💼"
         )
 
@@ -524,8 +529,8 @@ def editar_horario(request):
                 f"<p>Queremos informarte que la empresa <b>{nombre_empresa}</b> ha actualizado su horario de atención.</p>\n"
                 f"<p>🕒 Los nuevos horarios son:</p>\n"
                 f"<table style=\"border-collapse: collapse; margin: 20px 0;\">\n"
-                f"<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><b>Hora de inicio:</b></td><td style=\"padding: 8px; border: 1px solid #ddd;\">{hora_inicio.strftime('%H:%M')}</td></tr>\n"
-                f"<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><b>Hora de cierre:</b></td><td style=\"padding: 8px; border: 1px solid #ddd;\">{hora_cierre.strftime('%H:%M')}</td></tr>\n"
+                f"<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><b>Hora de inicio:</b></td><td style=\"padding: 8px; border: 1px solid #ddd;\">{hora_inicio_fmt}</td></tr>\n"
+                f"<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><b>Hora de cierre:</b></td><td style=\"padding: 8px; border: 1px solid #ddd;\">{hora_cierre_fmt}</td></tr>\n"
                 f"</table>\n"
                 f"<p>Gracias por confiar en nuestros servicios.</p>\n"
                 f"<p style=\"color: #0056b3;\">— El equipo de Gestiona tu Cita</p>\n"
@@ -551,7 +556,7 @@ def editar_horario(request):
                     mensaje_telegram_cliente = (
                         f"👋 Hola {nombre_cliente},\n"
                         f"📢 La empresa *{nombre_empresa}* ha actualizado su horario de atención.\n"
-                        f"🕒 Nuevo horario: {hora_inicio.strftime('%H:%M')} - {hora_cierre.strftime('%H:%M')}\n"
+                        f"🕒 Nuevo horario: {hora_inicio_fmt} - {hora_cierre_fmt}\n"
                         f"Gracias por preferirnos 💙"
                     )
                     enviado = enviar_mensaje_telegram(cliente.telegram_chat_id, mensaje_telegram_cliente)
@@ -579,7 +584,6 @@ def editar_horario(request):
         return redirect('app:empresa_panel')
 
     return render(request, 'app/editar_horario.html', {'empresa': empresa})
-
 
 # Editar días laborables
 @login_required(login_url='app:login')
