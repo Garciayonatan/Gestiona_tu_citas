@@ -60,7 +60,6 @@
       transition: background-color 0.3s ease;
     }
     button:hover { background: #5a3579; }
-    /* Mensajes */
     .message {
       margin-top: 15px;
       padding: 10px;
@@ -69,7 +68,6 @@
     }
     .message.error { background: #f8d7da; color: #842029; }
     .message.success { background: #d1e7dd; color: #0f5132; }
-    /* Otros estilos existentes */
     .servicio-detalle {
       margin-top: 10px;
       background: #f1f1f1;
@@ -104,7 +102,6 @@
   <div class="form-box">
     <h2>Solicitar Nueva Cita</h2>
 
-    <!-- Bloque para mostrar mensajes -->
     {% if messages %}
       {% for message in messages %}
         <div class="message {{ message.tags }}">{{ message }}</div>
@@ -153,7 +150,8 @@
       <textarea
         name="comentarios"
         id="comentarios"
-        placeholder="Agrega algún comentario adicional...">{{ comentarios|default:'' }}</textarea>
+        placeholder="Agrega algún comentario adicional..."
+      >{{ comentarios|default:'' }}</textarea>
 
       <!-- BLOQUE para confirmar repetición de servicio -->
       {% if servicio_repetido %}
