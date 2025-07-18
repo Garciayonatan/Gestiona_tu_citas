@@ -57,12 +57,6 @@
             border-radius: 8px;
             font-weight: 600;
         }
-        input[type="time"] {
-            padding: 6px 12px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            width: 100%;
-        }
     </style>
 </head>
 <body>
@@ -114,8 +108,9 @@
 
             <!-- Hora -->
             <div class="mb-3">
-                <label class="form-label fw-semibold">Hora</label>
-                <input type="time" name="hora" value="{{ form.initial.hora|time:'H:i' }}" class="form-control" required>
+                <label class="form-label fw-semibold" for="{{ form.hora.id_for_label }}">Hora</label>
+                {{ form.hora }}
+                <div class="form-text">Formato: 02:30 PM (hora dominicana)</div>
                 {% if form.hora.errors %}
                     <div class="text-danger small mt-1">
                         {{ form.hora.errors|striptags }}
