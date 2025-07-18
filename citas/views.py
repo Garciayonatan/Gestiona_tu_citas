@@ -1174,14 +1174,6 @@ def editar_cita(request, cita_id):
     if cita.estado not in ['completada', 'rechazada', 'vencida'] and cita_datetime < ahora:
         cita.estado = 'vencida'
         cita.save()
-    #aqui esta la validacion de que no puede eliminar faltando 20 minuto
-
-    # Obtener la hora actual
-       # ahora = now()
-
-# Combinar fecha y hora de la cita
-# Obtener la hora actual
-    #y aqui termina esto 
 
     # Bloquear edición si el estado no permite
     if cita.estado in ['completada', 'rechazada', 'vencida']:
@@ -1238,8 +1230,8 @@ def editar_cita(request, cita_id):
 
             cita_nueva.save()
 
-            # Notificar cambios
-            notificar_cita(
+            # Notificar cambios y capturar resultados
+            resultados = notificar_cita(
                 cita_nueva,
                 cita_nueva.cliente,
                 cita_nueva.empresa,
@@ -1249,6 +1241,12 @@ def editar_cita(request, cita_id):
             )
 
             messages.success(request, "✅ Cita actualizada correctamente.")
+
+            if resultados.get("email_cliente") or resultados.get("email_empresa"):
+                messages.success(request, "📧 Notificaciones enviadas por correo electrónico.")
+            if resultados.get("telegram_cliente") or resultados.get("telegram_empresa"):
+                messages.success(request, "📲 Notificaciones enviadas por Telegram.")
+
             return redirect('app:cliente_panel')
 
         else:
@@ -1259,6 +1257,7 @@ def editar_cita(request, cita_id):
         form = EditarCitaForm(instance=cita)
 
     return render(request, 'app/editar_cita.html', {'form': form, 'cita': cita})
+
 
 def notificar_cita(cita, cliente, empresa, servicio, comentarios, accion):
     comentarios = comentarios.strip() if comentarios else "Sin comentarios"
@@ -1297,21 +1296,36 @@ def notificar_cita(cita, cliente, empresa, servicio, comentarios, accion):
         )
     }
 
+    resultados = {
+        "email_cliente": False,
+        "email_empresa": False,
+        "telegram_cliente": False,
+        "telegram_empresa": False,
+    }
+
+    # Enviar correos electrónicos
     try:
         if cliente.user.email:
             send_mail(asunto, mensajes["cliente"], settings.DEFAULT_FROM_EMAIL, [cliente.user.email])
+            resultados["email_cliente"] = True
         if empresa.user.email:
             send_mail(asunto, mensajes["empresa"], settings.DEFAULT_FROM_EMAIL, [empresa.user.email])
+            resultados["email_empresa"] = True
     except Exception as e:
         logger.error(f"Error al enviar correos: {e}")
 
+    # Enviar mensajes por Telegram
     try:
         if cliente.telegram_chat_id:
             enviar_mensaje_telegram(cliente.telegram_chat_id, mensajes["cliente"])
+            resultados["telegram_cliente"] = True
         if empresa.telegram_chat_id:
             enviar_mensaje_telegram(empresa.telegram_chat_id, mensajes["empresa"])
+            resultados["telegram_empresa"] = True
     except Exception as e:
         logger.error(f"Error al enviar mensajes por Telegram: {e}")
+
+    return resultados
     #whatsapp
    # try:
         ## else:
