@@ -1535,8 +1535,12 @@ def administrar_servicios(request):
     if request.method == 'POST':
         if 'eliminar_servicio' in request.POST:
             servicio_id = request.POST.get('servicio_id')
-            servicio = get_object_or_404(Servicio, id=servicio_id, empresa=empresa)
-            servicio.delete()
+            try:
+                servicio = Servicio.objects.get(id=servicio_id, empresa=empresa)
+                servicio.delete()
+                messages.success(request, "Servicio eliminado correctamente.")
+            except Servicio.DoesNotExist:
+                messages.error(request, "El servicio que intentas eliminar no existe o ya fue eliminado.")
             return redirect('app:servicios_empresa')
 
         elif 'cantidad_empleados' in request.POST:
@@ -1544,7 +1548,10 @@ def administrar_servicios(request):
             if cantidad_empleados and cantidad_empleados.isdigit():
                 empresa.cantidad_empleados = int(cantidad_empleados)
                 empresa.save()
-                return redirect('app:servicios_empresa')
+                messages.success(request, "Cantidad de empleados actualizada correctamente.")
+            else:
+                messages.error(request, "Cantidad de empleados inválida.")
+            return redirect('app:servicios_empresa')
 
         else:
             form = ServicioForm(request.POST)
@@ -1552,7 +1559,10 @@ def administrar_servicios(request):
                 nuevo_servicio = form.save(commit=False)
                 nuevo_servicio.empresa = empresa
                 nuevo_servicio.save()
+                messages.success(request, "Servicio agregado correctamente.")
                 return redirect('app:servicios_empresa')
+            else:
+                messages.error(request, "Error al agregar el servicio. Verifique los datos.")
 
     servicios = Servicio.objects.filter(empresa=empresa)
 
