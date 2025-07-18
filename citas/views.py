@@ -1240,13 +1240,17 @@ def editar_cita(request, cita_id):
                 "actualizada"
             )
 
-            messages.success(request, "✅ Cita actualizada correctamente.")
-
+            mensaje = "✅ Cita actualizada correctamente."
+            notificaciones = []
             if resultados.get("email_cliente") or resultados.get("email_empresa"):
-                messages.success(request, "📧 Notificaciones enviadas por correo electrónico.")
+                notificaciones.append("📧 Notificaciones enviadas por correo electrónico.")
             if resultados.get("telegram_cliente") or resultados.get("telegram_empresa"):
-                messages.success(request, "📲 Notificaciones enviadas por Telegram.")
+                notificaciones.append("📲 Notificaciones enviadas por Telegram.")
 
+            if notificaciones:
+                mensaje += " " + " ".join(notificaciones)
+
+            messages.success(request, mensaje)
             return redirect('app:cliente_panel')
 
         else:
@@ -1262,7 +1266,7 @@ def editar_cita(request, cita_id):
 def notificar_cita(cita, cliente, empresa, servicio, comentarios, accion):
     comentarios = comentarios.strip() if comentarios else "Sin comentarios"
     asunto = f"Cita {accion.capitalize()} - {empresa.nombre_empresa}"
-    
+
     mensajes = {
         "cliente": (
             f"Hola {cliente.nombre_completo},\n\n"
@@ -1303,7 +1307,6 @@ def notificar_cita(cita, cliente, empresa, servicio, comentarios, accion):
         "telegram_empresa": False,
     }
 
-    # Enviar correos electrónicos
     try:
         if cliente.user.email:
             send_mail(asunto, mensajes["cliente"], settings.DEFAULT_FROM_EMAIL, [cliente.user.email])
@@ -1314,7 +1317,6 @@ def notificar_cita(cita, cliente, empresa, servicio, comentarios, accion):
     except Exception as e:
         logger.error(f"Error al enviar correos: {e}")
 
-    # Enviar mensajes por Telegram
     try:
         if cliente.telegram_chat_id:
             enviar_mensaje_telegram(cliente.telegram_chat_id, mensajes["cliente"])
@@ -1326,23 +1328,6 @@ def notificar_cita(cita, cliente, empresa, servicio, comentarios, accion):
         logger.error(f"Error al enviar mensajes por Telegram: {e}")
 
     return resultados
-    #whatsapp
-   # try:
-        ## else:
-           # logger.warning("❌ El cliente no tiene número de teléfono registrado.")
-
-        #if empresa.telefono:
-           ### enviar_whatsapp(numero_empresa, mensajes["empresa"])
-               # logger.info(f"✅ WhatsApp enviado a la empresa: {numero_empresa}")
-            #else:
-               # logger.warning(f"❌ Número inválido de la empresa: {empresa.telefono}")
-        #else:
-           #logger.warning("❌ La empresa no tiene número de teléfono registrado.")
-
-    #except Exception as e:
-        #logger.warning(f"⚠️ Error al enviar WhatsApp: {e}")
-       
-       #whatsapp
 
 
 @login_required(login_url='app:login')
