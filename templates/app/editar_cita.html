@@ -108,8 +108,24 @@
 
             <!-- Hora -->
             <div class="mb-3">
-                <label class="form-label fw-semibold" for="{{ form.hora.id_for_label }}">Hora</label>
-                {{ form.hora }}
+                <label class="form-label fw-semibold" for="id_hora">Hora</label>
+                <select name="hora" id="id_hora" class="form-control">
+                    {% for h in "07,07:30,08,08:30,09,09:30,10,10:30,11,11:30,12,12:30,13,13:30,14,14:30,15,15:30,16,16:30,17,17:30,18,18:30,19,19:30".split(',') %}
+                        {% with h|slice:":2" as hour h|slice:"3:" as minute %}
+                            {% with hour|add:"0"|int as hr minute|add:"0"|int as mn %}
+                                {% if hr < 12 %}
+                                    {% with hr|stringformat:"02d"|add:":"|add:mn|stringformat:"02d"|add:" AM" as formatted %}
+                                {% elif hr == 12 %}
+                                    {% with "12"|add:":"|add:mn|stringformat:"02d"|add:" PM" as formatted %}
+                                {% else %}
+                                    {% with hr|add:"-12"|int|stringformat:"02d"|add:":"|add:mn|stringformat:"02d"|add:" PM" as formatted %}
+                                {% endif %}
+                                    <option value="{{ h }}" {% if form.hora.value == h %}selected{% endif %}>{{ formatted }}</option>
+                                {% endwith %}
+                            {% endwith %}
+                        {% endwith %}
+                    {% endfor %}
+                </select>
                 {% if form.hora.errors %}
                     <div class="text-danger small mt-1">
                         {{ form.hora.errors|striptags }}
