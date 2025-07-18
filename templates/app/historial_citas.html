@@ -278,11 +278,11 @@
         {% for cita in historial %}
         <tr>
           <td data-label="Cliente">{{ cita.cliente.nombre_completo }}</td>
-          <td data-label="Servicio">{{ cita.servicio.nombre }} (RD$ {{ cita.servicio.precio }})</td>
+          <td data-label="Servicio">{{ cita.servicio.nombre }} (RD$ {{ cita.servicio.precio|floatformat:0|intcomma }})</td>
           <td data-label="Fecha">{{ cita.fecha }}</td>
           <td data-label="Hora">{{ cita.hora|time:"h:i A" }}</td>
           <td data-label="Estado">{{ cita.get_estado_display }}</td>
-          <td data-label="Total">RD$ {{ cita.total_servicios }}</td>
+          <td data-label="Total">RD$ {{ cita.total_servicios|floatformat:0|intcomma }}</td>
         </tr>
         {% empty %}
         <tr>
