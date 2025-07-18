@@ -5,8 +5,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Editar Cita</title>
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+    <!-- Flatpickr CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet" />
+
     <style>
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -60,72 +65,76 @@
     </style>
 </head>
 <body>
-    <div class="container shadow-sm">
-        <h2>Editar Cita</h2>
+<div class="container shadow-sm">
+    <h2>Editar Cita</h2>
 
-        <!-- Mensajes flash -->
-        {% if messages %}
-            <div class="mb-3">
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-                    </div>
+    {% if messages %}
+        <div class="mb-3">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <form method="POST" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                    {{ error }}
                 {% endfor %}
             </div>
         {% endif %}
 
-        <!-- Formulario de edición -->
-        <form method="POST" novalidate>
-            {% csrf_token %}
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Empresa</label>
+            <input type="text" class="form-control" value="{{ cita.empresa.nombre_empresa }}" disabled>
+            <input type="hidden" name="empresa" value="{{ cita.empresa.id }}">
+        </div>
 
-            <!-- Errores generales del formulario -->
-            {% if form.non_field_errors %}
-                <div class="alert alert-danger">
-                    {% for error in form.non_field_errors %}
-                        {{ error }}
-                    {% endfor %}
+        <div class="mb-3">
+            <label class="form-label fw-semibold" for="{{ form.fecha.id_for_label }}">Fecha</label>
+            {{ form.fecha }}
+            {% if form.fecha.errors %}
+                <div class="text-danger small mt-1">
+                    {{ form.fecha.errors|striptags }}
                 </div>
             {% endif %}
+        </div>
 
-            <!-- Empresa (solo lectura) -->
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Empresa</label>
-                <input type="text" class="form-control" value="{{ cita.empresa.nombre_empresa }}" disabled>
-                <input type="hidden" name="empresa" value="{{ cita.empresa.id }}">
-            </div>
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Hora</label>
+            <input type="text" id="horaPicker" name="hora" class="form-control" placeholder="Selecciona la hora" value="{{ cita.hora|time:'h:i A' }}">
+            {% if form.hora.errors %}
+                <div class="text-danger small mt-1">
+                    {{ form.hora.errors|striptags }}
+                </div>
+            {% endif %}
+        </div>
 
-            <!-- Fecha -->
-            <div class="mb-3">
-                <label class="form-label fw-semibold" for="{{ form.fecha.id_for_label }}">Fecha</label>
-                {{ form.fecha }}
-                {% if form.fecha.errors %}
-                    <div class="text-danger small mt-1">
-                        {{ form.fecha.errors|striptags }}
-                    </div>
-                {% endif %}
-            </div>
+        <div class="d-flex justify-content-between">
+            <a href="{% url 'app:cliente_panel' %}" class="btn btn-cancel">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Guardar cambios</button>
+        </div>
+    </form>
+</div>
 
-            <!-- Hora -->
-            <div class="mb-3">
-                <label class="form-label fw-semibold" for="{{ form.hora.id_for_label }}">Hora</label>
-                {{ form.hora }}
-                {% if form.hora.errors %}
-                    <div class="text-danger small mt-1">
-                        {{ form.hora.errors|striptags }}
-                    </div>
-                {% endif %}
-            </div>
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-            <!-- Botones -->
-            <div class="d-flex justify-content-between">
-                <a href="{% url 'app:cliente_panel' %}" class="btn btn-cancel">Cancelar</a>
-                <button type="submit" class="btn btn-primary">Guardar cambios</button>
-            </div>
-        </form>
-    </div>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    flatpickr("#horaPicker", {
+        enableTime: true,
+        noCalendar: true,
+        dateFormat: "h:i K", // 12h con AM/PM
+        time_24hr: false
+    });
+</script>
 </body>
 </html>
