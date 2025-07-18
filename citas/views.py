@@ -1572,17 +1572,20 @@ def administrar_servicios(request):
 #cita eliminar empresa
 # views.py
 
-@login_required(login_url='home')  # Asegura que el usuario esté logueado
 def empresa_panel(request):
     """
     Muestra el panel de la empresa, listando únicamente las citas
-    cuya bandera visible_para_empresa esté en True.
-    Si el usuario no tiene empresa asociada, lo redirige al home.
+    visibles. Si no está logueado, lo manda a home.
+    Si está logueado pero no tiene empresa, lo manda a login.
     """
+
+    if not request.user.is_authenticated:
+        return redirect('home')  # No logueado → a home
+
     try:
         empresa = Empresa.objects.get(user=request.user)
     except Empresa.DoesNotExist:
-        return redirect('home')  # Si no tiene empresa, lo manda al home
+        return redirect('login')  # Logueado pero sin empresa → a login
 
     # Obtener citas pendientes visibles para la empresa
     citas_pendientes = Cita.objects.filter(
