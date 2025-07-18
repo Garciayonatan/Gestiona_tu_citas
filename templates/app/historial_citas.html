@@ -282,7 +282,8 @@
           <td data-label="Fecha">{{ cita.fecha }}</td>
           <td data-label="Hora">{{ cita.hora|time:"h:i A" }}</td>
           <td data-label="Estado">{{ cita.get_estado_display }}</td>
-          <td data-label="Total">RD$ {{ cita.total_servicios }}</td>
+          <td data-label="Total">RD$ {{ cita.total_servicios|floatformat:"0" }}</td>
+
         </tr>
         {% empty %}
         <tr>
