@@ -27,7 +27,7 @@ urlpatterns = [
     # Paneles de usuario
     path('cliente/panel/', views.cliente_panel, name='cliente_panel'),
     path('empresa/panel/', views.empresa_panel, name='empresa_panel'),
-    path('empresa/panel/', views.redirigir_panel_empresa, name='redirigir_panel_empresa'), #dirigir
+    #path('empresa/panel/', views.redirigir_panel_empresa, name='redirigir_panel_empresa'), #dirigir
 
 
     path('empresa/<int:empresa_id>/editar/', views.editar_empresa, name='editar_empresa'),

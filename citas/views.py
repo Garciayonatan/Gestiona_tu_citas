@@ -1567,55 +1567,41 @@ def administrar_servicios(request):
     })
     
           #derigir si no tiene empresa
-def redirigir_panel_empresa(request):
-    if not request.user.is_authenticated:
-        return redirect('login')  # Cambia si usas otro nombre de vista para login
-
-    empresa = Empresa.objects.filter(user=request.user).first()
-
-    if empresa:
-        return redirect('empresa_panel', empresa_id=empresa.id)
-    else:
-        return redirect('home')  # Cambia a 'inicio' o la vista que muestra tu página principal
-
-
 
 
 #cita eliminar empresa
 # views.py
 
+@login_required(login_url='login')  # Asegura que el usuario esté logueado
 def empresa_panel(request):
     """
     Muestra el panel de la empresa, listando únicamente las citas
     cuya bandera visible_para_empresa esté en True.
+    Si no tiene empresa asociada, lo manda al home.
     """
-    empresa = get_object_or_404(Empresa, user=request.user)
+    try:
+        empresa = Empresa.objects.get(user=request.user)
+    except Empresa.DoesNotExist:
+        return redirect('home')  # Si no tiene empresa, lo manda a home
 
-    # borrar si no funciona
-    citas_pendientes = Cita.objects.filter( 
-        empresa=empresa, 
-        visible_para_empresa=True, 
-        estado='pendiente' 
-    ) 
+    # Obtener citas pendientes visibles para la empresa
+    citas_pendientes = Cita.objects.filter(
+        empresa=empresa,
+        visible_para_empresa=True,
+        estado='pendiente'
+    )
 
-    # Verificar si alguna ya pasó su hora → marcar como vencida
-    for cita in citas_pendientes: 
+    # Marcar como vencidas las citas que ya pasaron su hora
+    for cita in citas_pendientes:
         cita.marcar_vencida_si_paso()
-    # borrar si no funciona
 
+    # Obtener todas las citas visibles
     citas = Cita.objects.filter(empresa=empresa, visible_para_empresa=True)
+
     return render(request, 'app/empresa_panel.html', {
         'empresa': empresa,
         'citas': citas,
     })
-
-
-    citas = Cita.objects.filter(empresa=empresa, visible_para_empresa=True)
-    return render(request, 'app/empresa_panel.html', {
-        'empresa': empresa,
-        'citas': citas,
-    })
-
 
 def eliminar_cita_empresa(request, cita_id):
     """
