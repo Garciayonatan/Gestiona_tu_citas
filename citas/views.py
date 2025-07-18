@@ -1962,13 +1962,19 @@ def csrf_failure(request, reason=""):
 
 
 
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
 from django.db.models.functions import TruncMonth
-
 from django.db.models import Sum
-
+from datetime import datetime
 
 def formatear_con_coma_miles(valor):
-    return f"{int(valor):,}".replace(",", ",")
+    try:
+        valor_int = int(round(valor))
+        # Formato con coma como separador de miles
+        return f"{valor_int:,}"
+    except Exception:
+        return valor
 
 @login_required
 def historial_citas_empresa(request):
@@ -1981,9 +1987,7 @@ def historial_citas_empresa(request):
     ahora = datetime.now()
 
     for cita in historial:
-        # Verificamos si la cita ya pasó y actualizamos el estado si es necesario
         fecha_hora_cita = datetime.combine(cita.fecha, cita.hora)
-
         if cita.estado == 'aceptada' and fecha_hora_cita <= ahora:
             cita.estado = 'completada'
             cita.save()
@@ -1991,10 +1995,12 @@ def historial_citas_empresa(request):
             cita.estado = 'vencida'
             cita.save()
 
-        # Calculamos el total del servicio si existe
-        cita.total_servicios = cita.servicio.precio if cita.servicio else 0
+        # Calculamos total servicios y formateamos los valores para mostrar
+        precio = cita.servicio.precio if cita.servicio else 0
+        cita.total_servicios = precio
+        cita.total_servicios_formateado = formatear_con_coma_miles(precio)
+        cita.servicio.precio_formateado = formatear_con_coma_miles(precio) if cita.servicio else "0"
 
-    # Generamos el resumen mensual de ingresos por servicios completados
     resumen_qs = (
         Cita.objects.filter(empresa=empresa, estado='completada')
         .annotate(mes=TruncMonth('fecha'))
@@ -2027,6 +2033,7 @@ def historial_citas_empresa(request):
     }
 
     return render(request, 'app/historial_citas.html', context)
+
    # borrar sino funciona editar empresa
 
 
