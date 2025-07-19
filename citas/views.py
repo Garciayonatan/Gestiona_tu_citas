@@ -1529,7 +1529,9 @@ def eliminar_cita(request, cita_id):
         if errores:
             messages.warning(request, f"⚠️ Cita eliminada, pero fallaron: {', '.join(errores)}")
         else:
-            messages.success(request, "✉️ Notificaciones enviadas correctamente.")
+            messages.success(request, "📬 Correo enviado | 📲 Telegram enviado correctamente.")
+
+            #messages.success(request, "✉️ Notificaciones enviadas correctamente.")
 
         return redirect('app:cliente_panel')  # ✅ Esta línea es OBLIGATORIA para que retorne HttpResponse
 
