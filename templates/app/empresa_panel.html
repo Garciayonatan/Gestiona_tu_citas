@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Panel Empresa</title>
   <style>
-    /* Reset y box-sizing */
     *, *::before, *::after { box-sizing: border-box; }
 
     body {
@@ -155,25 +154,29 @@
 
     <section aria-labelledby="info-empresa">
       <h2 id="info-empresa">Información de la Empresa</h2>
-      <p><strong>Nombre:</strong> {{ empresa.nombre_empresa }}</p>
-      <p><strong>Dirección:</strong> {{ empresa.direccion }}</p>
-      <p><strong>Dueño:</strong> {{ empresa.nombre_dueno }}</p>
-      <p><strong>Tipo:</strong> {{ empresa.get_tipo_empresa_display }}</p>
-      <p><strong>Teléfono:</strong> {{ empresa.telefono }}</p>
-      <p><strong>Citas pendientes:</strong> {{ citas.count }}</p>
+      <p>🏢 <strong>Nombre:</strong> {{ empresa.nombre_empresa }}</p>
+      <p>📍 <strong>Dirección:</strong> {{ empresa.direccion }}</p>
+      <p>👤 <strong>Dueño:</strong> {{ empresa.nombre_dueno }}</p>
+      <p>🛠 <strong>Tipo:</strong> {{ empresa.get_tipo_empresa_display }}</p>
+      <p>📞 <strong>Teléfono:</strong> {{ empresa.telefono }}</p>
+      <p>📅 <strong>Citas pendientes:</strong>
+        {% if citas_pendientes_count > 0 %}
+          {{ citas_pendientes_count }}
+        {% else %}
+          <span class="no-citas">No hay citas pendientes</span>
+        {% endif %}
+      </p>
 
       <a class="btn-primary" href="{% url 'app:editar_empresa' empresa.id %}">✏️ Editar Empresa</a> 
-      <a class="btn-primary" href="{% url 'app:servicios_empresa' %}">Gestionar Servicios</a>
+      <a class="btn-primary" href="{% url 'app:servicios_empresa' %}">🛠 Gestionar Servicios</a>
 
       <h3>Editar Horario</h3>
       <form method="POST" action="{% url 'app:editar_horario' %}">
         {% csrf_token %}
         <label for="hora_inicio">Hora de inicio</label>
-        <input type="time" name="hora_inicio" id="hora_inicio"
-               value="{{ empresa.hora_inicio|default_if_none:'' }}" required/>
+        <input type="time" name="hora_inicio" id="hora_inicio" value="{{ empresa.hora_inicio|default_if_none:'' }}" required />
         <label for="hora_cierre">Hora de cierre</label>
-        <input type="time" name="hora_cierre" id="hora_cierre"
-               value="{{ empresa.hora_cierre|default_if_none:'' }}" required/>
+        <input type="time" name="hora_cierre" id="hora_cierre" value="{{ empresa.hora_cierre|default_if_none:'' }}" required />
         <button type="submit">Guardar horario</button>
       </form>
 
@@ -200,14 +203,16 @@
       {% if citas %}
         <table role="table">
           <thead>
-            <tr><th>Cliente</th><th>Fecha</th><th>Hora</th><th>Estado</th><th>Acciones</th></tr>
+            <tr>
+              <th>Cliente</th><th>Fecha</th><th>Hora</th><th>Estado</th><th>Acciones</th>
+            </tr>
           </thead>
           <tbody>
             {% for cita in citas %}
               <tr>
                 <td data-label="Cliente">{{ cita.cliente.nombre_completo }}</td>
                 <td data-label="Fecha">{{ cita.fecha|date:"d/m/Y" }}</td>
-                <td data-label="Hora">{{ cita.hora|time:"g:i a" }}</td>
+                <td data-label="Hora">{{ cita.hora|time:"g:i a" }}</td>
                 <td data-label="Estado">{{ cita.get_estado_display }}</td>
                 <td data-label="Acciones">
                   <div class="actions">

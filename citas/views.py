@@ -259,8 +259,8 @@ def empresa_panel(request):
     for cita in citas:
         # Combinar fecha y hora
         fecha_hora_cita = datetime.combine(cita.fecha, cita.hora)
-        
-        # Hacerla timezone-aware solo si no lo es
+
+        # Hacer timezone-aware si no lo es
         if timezone.is_naive(fecha_hora_cita):
             fecha_hora_cita = timezone.make_aware(fecha_hora_cita)
 
@@ -272,6 +272,10 @@ def empresa_panel(request):
             cita.estado = 'vencida'
             cita.save()
 
+    # Citas pendientes solo
+    citas_pendientes = citas.filter(estado='pendiente')
+    citas_pendientes_count = citas_pendientes.count()
+
     dias_laborables = empresa.dias_laborables.all()
     servicios = Servicio.objects.filter(empresa=empresa)
 
@@ -280,6 +284,8 @@ def empresa_panel(request):
         'citas': citas,
         'dias_laborables': dias_laborables,
         'servicios': servicios,
+        'citas_pendientes': citas_pendientes,
+        'citas_pendientes_count': citas_pendientes_count,  # Contador para la plantilla
     })
 
 #telegram noti
@@ -972,6 +978,15 @@ def cancelar_cita(request, cita_id):
 
 
 
+import logging
+from datetime import datetime, timedelta
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.utils.timezone import make_aware, now
+from django.core.mail import send_mail
+from django.conf import settings
+
 logger = logging.getLogger(__name__)
 
 @login_required(login_url='app:login')
@@ -1054,13 +1069,19 @@ def nueva_cita(request):
                 estado__in=['pendiente', 'aceptada']
             )
 
-            citas_superpuestas = [
-                cita for cita in citas_existentes
-                if not (
-                    make_aware(datetime.combine(cita.fecha, cita.hora)) + timedelta(minutes=cita.servicio.duracion) <= fecha_hora or
-                    fecha_hora_fin <= make_aware(datetime.combine(cita.fecha, cita.hora))
-                )
-            ]
+            citas_superpuestas = []
+            for cita in citas_existentes:
+                if cita.servicio is None:
+                    # Omitir citas sin servicio asignado para evitar error
+                    continue
+
+                cita_inicio = make_aware(datetime.combine(cita.fecha, cita.hora))
+                cita_fin = cita_inicio + timedelta(minutes=cita.servicio.duracion)
+
+                # Si NO se cumple que la cita existente termine antes de la nueva cita
+                # o que la nueva cita termine antes de la existente, entonces hay solapamiento
+                if not (cita_fin <= fecha_hora or fecha_hora_fin <= cita_inicio):
+                    citas_superpuestas.append(cita)
 
             if len(citas_superpuestas) >= empresa.capacidad:
                 messages.error(request, 'No hay disponibilidad para la hora seleccionada. Intenta con otro horario.')
@@ -1133,8 +1154,7 @@ def nueva_cita(request):
                     telegram_enviado = True
                 telegram_ok = telegram_enviado
                 if not telegram_enviado:
-                    # No tienen telegram configurado, no es error
-                    telegram_ok = True
+                    telegram_ok = True  # No es error si no tienen Telegram configurado
             except Exception as e:
                 telegram_ok = False
                 logger.warning(f"⚠️ Error al enviar Telegram: {e}")
@@ -1163,6 +1183,9 @@ def nueva_cita(request):
             messages.error(request, "❌ Ocurrió un error inesperado. Inténtalo más tarde.")
 
     return render(request, 'app/nueva_cita.html', {'empresas': empresas})
+
+
+# El resto de funciones que mostraste (editar_cita, notificar_cita) no requieren cambios relacionados a este error.
 
 
 logger = logging.getLogger(__name__)
@@ -1618,7 +1641,10 @@ def empresa_panel(request):
     return render(request, 'app/empresa_panel.html', {
         'empresa': empresa,
         'citas': citas,
+        'citas_pendientes_count': citas_pendientes.count(),
+
     })
+
 def eliminar_cita_empresa(request, cita_id):
     """
     Marca la cita como no visible en el panel de la empresa en lugar de eliminarla de la base de datos.
@@ -1960,13 +1986,9 @@ def csrf_failure(request, reason=""):
    # return JsonResponse({"mensaje": "Recordatorios enviados"})
            #probar solamente
 
-
-
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
 from django.db.models.functions import TruncMonth
 from django.db.models import Sum
-from datetime import datetime
+
 
 def formatear_con_coma_miles(valor):
     try:
@@ -1982,7 +2004,8 @@ def historial_citas_empresa(request):
     if not empresa:
         return render(request, 'app/no_empresa.html')
 
-    historial = Cita.objects.filter(empresa=empresa).order_by('-fecha', '-hora')
+    # Filtramos solo las citas que tienen servicio asignado para evitar mostrar citas sin servicio
+    historial = Cita.objects.filter(empresa=empresa, servicio__isnull=False).order_by('-fecha', '-hora')
 
     ahora = datetime.now()
 
@@ -1999,10 +2022,11 @@ def historial_citas_empresa(request):
         precio = cita.servicio.precio if cita.servicio else 0
         cita.total_servicios = precio
         cita.total_servicios_formateado = formatear_con_coma_miles(precio)
-        cita.servicio.precio_formateado = formatear_con_coma_miles(precio) if cita.servicio else "0"
+        if cita.servicio:
+            cita.servicio.precio_formateado = formatear_con_coma_miles(precio)
 
     resumen_qs = (
-        Cita.objects.filter(empresa=empresa, estado='completada')
+        Cita.objects.filter(empresa=empresa, estado='completada', servicio__isnull=False)
         .annotate(mes=TruncMonth('fecha'))
         .values('mes')
         .annotate(total=Sum('servicio__precio'))
