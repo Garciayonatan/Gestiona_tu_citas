@@ -1380,36 +1380,27 @@ def notificar_cita(cita, cliente, empresa, servicio, comentarios, accion):
 
 @login_required(login_url='app:login')
 def eliminar_cita(request, cita_id):
-    #cita = get_object_or_404(Cita, id=cita_id, cliente__user=request.user)
     try:
-            cita = Cita.objects.get(id=cita_id, cliente__user=request.user)
+        cita = Cita.objects.get(id=cita_id, cliente__user=request.user)
     except Cita.DoesNotExist:
-             messages.error(request, "❌ Esta cita ya fue eliminada o no existe.")
-             return redirect('app:cliente_panel')
-              #aqui termina , esto es por el error que salia al borrar
+        messages.error(request, "❌ Esta cita ya fue eliminada o no existe.")
+        return redirect('app:cliente_panel')
 
     if request.method == 'POST':
-        # Guardar datos antes de eliminar    
-        #    #aqui poner los de validacion de que no -20 no 
-
         ahora = timezone.now()
-
         cita_datetime = timezone.make_aware(
             datetime.combine(cita.fecha, cita.hora),
             timezone.get_current_timezone()
         )
 
+        # Validar que no se pueda eliminar si está aceptada y faltan 20 minutos o menos
         if cita.estado == 'aceptada' and (cita_datetime - ahora) <= timedelta(minutes=20):
             messages.error(
                 request,
                 "🚫 No puedes eliminar una cita aceptada si faltan 20 minutos o menos para su inicio."
             )
             return redirect('app:cliente_panel')
-         # Validar que si la cita está aceptada y faltan 20 minutos o menos no se pueda
-         #comienza aqui
- 
-    
-            #termina aqui la validacion   
+
         cliente = request.user
         cliente_nombre = cita.cliente.nombre_completo or cliente.username
         cliente_email = cliente.email
@@ -1424,40 +1415,27 @@ def eliminar_cita(request, cita_id):
         fecha = cita.fecha
         hora = cita.hora
         estado = cita.estado
-        
-        # Eliminar la cita
-       # cita.delete()
-        #messages.success(request, '✅ Cita eliminada exitosamente.')
 
-        # Ocultar la cita en vez de eliminarla
-        cita.estado = 'cancelada'  # opcional, para que quede como cancelada
+        # En vez de eliminar, ocultamos la cita y la marcamos como cancelada
         cita.visible_para_cliente = False
+        cita.estado = 'cancelada'
         cita.save()
+
         messages.success(request, '✅ Cita eliminada (ocultada) exitosamente.')
 
-
-        # 🚫 Si estaba completada, no enviar notificaciones
-        if estado == 'completada':
-            return redirect('app:cliente_panel')
-        
-        #🚫 Si estaba vencida, no enviar notificaciones
-        if estado == 'vencida':
+        # Si la cita estaba completada o vencida, no enviamos notificaciones
+        if estado in ['completada', 'vencida']:
             return redirect('app:cliente_panel')
 
         if estado != 'rechazada':
             errores = []
 
-            fecha_str = fecha.strftime('%d/%m/%Y')         # Muestra: 22/06/2025 (más amigable)
-            hora_str = hora.strftime('%I:%M %p')           # Muestra: 08:01 PM
-
-
-           # fecha_str = fecha.strftime('%Y-%m-%d')
-            #hora_str = hora.strftime('%H:%M:%S')
+            fecha_str = fecha.strftime('%d/%m/%Y')  # Formato amigable: 22/06/2025
+            hora_str = hora.strftime('%I:%M %p')    # Formato 12h: 08:01 PM
 
             asunto_cliente = "📩 Confirmación de cancelación de cita"
             asunto_empresa = "📢 Notificación de cita cancelada por el cliente"
 
-            # ✉️ Mensaje para el cliente
             mensaje_cliente = (
                 f"Hola {cliente_nombre},\n\n"
                 f"❌ Has cancelado tu cita con {empresa_nombre}.\n\n"
@@ -1469,7 +1447,7 @@ def eliminar_cita(request, cita_id):
                 f"📌 *Estado:* Cancelada\n\n"
                 f"Gracias por usar nuestro sistema. 😊"
             )
-            # ✉️ Mensaje para la empresa
+
             mensaje_empresa = (
                 f"Hola {empresa_dueno},\n\n"
                 f"❌ El cliente ha cancelado una cita.\n\n"
@@ -1507,63 +1485,31 @@ def eliminar_cita(request, cita_id):
                 logger.error(f"Error al enviar correo a la empresa: {e}")
                 errores.append("correo a la empresa")
 
-                errores = []  # Asegúrate de que esta línea esté antes de cualquier intento de enviar mensajes
+            # Enviar mensajes por Telegram
+            try:
+                if cliente_chat_id:
+                    enviado = enviar_mensaje_telegram(cliente_chat_id, mensaje_cliente)
+                    if not enviado:
+                        errores.append("Telegram al cliente")
+            except Exception as e:
+                logger.error(f"Error al enviar Telegram al cliente: {e}")
+                errores.append("Telegram al cliente")
 
-        # Enviar mensajes por Telegram
-        try:
-            if cliente_chat_id:
-                enviado = enviar_mensaje_telegram(cliente_chat_id, mensaje_cliente)
-                if not enviado:
-                    errores.append("Telegram al cliente")
-        except Exception as e:
-            logger.error(f"Error al enviar Telegram al cliente: {e}")
-            errores.append("Telegram al cliente")
+            try:
+                if empresa_chat_id:
+                    enviado = enviar_mensaje_telegram(empresa_chat_id, mensaje_empresa)
+                    if not enviado:
+                        errores.append("Telegram a la empresa")
+            except Exception as e:
+                logger.error(f"Error al enviar Telegram a la empresa: {e}")
+                errores.append("Telegram a la empresa")
 
-        try:
-            if empresa_chat_id:
-                enviado = enviar_mensaje_telegram(empresa_chat_id, mensaje_empresa)
-                if not enviado:
-                    errores.append("Telegram a la empresa")
-        except Exception as e:
-            logger.error(f"Error al enviar Telegram a la empresa: {e}")
-            errores.append("Telegram a la empresa")
+            if errores:
+                messages.warning(request, f"⚠️ Cita eliminada, pero fallaron: {', '.join(errores)}")
+            else:
+                messages.success(request, "📬 Correo enviado | 📲 Telegram enviado correctamente.")
 
-        # Enviar mensajes por WhatsApp
-       # try:
-           # if cita.cliente.telefono:
-              #  numero_cliente = formatear_numero(cita.cliente.telefono)
-               # if numero_cliente:
-                  #  enviar_whatsapp(numero_cliente, mensaje_cliente)
-                   # logger.info(f"✅ WhatsApp enviado al cliente: {numero_cliente}")
-                #else:
-                    #errores.append("WhatsApp (número cliente inválido)")
-                    #logger.warning("⚠️ Número de WhatsApp del cliente inválido.")
-       # except Exception as e:
-            logger.error(f"Error al enviar WhatsApp al cliente: {e}")
-            errores.append("WhatsApp al cliente")
-
-       # try:
-           ## numero_empresa = formatear_numero(empresa.telefono)
-               # if numero_empresa:
-                   # enviar_whatsapp(numero_empresa, mensaje_empresa)
-                    #logger.info(f"✅ WhatsApp enviado a la empresa: {numero_empresa}")
-                #else:
-                    #errores.append("WhatsApp (número empresa inválido)")
-                    #logger.warning("⚠️ Número de WhatsApp de la empresa inválido.")
-       # except Exception as e:
-            #logger.error(f"Error al enviar WhatsApp a la empresa: {e}")
-           # errores.append("WhatsApp a la empresa")
-
-        # Notificación visual
-        if errores:
-            messages.warning(request, f"⚠️ Cita eliminada, pero fallaron: {', '.join(errores)}")
-        else:
-            messages.success(request, "📬 Correo enviado | 📲 Telegram enviado correctamente.")
-
-            #messages.success(request, "✉️ Notificaciones enviadas correctamente.")
-
-        return redirect('app:cliente_panel')  # ✅ Esta línea es OBLIGATORIA para que retorne HttpResponse
-
+        return redirect('app:cliente_panel')
 
 
 # servicios administrar 
