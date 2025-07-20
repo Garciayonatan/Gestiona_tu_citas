@@ -751,7 +751,7 @@ def aceptar_cita(request, cita_id):
         f"👤 *Cliente:* {cita.cliente.nombre_completo}\n"
         f"🏢 *Empresa:* {cita.empresa.nombre_empresa}\n"
         f"📅 *Fecha:* {cita.fecha.strftime('%Y-%m-%d')}\n"
-        f"🕒 *Hora:* {cita.hora.strftime('%H:%M:%S')}\n"
+        f"🕒 *Hora:* {cita.hora.strftime('%I:%M %p')}\n"
         f"📌 *Estado:* {cita.get_estado_display()}\n\n"
         f"Gracias por usar nuestro sistema. 😊"
     )
@@ -763,7 +763,7 @@ def aceptar_cita(request, cita_id):
         f"👤 *Cliente:* {cita.cliente.nombre_completo}\n"
         f"🏢 *Empresa:* {cita.empresa.nombre_empresa}\n"
         f"📅 *Fecha:* {cita.fecha.strftime('%Y-%m-%d')}\n"
-        f"🕒 *Hora:* {cita.hora.strftime('%H:%M:%S')}\n"
+        f"🕒 *Hora:* {cita.hora.strftime('%I:%M %p')}\n"
         f"📌 *Estado:* {cita.get_estado_display()}\n\n"
         f"Gracias por usar nuestro sistema. 🙌"
     )
