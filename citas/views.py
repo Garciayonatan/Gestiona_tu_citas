@@ -723,7 +723,6 @@ def aceptar_cita(request, cita_id):
 
     ahora = timezone.now()
     cita_datetime = make_aware(datetime.combine(cita.fecha, cita.hora))
-
     if cita.estado == 'pendiente' and cita_datetime < ahora:
         messages.error(request, '⚠️ Esta cita ya venció. Recarga la página.')
         # Si no está vencida, acepta la cita
@@ -840,6 +839,11 @@ def rechazar_cita(request, cita_id):
         # Verificar si la cita ya venció
     ahora = now()
     cita_datetime = make_aware(datetime.combine(cita.fecha, cita.hora))
+    
+        
+    if cita.estado == 'completada':
+        messages.error(request, '⚠️ Esta cita ya fue completada y no se puede editar.')
+        return redirect('app:cliente_panel')
 
     if cita.estado == 'pendiente' and cita_datetime < ahora:
         messages.error(request, '⚠️ Esta cita ya venció. Recarga la página.')
