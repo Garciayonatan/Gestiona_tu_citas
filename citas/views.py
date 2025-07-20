@@ -224,10 +224,15 @@ def cliente_panel(request):
         fecha_hora_cita = timezone.make_aware(datetime.combine(cita.fecha, cita.hora))
 
         # Si está aceptada y ya pasó, se marca como completada
-        if cita.estado == 'aceptada' and fecha_hora_cita <= ahora:
+        #if cita.estado == 'aceptada' and fecha_hora_cita <= ahora:
+           # cita.estado = 'completada'
+            #cita.save()
+        if cita.estado == 'aceptada' and cita.servicio:
+          fecha_hora_cita = datetime.combine(cita.fecha, cita.hora)
+          fin_cita = fecha_hora_cita + timedelta(minutes=cita.servicio.duracion)
+          if ahora >= fin_cita:
             cita.estado = 'completada'
             cita.save()
-
         # Si está pendiente y ya pasó, se marca como vencida
         elif cita.estado == 'pendiente' and fecha_hora_cita <= ahora:
             cita.estado = 'vencida'
