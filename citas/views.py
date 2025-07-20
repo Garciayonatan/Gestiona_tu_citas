@@ -224,15 +224,18 @@ def cliente_panel(request):
         fecha_hora_cita = timezone.make_aware(datetime.combine(cita.fecha, cita.hora))
 
         # Si está aceptada y ya pasó, se marca como completada
-        #if cita.estado == 'aceptada' and fecha_hora_cita <= ahora:
-           # cita.estado = 'completada'
-            #cita.save()
+        # (comentado para no marcarla antes de que termine el servicio)
+        # if cita.estado == 'aceptada' and fecha_hora_cita <= ahora:
+        #     cita.estado = 'completada'
+        #     cita.save()
+
         if cita.estado == 'aceptada' and cita.servicio:
-          fecha_hora_cita = datetime.combine(cita.fecha, cita.hora)
-          fin_cita = fecha_hora_cita + timedelta(minutes=cita.servicio.duracion)
-          if ahora >= fin_cita:
-            cita.estado = 'completada'
-            cita.save()
+            # Usamos la misma fecha_hora_cita (ya con zona horaria)
+            fin_cita = fecha_hora_cita + timedelta(minutes=cita.servicio.duracion)
+            if ahora >= fin_cita:
+                cita.estado = 'completada'
+                cita.save()
+
         # Si está pendiente y ya pasó, se marca como vencida
         elif cita.estado == 'pendiente' and fecha_hora_cita <= ahora:
             cita.estado = 'vencida'
@@ -249,7 +252,6 @@ def cliente_panel(request):
         'empresas': empresas,
         'dias_laborables': dias,
     })
-
 # Panel de empresa
 
 @login_required(login_url='app:login')
