@@ -220,26 +220,23 @@ def cliente_panel(request):
 
     ahora = timezone.now()
     for cita in citas:
-        # Combinar fecha y hora de la cita
+        # Combinar fecha y hora de la cita con zona horaria
         fecha_hora_cita = timezone.make_aware(datetime.combine(cita.fecha, cita.hora))
 
-        # Si está aceptada y ya pasó, se marca como completada
-        # (comentado para no marcarla antes de que termine el servicio)
-        # if cita.estado == 'aceptada' and fecha_hora_cita <= ahora:
-        #     cita.estado = 'completada'
-        #     cita.save()
-
+        # Si está aceptada y ya pasó el tiempo completo del servicio, se marca como completada
         if cita.estado == 'aceptada' and cita.servicio:
-            # Usamos la misma fecha_hora_cita (ya con zona horaria)
             fin_cita = fecha_hora_cita + timedelta(minutes=cita.servicio.duracion)
             if ahora >= fin_cita:
                 cita.estado = 'completada'
                 cita.save()
 
-        # Si está pendiente y ya pasó, se marca como vencida
-        elif cita.estado == 'pendiente' and fecha_hora_cita <= ahora:
+        # Si sigue pendiente (nunca fue aceptada) y ya pasó la hora de inicio, se marca como vencida
+        elif cita.estado == 'pendiente' and ahora >= fecha_hora_cita:
             cita.estado = 'vencida'
             cita.save()
+
+        # Si está aceptada pero aún no ha pasado el tiempo total, no se hace nada
+        # Y así evitamos que una cita aceptada se marque como vencida por error
 
     # Consultar las empresas y días laborables para mostrarlas en el panel
     empresas = Empresa.objects.prefetch_related('dias_laborables')
