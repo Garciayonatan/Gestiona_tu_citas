@@ -1207,6 +1207,10 @@ def editar_cita(request, cita_id):
         messages.error(request, '⚠️ Esta cita ya fue completada y no se puede editar.')
         return redirect('app:cliente_panel')
 
+    if cita.estado == 'vencida':
+       messages.error(request, '⚠️ Esta cita ya está vencida y no se puede editar.')
+       return redirect('app:cliente_panel')
+
     # Cambiar estado a vencida si corresponde
   # Evaluar cambio de estado según la duración del servicio
     if cita.estado == 'aceptada' and cita.servicio:
