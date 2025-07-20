@@ -216,7 +216,8 @@ def cliente_panel(request):
     También actualiza automáticamente el estado de las citas que ya han pasado.
     """
     cliente = get_object_or_404(Cliente, user=request.user)
-    #citas = Cita.objects.filter(cliente=cliente).select_related('empresa', 'servicio').order_by('fecha', 'hora')
+    
+    # Obtener solo las citas visibles para el cliente
     citas = Cita.objects.filter(cliente=cliente, visible_para_cliente=True).select_related('empresa', 'servicio').order_by('fecha', 'hora')
 
     ahora = timezone.now()
@@ -241,8 +242,9 @@ def cliente_panel(request):
                 cita.estado = 'vencida'
                 cita.save()
 
-    # Refrescar citas después de actualizar
-    citas = Cita.objects.filter(cliente=cliente).select_related('empresa', 'servicio').order_by('fecha', 'hora')
+    # Refrescar citas después de actualizar, filtrando por visible_para_cliente=True
+    citas = Cita.objects.filter(cliente=cliente, visible_para_cliente=True).select_related('empresa', 'servicio').order_by('fecha', 'hora')
+    
     empresas = Empresa.objects.prefetch_related('dias_laborables')
     dias = DiaLaborable.objects.all()
 
@@ -252,6 +254,7 @@ def cliente_panel(request):
         'empresas': empresas,
         'dias_laborables': dias,
     })
+
 # Panel de empresa
 
 @login_required(login_url='app:login')
