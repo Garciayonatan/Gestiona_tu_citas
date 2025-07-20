@@ -251,6 +251,7 @@ def cliente_panel(request):
         'empresas': empresas,
         'dias_laborables': dias,
     })
+
 # Panel de empresa
 
 @login_required(login_url='app:login')
