@@ -112,6 +112,8 @@ class Cita(models.Model):
     servicio = models.ForeignKey(Servicio, on_delete=models.CASCADE, null=True, blank=True)
     # citas/models.py
     #recordatorio_enviado = models.BooleanField(default=False) #usar este solamente
+    visible_para_cliente = models.BooleanField(default=True, verbose_name="Visible para Cliente", help_text="Si es True, el cliente verá esta cita en su panel; si es False, no.")
+
 
 
     #segundo_recordatorio_enviado = models.BooleanField(default=False)

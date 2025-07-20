@@ -216,7 +216,8 @@ def cliente_panel(request):
     También actualiza automáticamente el estado de las citas que ya han pasado.
     """
     cliente = get_object_or_404(Cliente, user=request.user)
-    citas = Cita.objects.filter(cliente=cliente).select_related('empresa', 'servicio').order_by('fecha', 'hora')
+    #citas = Cita.objects.filter(cliente=cliente).select_related('empresa', 'servicio').order_by('fecha', 'hora')
+    citas = Cita.objects.filter(cliente=cliente, visible_para_cliente=True).select_related('empresa', 'servicio').order_by('fecha', 'hora')
 
     ahora = timezone.now()
 
@@ -1425,8 +1426,15 @@ def eliminar_cita(request, cita_id):
         estado = cita.estado
         
         # Eliminar la cita
-        cita.delete()
-        messages.success(request, '✅ Cita eliminada exitosamente.')
+       # cita.delete()
+        #messages.success(request, '✅ Cita eliminada exitosamente.')
+
+        # Ocultar la cita en vez de eliminarla
+        cita.estado = 'cancelada'  # opcional, para que quede como cancelada
+        cita.visible_para_cliente = False
+        cita.save()
+        messages.success(request, '✅ Cita eliminada (ocultada) exitosamente.')
+
 
         # 🚫 Si estaba completada, no enviar notificaciones
         if estado == 'completada':
