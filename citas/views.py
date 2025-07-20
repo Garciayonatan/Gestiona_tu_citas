@@ -1990,13 +1990,15 @@ def historial_citas_empresa(request):
     ahora = datetime.now()
 
     for cita in historial:
-        fecha_hora_cita = datetime.combine(cita.fecha, cita.hora)
-        if cita.estado == 'aceptada' and fecha_hora_cita <= ahora:
+       fecha_hora_cita = datetime.combine(cita.fecha, cita.hora)
+
+    if cita.estado in ['pendiente', 'aceptada'] and fecha_hora_cita <= ahora:
+        if cita.estado == 'aceptada':
             cita.estado = 'completada'
-            cita.save()
-        elif cita.estado == 'pendiente' and fecha_hora_cita <= ahora:
+        elif cita.estado == 'pendiente':
             cita.estado = 'vencida'
             cita.save()
+
 
         # Calculamos total servicios y formateamos los valores para mostrar
         precio = cita.servicio.precio if cita.servicio else 0
