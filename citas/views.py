@@ -840,11 +840,6 @@ def rechazar_cita(request, cita_id):
     ahora = now()
     cita_datetime = make_aware(datetime.combine(cita.fecha, cita.hora))
     
-        
-    if cita.estado == 'completada':
-        messages.error(request, '⚠️ Esta cita ya fue completada y no se puede editar.')
-        return redirect('app:cliente_panel')
-
     if cita.estado == 'pendiente' and cita_datetime < ahora:
         messages.error(request, '⚠️ Esta cita ya venció. Recarga la página.')
         return redirect('app:empresa_panel')
@@ -1206,6 +1201,11 @@ def editar_cita(request, cita_id):
 
     ahora = now()
     cita_datetime = make_aware(datetime.combine(cita.fecha, cita.hora))
+
+     
+    if cita.estado == 'completada':
+        messages.error(request, '⚠️ Esta cita ya fue completada y no se puede editar.')
+        return redirect('app:cliente_panel')
 
     # Cambiar estado a vencida si corresponde
   # Evaluar cambio de estado según la duración del servicio
