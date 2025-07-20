@@ -218,19 +218,22 @@ def cliente_panel(request):
     # Obtener las citas del cliente
     citas = Cita.objects.filter(cliente=cliente).select_related('empresa', 'servicio').order_by('fecha', 'hora')
 
-    ahora = timezone.localtime(timezone.now())  # fecha actual con zona horaria local
+    ahora = timezone.now()
 
     for cita in citas:
-        # Combinar fecha y hora (sin usar make_aware directamente)
-        fecha_hora_cita = timezone.localtime(datetime.combine(cita.fecha, cita.hora))
+        # Combinar fecha y hora
+        fecha_hora_cita = datetime.combine(cita.fecha, cita.hora)
+        if is_naive(fecha_hora_cita):
+            fecha_hora_cita = make_aware(fecha_hora_cita)
 
+        # Si está aceptada y ya pasó el tiempo completo del servicio, se marca como completada
         if cita.estado == 'aceptada' and cita.servicio:
             fin_cita = fecha_hora_cita + timedelta(minutes=cita.servicio.duracion)
             if ahora >= fin_cita:
                 cita.estado = 'completada'
                 cita.save()
 
-        # Solo si sigue pendiente y ya pasó su hora, se marca como vencida
+        # Si sigue pendiente y ya pasó su hora, se marca como vencida
         elif cita.estado == 'pendiente' and ahora >= fecha_hora_cita:
             cita.estado = 'vencida'
             cita.save()
