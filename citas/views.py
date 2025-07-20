@@ -1204,9 +1204,16 @@ def editar_cita(request, cita_id):
     cita_datetime = make_aware(datetime.combine(cita.fecha, cita.hora))
 
     # Cambiar estado a vencida si corresponde
-    if cita.estado not in ['completada', 'rechazada', 'vencida'] and cita_datetime < ahora:
+  # Evaluar cambio de estado según la duración del servicio
+    if cita.estado == 'aceptada' and cita.servicio:
+      fin_cita = cita_datetime + timedelta(minutes=cita.servicio.duracion)
+    if ahora >= fin_cita:
+        cita.estado = 'completada'
+        cita.save()
+    elif cita.estado == 'pendiente' and ahora >= cita_datetime:
         cita.estado = 'vencida'
         cita.save()
+
 
     # Bloquear edición si el estado no permite
     if cita.estado in ['completada', 'rechazada', 'vencida']:
