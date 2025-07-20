@@ -211,47 +211,37 @@ def registro_cliente(request):
 # Panel del cliente
 @login_required(login_url='app:login')
 def cliente_panel(request):
-    """
-    Vista para mostrar el panel del cliente con sus citas y las empresas disponibles.
-    También actualiza automáticamente el estado de las citas que ya han pasado.
-    """
     cliente = get_object_or_404(Cliente, user=request.user)
 
-    # Obtener las citas del cliente
     citas = Cita.objects.filter(cliente=cliente).select_related('empresa', 'servicio').order_by('fecha', 'hora')
-
     ahora = timezone.now()
 
     for cita in citas:
-        # Combinar fecha y hora
         fecha_hora_cita = datetime.combine(cita.fecha, cita.hora)
         if is_naive(fecha_hora_cita):
             fecha_hora_cita = make_aware(fecha_hora_cita)
 
-        # Si está aceptada y ya pasó el tiempo completo del servicio, se marca como completada
         if cita.estado == 'aceptada' and cita.servicio:
             fin_cita = fecha_hora_cita + timedelta(minutes=cita.servicio.duracion)
             if ahora >= fin_cita:
                 cita.estado = 'completada'
                 cita.save()
-
-        # Si sigue pendiente y ya pasó su hora, se marca como vencida
         elif cita.estado == 'pendiente' and ahora >= fecha_hora_cita:
             cita.estado = 'vencida'
             cita.save()
 
-    # Consultar las empresas y días laborables para mostrarlas en el panel
+    # Refrescar para mostrar estados actualizados
+    citas = Cita.objects.filter(cliente=cliente).select_related('empresa', 'servicio').order_by('fecha', 'hora')
+
     empresas = Empresa.objects.prefetch_related('dias_laborables')
     dias = DiaLaborable.objects.all()
 
-    # Renderizar el panel del cliente con las citas y empresas
     return render(request, 'app/cliente_panel.html', {
         'cliente': cliente,
         'citas': citas,
         'empresas': empresas,
         'dias_laborables': dias,
     })
-
 # Panel de empresa
 
 @login_required(login_url='app:login')
