@@ -1204,28 +1204,28 @@ def editar_cita(request, cita_id):
     cita = get_object_or_404(Cita, id=cita_id, cliente__user=request.user)
 
     ahora = now()
-    cita_datetime = make_aware(datetime.combine(cita.fecha, cita.hora))
+    cita_datetime = datetime.combine(cita.fecha, cita.hora)
+    if is_naive(cita_datetime):
+        cita_datetime = make_aware(cita_datetime)
 
-     
     if cita.estado == 'completada':
         messages.error(request, '⚠️ Esta cita ya fue completada y no se puede editar.')
         return redirect('app:cliente_panel')
 
     if cita.estado == 'vencida':
-       messages.error(request, '⚠️ Esta cita ya está vencida y no se puede editar.')
-       return redirect('app:cliente_panel')
+        messages.error(request, '⚠️ Esta cita ya está vencida y no se puede editar.')
+        return redirect('app:cliente_panel')
 
-    # Cambiar estado a vencida si corresponde
-  # Evaluar cambio de estado según la duración del servicio
-    if cita.estado == 'aceptada' and cita.servicio:
-      fin_cita = cita_datetime + timedelta(minutes=cita.servicio.duracion)
-    if ahora >= fin_cita:
-        cita.estado = 'completada'
-        cita.save()
-    elif cita.estado == 'pendiente' and ahora >= cita_datetime:
-        cita.estado = 'vencida'
-        cita.save()
+    # Cambiar estado a completada o vencida si corresponde
+    if cita.servicio:
+        fin_cita = cita_datetime + timedelta(minutes=cita.servicio.duracion)
 
+        if cita.estado == 'aceptada' and ahora >= fin_cita:
+            cita.estado = 'completada'
+            cita.save()
+        elif cita.estado == 'pendiente' and ahora >= cita_datetime:
+            cita.estado = 'vencida'
+            cita.save()
 
     # Bloquear edición si el estado no permite
     if cita.estado in ['completada', 'rechazada', 'vencida']:
@@ -1240,7 +1240,10 @@ def editar_cita(request, cita_id):
             cita_nueva.empresa = cita.empresa  # Mantener empresa original
             servicio = cita_nueva.servicio
 
-            nueva_fecha_hora = make_aware(datetime.combine(cita_nueva.fecha, cita_nueva.hora))
+            nueva_fecha_hora = datetime.combine(cita_nueva.fecha, cita_nueva.hora)
+            if is_naive(nueva_fecha_hora):
+                nueva_fecha_hora = make_aware(nueva_fecha_hora)
+
             if nueva_fecha_hora < ahora:
                 form.add_error(None, "❌ No puedes seleccionar una fecha y hora pasada.")
                 return render(request, 'app/editar_cita.html', {'form': form, 'cita': cita})
@@ -1256,7 +1259,9 @@ def editar_cita(request, cita_id):
             ).exclude(id=cita.id)
 
             for otra_cita in citas_cliente:
-                otra_inicio = make_aware(datetime.combine(otra_cita.fecha, otra_cita.hora))
+                otra_inicio = datetime.combine(otra_cita.fecha, otra_cita.hora)
+                if is_naive(otra_inicio):
+                    otra_inicio = make_aware(otra_inicio)
                 otra_fin = otra_inicio + timedelta(minutes=otra_cita.servicio.duracion)
                 if fecha_hora_inicio < otra_fin and fecha_hora_fin > otra_inicio:
                     form.add_error(None, "❌ Ya tienes una cita en ese horario.")
@@ -1271,7 +1276,9 @@ def editar_cita(request, cita_id):
 
             conflictos = 0
             for otra in citas_conflictivas:
-                otra_inicio = make_aware(datetime.combine(otra.fecha, otra.hora))
+                otra_inicio = datetime.combine(otra.fecha, otra.hora)
+                if is_naive(otra_inicio):
+                    otra_inicio = make_aware(otra_inicio)
                 otra_fin = otra_inicio + timedelta(minutes=otra.servicio.duracion)
                 if fecha_hora_inicio < otra_fin and fecha_hora_fin > otra_inicio:
                     conflictos += 1
@@ -1380,7 +1387,6 @@ def notificar_cita(cita, cliente, empresa, servicio, comentarios, accion):
 
     return resultados
 
-
 @login_required(login_url='app:login')
 def eliminar_cita(request, cita_id):
     try:
@@ -1420,9 +1426,17 @@ def eliminar_cita(request, cita_id):
         estado = cita.estado
 
         # En vez de eliminar, ocultamos la cita y la marcamos como cancelada
+        #cita.visible_para_cliente = False
+        #cita.estado = 'cancelada'
+        #cita.save()
+
+        # En vez de eliminar, ocultamos la cita
         cita.visible_para_cliente = False
-        cita.estado = 'cancelada'
+       # Solo cambiamos el estado si no es completada ni vencida
+        if cita.estado not in ['completada', 'vencida']:
+           cita.estado = 'cancelada'
         cita.save()
+
 
         messages.success(request, '✅ Cita eliminada (ocultada) exitosamente.')
 
@@ -1973,8 +1987,7 @@ from django.db.models import Sum
 def formatear_con_coma_miles(valor):
     try:
         valor_int = int(round(valor))
-        # Formato con coma como separador de miles
-        return f"{valor_int:,}"
+        return f"{valor_int:,}".replace(",", ",")  # Si deseas punto en lugar de coma, cambia aquí
     except Exception:
         return valor
 
@@ -1984,29 +1997,29 @@ def historial_citas_empresa(request):
     if not empresa:
         return render(request, 'app/no_empresa.html')
 
-    # Filtramos solo las citas que tienen servicio asignado para evitar mostrar citas sin servicio
     historial = Cita.objects.filter(empresa=empresa, servicio__isnull=False).order_by('-fecha', '-hora')
 
     ahora = datetime.now()
 
     for cita in historial:
-       fecha_hora_cita = datetime.combine(cita.fecha, cita.hora)
+        fecha_hora_cita = datetime.combine(cita.fecha, cita.hora)
 
-    if cita.estado in ['pendiente', 'aceptada'] and fecha_hora_cita <= ahora:
-        if cita.estado == 'aceptada':
-            cita.estado = 'completada'
-        elif cita.estado == 'pendiente':
-            cita.estado = 'vencida'
+        if cita.estado in ['pendiente', 'aceptada'] and fecha_hora_cita <= ahora:
+            if cita.estado == 'aceptada':
+                cita.estado = 'completada'
+            elif cita.estado == 'pendiente':
+                cita.estado = 'vencida'
             cita.save()
 
-
-        # Calculamos total servicios y formateamos los valores para mostrar
+        # Total y formato de servicio
         precio = cita.servicio.precio if cita.servicio else 0
         cita.total_servicios = precio
         cita.total_servicios_formateado = formatear_con_coma_miles(precio)
+
         if cita.servicio:
             cita.servicio.precio_formateado = formatear_con_coma_miles(precio)
 
+    # Resumen mensual de ingresos
     resumen_qs = (
         Cita.objects.filter(empresa=empresa, estado='completada', servicio__isnull=False)
         .annotate(mes=TruncMonth('fecha'))
@@ -2039,7 +2052,6 @@ def historial_citas_empresa(request):
     }
 
     return render(request, 'app/historial_citas.html', context)
-
    # borrar sino funciona editar empresa
 
 
