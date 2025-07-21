@@ -86,6 +86,9 @@ class Servicio(models.Model):
     empleados_disponibles = models.PositiveIntegerField(default=1, verbose_name="Cantidad de empleados disponibles", help_text="Número de citas que pueden atenderse al mismo tiempo.")
     #borrae
     nombre = models.CharField(max_length=100)#borrar
+    #''''' servicios ocultar
+    activo = models.BooleanField(default=True, verbose_name="Activo")  # 👈 Campo nuevo para ocultar servicios
+    #ocultar servicios
     def __str__(self):
         return f"{self.nombre} - {self.empresa.nombre_empresa} (${self.precio})"
 

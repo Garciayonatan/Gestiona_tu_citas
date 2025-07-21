@@ -1015,18 +1015,20 @@ def nueva_cita(request):
                 return redirect('app:nueva_cita')
 
             empresa = Empresa.objects.get(id=empresa_id)
-            servicio = Servicio.objects.get(id=servicio_id, empresa=empresa)
+            servicio = Servicio.objects.get(id=servicio_id, empresa=empresa, activo=True)
 
             fecha_hora_naive = datetime.strptime(fecha_hora_str, '%Y-%m-%dT%H:%M')
             fecha_hora = make_aware(fecha_hora_naive)
 
-            # Validación cita repetida completada sin confirmación
             confirmar_repeticion = request.POST.get('confirmar_repeticion') == '1'
+
+            # ✅ Corrección: validar si ya completó este servicio con esta empresa el mismo día
             cita_completada = Cita.objects.filter(
                 cliente=cliente,
                 empresa=empresa,
                 servicio=servicio,
-                estado='completada'
+                estado='completada',
+                fecha=fecha_hora.date()
             ).exists()
 
             if cita_completada and not confirmar_repeticion:
@@ -1039,12 +1041,10 @@ def nueva_cita(request):
                     'comentarios': comentarios,
                 })
 
-            # Validar fecha en pasado
             if fecha_hora < now():
                 messages.error(request, 'No puedes agendar una cita en el pasado.')
                 return redirect('app:nueva_cita')
 
-            # Validar cita existente en misma fecha y hora
             cita_existente = Cita.objects.filter(
                 cliente=cliente,
                 fecha=fecha_hora.date(),
@@ -1056,21 +1056,19 @@ def nueva_cita(request):
                 messages.error(request, 'Ya tienes una cita pendiente o aceptada a esta fecha y hora.')
                 return redirect('app:nueva_cita')
 
-            # Validar día laborable
             dias_semana = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom']
             dia_codigo = dias_semana[fecha_hora.weekday()]
             dias_laborables = [d.lower() for d in empresa.dias_laborables.values_list('codigo', flat=True)]
+
             if dia_codigo not in dias_laborables:
                 messages.error(request, 'La empresa no trabaja ese día.')
                 return redirect('app:nueva_cita')
 
-            # Validar hora dentro de horario laboral
             hora_cita = fecha_hora.time()
             if not (empresa.hora_inicio <= hora_cita <= empresa.hora_cierre):
                 messages.error(request, 'La hora está fuera del horario laboral.')
                 return redirect('app:nueva_cita')
 
-            # Validar capacidad de la empresa para esa hora
             fecha_hora_fin = fecha_hora + timedelta(minutes=servicio.duracion)
             citas_existentes = Cita.objects.filter(
                 empresa=empresa,
@@ -1081,14 +1079,11 @@ def nueva_cita(request):
             citas_superpuestas = []
             for cita in citas_existentes:
                 if cita.servicio is None:
-                    # Omitir citas sin servicio asignado para evitar error
                     continue
 
                 cita_inicio = make_aware(datetime.combine(cita.fecha, cita.hora))
                 cita_fin = cita_inicio + timedelta(minutes=cita.servicio.duracion)
 
-                # Si NO se cumple que la cita existente termine antes de la nueva cita
-                # o que la nueva cita termine antes de la existente, entonces hay solapamiento
                 if not (cita_fin <= fecha_hora or fecha_hora_fin <= cita_inicio):
                     citas_superpuestas.append(cita)
 
@@ -1096,7 +1091,6 @@ def nueva_cita(request):
                 messages.error(request, 'No hay disponibilidad para la hora seleccionada. Intenta con otro horario.')
                 return redirect('app:nueva_cita')
 
-            # Crear cita
             cita = Cita.objects.create(
                 cliente=cliente,
                 empresa=empresa,
@@ -1107,7 +1101,6 @@ def nueva_cita(request):
                 estado='pendiente'
             )
 
-            # Preparar mensajes para correo y telegram
             asunto = f"📅 Nueva cita - {empresa.nombre_empresa}"
             mensaje_cliente = (
                 f"Hola {cliente.nombre_completo},\n\n"
@@ -1143,7 +1136,6 @@ def nueva_cita(request):
             correo_ok = True
             telegram_ok = True
 
-            # Enviar correos
             try:
                 send_mail(asunto, mensaje_cliente, settings.DEFAULT_FROM_EMAIL, [cliente.user.email])
                 send_mail(asunto, mensaje_empresa, settings.DEFAULT_FROM_EMAIL, [empresa.user.email])
@@ -1152,7 +1144,6 @@ def nueva_cita(request):
                 logger.warning(f"⚠️ Error al enviar correos: {e}")
                 messages.warning(request, "Cita creada, pero ocurrió un error al enviar los correos.")
 
-            # Enviar telegram
             try:
                 telegram_enviado = False
                 if empresa.telegram_chat_id:
@@ -1163,13 +1154,12 @@ def nueva_cita(request):
                     telegram_enviado = True
                 telegram_ok = telegram_enviado
                 if not telegram_enviado:
-                    telegram_ok = True  # No es error si no tienen Telegram configurado
+                    telegram_ok = True
             except Exception as e:
                 telegram_ok = False
                 logger.warning(f"⚠️ Error al enviar Telegram: {e}")
                 messages.warning(request, "Cita creada, pero no se pudo enviar mensaje por Telegram.")
 
-            # Mensaje éxito para usuario, indicando estado de notificaciones
             if correo_ok and telegram_ok:
                 messages.success(request, "✅ Cita creada correctamente. Las notificaciones se enviaron correctamente por correo y Telegram.")
             elif correo_ok and not telegram_ok:
@@ -1184,7 +1174,7 @@ def nueva_cita(request):
         except Empresa.DoesNotExist:
             messages.error(request, "Empresa no encontrada.")
         except Servicio.DoesNotExist:
-            messages.error(request, "Servicio no válido o no pertenece a la empresa.")
+            messages.error(request, "Servicio no válido o no pertenece a la empresa, o está inactivo.")
         except ValueError as ve:
             messages.error(request, f"Fecha y hora inválidas: {ve}")
         except Exception as e:
@@ -1192,7 +1182,6 @@ def nueva_cita(request):
             messages.error(request, "❌ Ocurrió un error inesperado. Inténtalo más tarde.")
 
     return render(request, 'app/nueva_cita.html', {'empresas': empresas})
-
 
 # El resto de funciones que mostraste (editar_cita, notificar_cita) no requieren cambios relacionados a este error.
 
@@ -1541,7 +1530,8 @@ def formatear_precio(precio):
 def administrar_servicios(request):
     """
     Vista para administrar los servicios de una empresa.
-    Permite agregar, listar y eliminar servicios, así como actualizar la capacidad de empleados.
+    Permite agregar, listar, ocultar (desactivar) y mostrar (activar) servicios, 
+    así como actualizar la capacidad de empleados.
     """
     try:
         empresa = request.user.empresa
@@ -1549,17 +1539,29 @@ def administrar_servicios(request):
         return HttpResponseForbidden("No tienes una empresa asociada para gestionar servicios.")
 
     empleados_rango = range(1, 101)
-    form = ServicioForm()  # Form vacío por defecto
+    form = ServicioForm()
 
     if request.method == 'POST':
         if 'eliminar_servicio' in request.POST:
             servicio_id = request.POST.get('servicio_id')
             try:
                 servicio = Servicio.objects.get(id=servicio_id, empresa=empresa)
-                servicio.delete()
-                messages.success(request, "Servicio eliminado correctamente.")
+                servicio.activo = False  # Ocultar el servicio en lugar de borrarlo
+                servicio.save()
+                messages.success(request, "Servicio ocultado correctamente.")
             except Servicio.DoesNotExist:
-                messages.error(request, "El servicio que intentas eliminar no existe o ya fue eliminado.")
+                messages.error(request, "El servicio que intentas ocultar no existe.")
+            return redirect('app:servicios_empresa')
+
+        elif 'mostrar_servicio' in request.POST:
+            servicio_id = request.POST.get('servicio_id')
+            try:
+                servicio = Servicio.objects.get(id=servicio_id, empresa=empresa)
+                servicio.activo = True  # Activar el servicio nuevamente
+                servicio.save()
+                messages.success(request, "Servicio activado correctamente.")
+            except Servicio.DoesNotExist:
+                messages.error(request, "El servicio que intentas activar no existe.")
             return redirect('app:servicios_empresa')
 
         elif 'cantidad_empleados' in request.POST:
@@ -1583,20 +1585,25 @@ def administrar_servicios(request):
             else:
                 messages.error(request, "Error al agregar el servicio. Verifique los datos.")
 
-    servicios = Servicio.objects.filter(empresa=empresa)
+    # Separar servicios activos y ocultos
+    servicios_activos = Servicio.objects.filter(empresa=empresa, activo=True)
+    servicios_ocultos = Servicio.objects.filter(empresa=empresa, activo=False)
 
-    # Formatear el precio para mostrarlo bonito en el HTML
-    for servicio in servicios:
-        servicio.precio_formateado = formatear_precio(servicio.precio)
+    # Formatear los precios
+    for s in servicios_activos:
+        s.precio_formateado = formatear_precio(s.precio)
+    for s in servicios_ocultos:
+        s.precio_formateado = formatear_precio(s.precio)
 
     return render(request, 'app/servicio_empresa.html', {
         'empresa': empresa,
         'form': form,
-        'servicios': servicios,
+        'servicios_activos': servicios_activos,
+        'servicios_ocultos': servicios_ocultos,
         'empleados_rango': empleados_rango,
         'cantidad_empleados': empresa.cantidad_empleados,
     })
-    
+
           #derigir si no tiene empresa
 
 
@@ -1836,7 +1843,7 @@ def restablecer_contraseña_con_codigo(request):
 def obtener_servicios_por_empresa(request):
     """
     Endpoint para obtener servicios por ID de empresa.
-    Devuelve los servicios con sus detalles: nombre, descripción, precio y duración,
+    Devuelve los servicios activos con sus detalles: nombre, descripción, precio y duración,
     y el precio está formateado con coma para los miles.
     """
     empresa_id = request.GET.get('empresa_id')
@@ -1845,7 +1852,8 @@ def obtener_servicios_por_empresa(request):
         return JsonResponse({'message': 'Debe proporcionar un ID de empresa.'}, status=400)
 
     try:
-        servicios = Servicio.objects.filter(empresa_id=empresa_id).values(
+        # Filtrar solo los servicios activos de la empresa
+        servicios = Servicio.objects.filter(empresa_id=empresa_id, activo=True).values(
             'id', 'nombre', 'descripcion', 'precio', 'duracion'
         )
 
