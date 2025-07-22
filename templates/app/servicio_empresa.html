@@ -1,272 +1,312 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Servicios de la Empresa</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
-    <style>
-        body {
-            background: linear-gradient(to right, #a1c4fd, #c2e9fb);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #333;
-            min-height: 100vh;
-            padding: 1rem;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Servicios de la Empresa</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body {
+      background: linear-gradient(to right, #a1c4fd, #c2e9fb);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #333;
+      padding: 20px;
+    }
 
-        .container {
-            background: #fff;
-            border-radius: 1rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            padding: 2rem;
-        }
+    .container {
+      background: #fff;
+      border-radius: 1rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      padding: 30px;
+      max-width: 1100px;
+      margin: auto;
+    }
 
-        .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      row-gap: 10px;
+      margin-bottom: 30px;
+    }
 
-        .top-bar h2 {
-            font-weight: 700;
-            font-size: 1.8rem;
-            margin: 0;
-        }
+    .top-bar h2 {
+      font-weight: 700;
+      color: #004080;
+      font-size: 1.8rem;
+    }
 
-        .card {
-            border-radius: 1rem;
-            background-color: #f8f9fa;
-            padding: 1.5rem;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            margin-bottom: 2rem;
-        }
+    .card {
+      background-color: #f8f9fa;
+      padding: 25px;
+      border-radius: 1rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      margin-bottom: 40px;
+    }
 
-        .form-section {
-            margin-top: 2.5rem;
-        }
+    .form-label {
+      font-weight: 600;
+    }
 
-        .form-label {
-            font-weight: 600;
-        }
+    .table th, .table td {
+      vertical-align: middle;
+      white-space: normal;
+      word-wrap: break-word;
+    }
 
-        .alert {
-            border-radius: 12px;
-            padding: 15px 25px;
-            font-size: 1rem;
-            font-weight: 500;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        }
+    .alert {
+      border-radius: 12px;
+      padding: 15px 25px;
+      font-size: 1rem;
+      font-weight: 500;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
 
-        .btn-danger {
-            margin-left: 5px;
-        }
+    .btn-close {
+      filter: brightness(0.5);
+    }
 
-        .btn-close {
-            filter: brightness(0.5);
-        }
+    .btn-close:hover {
+      filter: brightness(1);
+    }
 
-        .btn-close:hover {
-            filter: brightness(1);
-        }
+    .form-section h5 {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #005792;
+      margin-bottom: 15px;
+    }
 
-        .table th, .table td {
-            vertical-align: middle;
-        }
+    .table-responsive {
+      overflow-x: auto;
+    }
 
-        @media (max-width: 768px) {
-            .top-bar {
-                flex-direction: column;
-                align-items: flex-start;
-            }
+    /* --- Responsive para móviles: --- */
+    @media (max-width: 768px) {
+      .top-bar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
 
-            .top-bar h2 {
-                font-size: 1.5rem;
-            }
+      .top-bar h2 {
+        font-size: 1.5rem;
+      }
 
-            .table {
-                font-size: 0.9rem;
-            }
+      .btn {
+        width: 100%;
+      }
 
-            .form-section {
-                margin-top: 1.5rem;
-            }
+      .form-section {
+        margin-top: 30px;
+      }
 
-            .btn {
-                width: 100%;
-            }
+      .form-select, .form-control {
+        font-size: 1rem;
+      }
 
-            .table thead {
-                display: none;
-            }
+      /* Ocultar encabezado de tabla */
+      .table thead {
+        display: none;
+      }
 
-            .table tbody tr {
-                display: block;
-                margin-bottom: 1rem;
-                border-bottom: 1px solid #ccc;
-                padding-bottom: 1rem;
-            }
+      /* Cada fila se muestra como bloque separado */
+      .table tr {
+        display: block;
+        margin-bottom: 1.5rem;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        padding: 15px 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      }
 
-            .table tbody td {
-                display: flex;
-                justify-content: space-between;
-                padding: 0.5rem 0;
-            }
+      /* Cada celda en bloque apilado */
+      .table td {
+        display: block;
+        padding: 10px 0;
+        border: none;
+        border-bottom: 1px solid #eee;
+        position: relative;
+        padding-left: 110px; /* espacio para la etiqueta */
+        word-break: break-word;
+      }
 
-            .table tbody td::before {
-                content: attr(data-label);
-                font-weight: bold;
-                width: 45%;
-            }
-        }
-    </style>
+      .table td:last-child {
+        border-bottom: none;
+      }
+
+      /* Etiqueta delante de cada dato */
+      .table td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-weight: 700;
+        color: #005792;
+        white-space: nowrap;
+      }
+
+      /* Ajuste botones en móvil */
+      .table td form {
+        margin: 0;
+        padding: 0;
+      }
+
+      .table td form button {
+        width: auto;
+        padding: 6px 12px;
+        font-size: 0.85rem;
+      }
+    }
+  </style>
 </head>
 <body>
+
 <div class="container">
 
-    {% if messages %}
-    <div class="mb-4">
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+  {% if messages %}
+  <div class="mb-4">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="top-bar">
+    <h2>Servicios de <strong>{{ empresa.nombre_empresa }}</strong></h2>
+    <a href="{% url 'app:empresa_panel' %}" class="btn btn-secondary">⬅ Volver al Panel</a>
+  </div>
+
+  <!-- Cantidad de empleados -->
+  <div class="mb-4">
+    <form method="post">
+      {% csrf_token %}
+      <div class="row align-items-end g-3">
+        <div class="col-md-8">
+          <label for="cantidad_empleados" class="form-label">Seleccione la cantidad de empleados:</label>
+          <select id="cantidad_empleados" class="form-select" name="cantidad_empleados" required>
+            <option value="" disabled {% if not cantidad_empleados %}selected{% endif %}>Seleccione</option>
+            {% for i in empleados_rango %}
+              <option value="{{ i }}" {% if i == cantidad_empleados %}selected{% endif %}>{{ i }}</option>
+            {% endfor %}
+          </select>
         </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-
-    <div class="top-bar">
-        <h2>Servicios de <strong>{{ empresa.nombre_empresa }}</strong></h2>
-        <a href="{% url 'app:empresa_panel' %}" class="btn btn-secondary">⬅ Volver al Panel</a>
-    </div>
-
-    <!-- Actualizar cantidad de empleados -->
-    <div class="mb-4">
-        <form method="post">
-            {% csrf_token %}
-            <div class="row align-items-end">
-                <div class="col-md-8">
-                    <label for="cantidad_empleados" class="form-label">Seleccione la cantidad de empleados:</label>
-                    <select id="cantidad_empleados" class="form-select" name="cantidad_empleados" required>
-                        <option value="" disabled {% if not cantidad_empleados %}selected{% endif %}>Seleccione</option>
-                        {% for i in empleados_rango %}
-                            <option value="{{ i }}" {% if i == cantidad_empleados %}selected{% endif %}>{{ i }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-4 mt-3 mt-md-0">
-                    <button type="submit" class="btn btn-primary w-100">Actualizar</button>
-                </div>
-            </div>
-        </form>
-    </div>
-
-    <!-- Formulario nuevo servicio -->
-    <div class="card">
-        <h5 class="mb-3">Agregar Nuevo Servicio</h5>
-        <form method="post">
-            {% csrf_token %}
-            <div class="mb-3">
-                <label for="{{ form.nombre.id_for_label }}" class="form-label">Nombre del Servicio</label>
-                {{ form.nombre }}
-            </div>
-            <div class="mb-3">
-                <label for="{{ form.descripcion.id_for_label }}" class="form-label">Descripción</label>
-                {{ form.descripcion }}
-            </div>
-            <div class="mb-3">
-                <label for="{{ form.precio.id_for_label }}" class="form-label">Precio</label>
-                {{ form.precio }}
-            </div>
-            <div class="mb-3">
-                <label for="{{ form.duracion.id_for_label }}" class="form-label">Duración (en minutos)</label>
-                {{ form.duracion }}
-            </div>
-            <button type="submit" class="btn btn-success mt-2">Agregar Servicio</button>
-        </form>
-    </div>
-
-    <!-- Servicios Activos -->
-    <div class="form-section">
-        <h5 class="mb-3">Servicios Activos</h5>
-        <div class="table-responsive">
-            <table class="table table-striped table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Descripción</th>
-                        <th>Precio</th>
-                        <th>Duración</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for servicio in servicios_activos %}
-                    <tr>
-                        <td data-label="Nombre">{{ servicio.nombre }}</td>
-                        <td data-label="Descripción">{{ servicio.descripcion|default:"Sin descripción" }}</td>
-                        <td data-label="Precio">{{ servicio.precio_formateado }}</td>
-                        <td data-label="Duración">{{ servicio.duracion|default:"No especificado" }} min</td>
-                        <td data-label="Acciones">
-                            <form method="post" style="display:inline;">
-                                {% csrf_token %}
-                                <input type="hidden" name="eliminar_servicio" value="1" />
-                                <input type="hidden" name="servicio_id" value="{{ servicio.id }}" />
-                                <button type="submit" class="btn btn-warning btn-sm">Ocultar</button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5" class="text-center text-muted">No hay servicios activos.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="col-md-4">
+          <button type="submit" class="btn btn-primary w-100">Actualizar</button>
         </div>
-    </div>
+      </div>
+    </form>
+  </div>
 
-    <!-- Servicios Ocultos -->
-    <div class="form-section">
-        <h5 class="mb-3">Servicios Ocultos</h5>
-        <div class="table-responsive">
-            <table class="table table-striped table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Descripción</th>
-                        <th>Precio</th>
-                        <th>Duración</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for servicio in servicios_ocultos %}
-                    <tr>
-                        <td data-label="Nombre">{{ servicio.nombre }}</td>
-                        <td data-label="Descripción">{{ servicio.descripcion|default:"Sin descripción" }}</td>
-                        <td data-label="Precio">{{ servicio.precio_formateado }}</td>
-                        <td data-label="Duración">{{ servicio.duracion|default:"No especificado" }} min</td>
-                        <td data-label="Acciones">
-                            <form method="post" style="display:inline;">
-                                {% csrf_token %}
-                                <input type="hidden" name="mostrar_servicio" value="1" />
-                                <input type="hidden" name="servicio_id" value="{{ servicio.id }}" />
-                                <button type="submit" class="btn btn-success btn-sm">Activar</button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5" class="text-center text-muted">No hay servicios ocultos.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+  <!-- Formulario nuevo servicio -->
+  <div class="card">
+    <h5>Agregar Nuevo Servicio</h5>
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="{{ form.nombre.id_for_label }}" class="form-label">Nombre del Servicio</label>
+        {{ form.nombre }}
+      </div>
+      <div class="mb-3">
+        <label for="{{ form.descripcion.id_for_label }}" class="form-label">Descripción</label>
+        {{ form.descripcion }}
+      </div>
+      <div class="mb-3">
+        <label for="{{ form.precio.id_for_label }}" class="form-label">Precio</label>
+        {{ form.precio }}
+      </div>
+      <div class="mb-3">
+        <label for="{{ form.duracion.id_for_label }}" class="form-label">Duración (en minutos)</label>
+        {{ form.duracion }}
+      </div>
+      <button type="submit" class="btn btn-success mt-2">Agregar Servicio</button>
+    </form>
+  </div>
+
+  <!-- Servicios Activos -->
+  <div class="form-section">
+    <h5>Servicios Activos</h5>
+    <div class="table-responsive">
+      <table class="table table-striped table-hover align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Nombre</th>
+            <th>Descripción</th>
+            <th>Precio</th>
+            <th>Duración</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for servicio in servicios_activos %}
+          <tr>
+            <td data-label="Nombre">{{ servicio.nombre }}</td>
+            <td data-label="Descripción">{{ servicio.descripcion|default:"Sin descripción" }}</td>
+            <td data-label="Precio">{{ servicio.precio_formateado }}</td>
+            <td data-label="Duración">{{ servicio.duracion|default:"No especificado" }} min</td>
+            <td data-label="Acciones">
+              <form method="post" style="display:inline;">
+                {% csrf_token %}
+                <input type="hidden" name="eliminar_servicio" value="1" />
+                <input type="hidden" name="servicio_id" value="{{ servicio.id }}" />
+                <button type="submit" class="btn btn-warning btn-sm">Ocultar</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="text-center text-muted">No hay servicios activos.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
+  </div>
+
+  <!-- Servicios Ocultos -->
+  <div class="form-section">
+    <h5>Servicios Ocultos</h5>
+    <div class="table-responsive">
+      <table class="table table-striped table-hover align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Nombre</th>
+            <th>Descripción</th>
+            <th>Precio</th>
+            <th>Duración</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for servicio in servicios_ocultos %}
+          <tr>
+            <td data-label="Nombre">{{ servicio.nombre }}</td>
+            <td data-label="Descripción">{{ servicio.descripcion|default:"Sin descripción" }}</td>
+            <td data-label="Precio">{{ servicio.precio_formateado }}</td>
+            <td data-label="Duración">{{ servicio.duracion|default:"No especificado" }} min</td>
+            <td data-label="Acciones">
+              <form method="post" style="display:inline;">
+                {% csrf_token %}
+                <input type="hidden" name="mostrar_servicio" value="1" />
+                <input type="hidden" name="servicio_id" value="{{ servicio.id }}" />
+                <button type="submit" class="btn btn-success btn-sm">Activar</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="text-center text-muted">No hay servicios ocultos.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
 
 </div>
 
