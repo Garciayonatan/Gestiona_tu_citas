@@ -1045,6 +1045,22 @@ def nueva_cita(request):
                 messages.error(request, 'No puedes agendar una cita en el pasado.')
                 return redirect('app:nueva_cita')
 
+            # ✅ Validar si ya tiene una cita pendiente o aceptada con esta empresa para hoy o después
+            cita_activa = Cita.objects.filter(
+                cliente=cliente,
+                empresa=empresa,
+                estado__in=['pendiente', 'aceptada'],
+                fecha__gte=now().date()
+            ).exists()
+
+            if cita_activa:
+                messages.warning(
+                    request,
+                    "⚠️ Ya tienes una cita pendiente o aceptada con esta empresa. "
+                    "Debes completarla, cancelarla o reprogramarla antes de agendar una nueva."
+                )
+                return redirect('app:nueva_cita')
+
             cita_existente = Cita.objects.filter(
                 cliente=cliente,
                 fecha=fecha_hora.date(),
@@ -1182,6 +1198,7 @@ def nueva_cita(request):
             messages.error(request, "❌ Ocurrió un error inesperado. Inténtalo más tarde.")
 
     return render(request, 'app/nueva_cita.html', {'empresas': empresas})
+
 
 # El resto de funciones que mostraste (editar_cita, notificar_cita) no requieren cambios relacionados a este error.
 
