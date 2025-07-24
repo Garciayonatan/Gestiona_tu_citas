@@ -40,6 +40,7 @@ class Cliente(models.Model):
     direccion = models.CharField(max_length=255, verbose_name="Dirección", blank=True, null=True)
     telegram_chat_id = models.CharField(max_length=50, blank=True, null=True)
     genero = models.CharField(max_length=10, choices=[('M', 'Masculino'), ('F', 'Femenino'), ('O', 'Otro')], verbose_name="Género", blank=True, null=True)
+    #foto_perfil = models.ImageField(upload_to='clientes/fotos_perfil/', null=True, blank=True, verbose_name="Foto de Perfil")
 
     def __str__(self):
         return self.nombre_completo or self.user.username
@@ -58,6 +59,7 @@ class Empresa(models.Model):
     dias_laborables = models.ManyToManyField(DiaLaborable, related_name="empresas", verbose_name="Días Laborables", blank=True)
     capacidad = models.PositiveIntegerField(default=1, verbose_name="Capacidad de Atención Simultánea", help_text="Número de personas que pueden ser atendidas al mismo tiempo en un horario.")
     cantidad_empleados = models.PositiveIntegerField(default=1, verbose_name="Cantidad de Empleados", help_text="Número de empleados registrados en la empresa.")
+    #logo = models.ImageField(upload_to='empresas/logos/', null=True, blank=True, verbose_name="Logo o Imagen")
 
     def save(self, *args, **kwargs):
         self.capacidad = self.cantidad_empleados

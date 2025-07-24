@@ -62,6 +62,11 @@ urlpatterns = [
       #borrar esto hoy 10 del 7 
     path('empresa/historial-citas/', historial_citas_empresa, name='historial_citas_empresa'),
     #borrar si no quiero esto de historial
+
+    #-----------------------------------------------------------activar cuando yo quiera
+    #path('cliente/subir-foto/', views.subir_o_eliminar_foto_cliente, name='subir_foto_cliente'),
+    #path('empresa/subir-logo/', views.subir_o_eliminar_logo_empresa, name='subir_logo_empresa'),
+    #este tambien activar cuando yo quiera foto empresa y cliente
 ]
 
 
