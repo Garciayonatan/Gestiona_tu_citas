@@ -1022,7 +1022,7 @@ def nueva_cita(request):
 
             confirmar_repeticion = request.POST.get('confirmar_repeticion') == '1'
 
-            # 🚫 Ya completó este servicio el mismo día
+            # ✅ Corrección: validar si ya completó este servicio con esta empresa el mismo día
             cita_completada = Cita.objects.filter(
                 cliente=cliente,
                 empresa=empresa,
@@ -1045,28 +1045,6 @@ def nueva_cita(request):
                 messages.error(request, 'No puedes agendar una cita en el pasado.')
                 return redirect('app:nueva_cita')
 
-            # 🚫 Ya tiene una cita pendiente o aceptada con esta empresa para hoy o el futuro
-            cita_conflictiva = Cita.objects.filter(
-                cliente=cliente,
-                empresa=empresa,
-                estado__in=['pendiente', 'aceptada'],
-                fecha__gte=now().date()
-            ).order_by('fecha', 'hora').first()
-
-            if cita_conflictiva:
-                cita_dt = datetime.combine(cita_conflictiva.fecha, cita_conflictiva.hora)
-                cita_dt = make_aware(cita_dt)
-
-                if fecha_hora <= cita_dt:
-                    messages.warning(
-                        request,
-                        f"⚠️ Ya tienes una cita pendiente o aceptada con esta empresa "
-                        f"para el {cita_conflictiva.fecha} a las {cita_conflictiva.hora.strftime('%I:%M %p')}. "
-                        f"Cancela o reprograma esa cita antes de agendar una nueva."
-                    )
-                    return redirect('app:nueva_cita')
-
-            # 🚫 Ya tiene una cita con la misma fecha y hora exacta
             cita_existente = Cita.objects.filter(
                 cliente=cliente,
                 fecha=fecha_hora.date(),
@@ -1078,7 +1056,6 @@ def nueva_cita(request):
                 messages.error(request, 'Ya tienes una cita pendiente o aceptada a esta fecha y hora.')
                 return redirect('app:nueva_cita')
 
-            # Día laborable y horario
             dias_semana = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom']
             dia_codigo = dias_semana[fecha_hora.weekday()]
             dias_laborables = [d.lower() for d in empresa.dias_laborables.values_list('codigo', flat=True)]
@@ -1092,7 +1069,6 @@ def nueva_cita(request):
                 messages.error(request, 'La hora está fuera del horario laboral.')
                 return redirect('app:nueva_cita')
 
-            # Verificar superposición
             fecha_hora_fin = fecha_hora + timedelta(minutes=servicio.duracion)
             citas_existentes = Cita.objects.filter(
                 empresa=empresa,
@@ -1102,18 +1078,19 @@ def nueva_cita(request):
 
             citas_superpuestas = []
             for cita in citas_existentes:
-                if not cita.servicio:
+                if cita.servicio is None:
                     continue
-                inicio = make_aware(datetime.combine(cita.fecha, cita.hora))
-                fin = inicio + timedelta(minutes=cita.servicio.duracion)
-                if not (fin <= fecha_hora or fecha_hora_fin <= inicio):
+
+                cita_inicio = make_aware(datetime.combine(cita.fecha, cita.hora))
+                cita_fin = cita_inicio + timedelta(minutes=cita.servicio.duracion)
+
+                if not (cita_fin <= fecha_hora or fecha_hora_fin <= cita_inicio):
                     citas_superpuestas.append(cita)
 
             if len(citas_superpuestas) >= empresa.capacidad:
                 messages.error(request, 'No hay disponibilidad para la hora seleccionada. Intenta con otro horario.')
                 return redirect('app:nueva_cita')
 
-            # Crear cita
             cita = Cita.objects.create(
                 cliente=cliente,
                 empresa=empresa,
@@ -1124,7 +1101,6 @@ def nueva_cita(request):
                 estado='pendiente'
             )
 
-            # Notificaciones
             asunto = f"📅 Nueva cita - {empresa.nombre_empresa}"
             mensaje_cliente = (
                 f"Hola {cliente.nombre_completo},\n\n"
@@ -1157,7 +1133,8 @@ def nueva_cita(request):
                 f"Gracias por usar nuestro servicio."
             )
 
-            correo_ok = telegram_ok = True
+            correo_ok = True
+            telegram_ok = True
 
             try:
                 send_mail(asunto, mensaje_cliente, settings.DEFAULT_FROM_EMAIL, [cliente.user.email])
@@ -1168,25 +1145,27 @@ def nueva_cita(request):
                 messages.warning(request, "Cita creada, pero ocurrió un error al enviar los correos.")
 
             try:
-                enviado = False
+                telegram_enviado = False
                 if empresa.telegram_chat_id:
                     enviar_mensaje_telegram(empresa.telegram_chat_id, mensaje_empresa)
-                    enviado = True
+                    telegram_enviado = True
                 if cliente.telegram_chat_id:
                     enviar_mensaje_telegram(cliente.telegram_chat_id, mensaje_cliente)
-                    enviado = True
-                telegram_ok = enviado or True
+                    telegram_enviado = True
+                telegram_ok = telegram_enviado
+                if not telegram_enviado:
+                    telegram_ok = True
             except Exception as e:
                 telegram_ok = False
                 logger.warning(f"⚠️ Error al enviar Telegram: {e}")
                 messages.warning(request, "Cita creada, pero no se pudo enviar mensaje por Telegram.")
 
             if correo_ok and telegram_ok:
-                messages.success(request, "✅ Cita creada correctamente. Las notificaciones se enviaron por correo y Telegram.")
+                messages.success(request, "✅ Cita creada correctamente. Las notificaciones se enviaron correctamente por correo y Telegram.")
             elif correo_ok and not telegram_ok:
-                messages.success(request, "✅ Cita creada. Notificación enviada por correo, pero falló Telegram.")
+                messages.success(request, "✅ Cita creada correctamente. Notificación enviada por correo, pero fallo el envío por Telegram.")
             elif not correo_ok and telegram_ok:
-                messages.success(request, "✅ Cita creada. Notificación enviada por Telegram, pero falló el correo.")
+                messages.success(request, "✅ Cita creada correctamente. Notificación enviada por Telegram, pero fallo el envío por correo.")
             else:
                 messages.success(request, "✅ Cita creada correctamente. No se pudieron enviar las notificaciones.")
 
@@ -1195,7 +1174,7 @@ def nueva_cita(request):
         except Empresa.DoesNotExist:
             messages.error(request, "Empresa no encontrada.")
         except Servicio.DoesNotExist:
-            messages.error(request, "Servicio inválido o inactivo.")
+            messages.error(request, "Servicio no válido o no pertenece a la empresa, o está inactivo.")
         except ValueError as ve:
             messages.error(request, f"Fecha y hora inválidas: {ve}")
         except Exception as e:
@@ -1203,6 +1182,7 @@ def nueva_cita(request):
             messages.error(request, "❌ Ocurrió un error inesperado. Inténtalo más tarde.")
 
     return render(request, 'app/nueva_cita.html', {'empresas': empresas})
+
 # El resto de funciones que mostraste (editar_cita, notificar_cita) no requieren cambios relacionados a este error.
 
 
