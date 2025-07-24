@@ -1022,7 +1022,7 @@ def nueva_cita(request):
 
             confirmar_repeticion = request.POST.get('confirmar_repeticion') == '1'
 
-            # ✅ Corrección: validar si ya completó este servicio con esta empresa el mismo día
+            # Validar si ya completó este servicio con esta empresa el mismo día
             cita_completada = Cita.objects.filter(
                 cliente=cliente,
                 empresa=empresa,
@@ -1045,6 +1045,29 @@ def nueva_cita(request):
                 messages.error(request, 'No puedes agendar una cita en el pasado.')
                 return redirect('app:nueva_cita')
 
+            # NUEVA VALIDACIÓN: Si el cliente ya tiene cita pendiente o aceptada con esta empresa para hoy o en adelante
+            cita_activa = Cita.objects.filter(
+                cliente=cliente,
+                empresa=empresa,
+                estado__in=['pendiente', 'aceptada'],
+                fecha__gte=now().date()
+            ).order_by('fecha', 'hora').first()
+
+            if cita_activa:
+                fecha_cita_activa = datetime.combine(cita_activa.fecha, cita_activa.hora)
+                fecha_cita_activa = make_aware(fecha_cita_activa)
+
+                # Si la nueva cita que quiere crear es en una fecha/hora igual o anterior a la cita activa
+                if fecha_hora <= fecha_cita_activa:
+                    messages.warning(
+                        request,
+                        f"⚠️ Ya tienes una cita pendiente o aceptada con esta empresa para el "
+                        f"{cita_activa.fecha.strftime('%d/%m/%Y')} a las {cita_activa.hora.strftime('%I:%M %p')}. "
+                        f"Por favor cancela o reprograma esa cita antes de agendar una nueva."
+                    )
+                    return redirect('app:nueva_cita')
+
+            # Verificar si ya tiene cita en misma fecha y hora (para cualquier empresa)
             cita_existente = Cita.objects.filter(
                 cliente=cliente,
                 fecha=fecha_hora.date(),
