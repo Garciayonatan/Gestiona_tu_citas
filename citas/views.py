@@ -996,7 +996,7 @@ from django.utils.timezone import make_aware, now
 from django.core.mail import send_mail
 from django.conf import settings
 
-logger = logging.getLogger(_name_)
+logger = logging.getLogger(__name__)
 
 @login_required(login_url='app:login')
 def nueva_cita(request):
