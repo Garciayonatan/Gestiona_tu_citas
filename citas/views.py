@@ -996,7 +996,7 @@ from django.utils.timezone import make_aware, now
 from django.core.mail import send_mail
 from django.conf import settings
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(_name_)
 
 @login_required(login_url='app:login')
 def nueva_cita(request):
@@ -1198,7 +1198,6 @@ def nueva_cita(request):
             messages.error(request, "❌ Ocurrió un error inesperado. Inténtalo más tarde.")
 
     return render(request, 'app/nueva_cita.html', {'empresas': empresas})
-
 
 # El resto de funciones que mostraste (editar_cita, notificar_cita) no requieren cambios relacionados a este error.
 
