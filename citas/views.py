@@ -1022,7 +1022,7 @@ def nueva_cita(request):
 
             confirmar_repeticion = request.POST.get('confirmar_repeticion') == '1'
 
-            # ✅ Corrección: validar si ya completó este servicio con esta empresa el mismo día
+            # Validar si ya completó este servicio con esta empresa el mismo día
             cita_completada = Cita.objects.filter(
                 cliente=cliente,
                 empresa=empresa,
@@ -1045,7 +1045,7 @@ def nueva_cita(request):
                 messages.error(request, 'No puedes agendar una cita en el pasado.')
                 return redirect('app:nueva_cita')
 
-            # ✅ Validar si ya tiene una cita pendiente o aceptada con esta empresa para hoy o después
+            # Validar si ya tiene una cita pendiente o aceptada con esta empresa para hoy o después
             cita_activa = Cita.objects.filter(
                 cliente=cliente,
                 empresa=empresa,
@@ -1081,7 +1081,9 @@ def nueva_cita(request):
                 return redirect('app:nueva_cita')
 
             hora_cita = fecha_hora.time()
-            if not (empresa.hora_inicio <= hora_cita <= empresa.hora_cierre):
+
+            # ✅ Ajuste aquí: no se permite cita a la hora exacta de cierre
+            if not (empresa.hora_inicio <= hora_cita < empresa.hora_cierre):
                 messages.error(request, 'La hora está fuera del horario laboral.')
                 return redirect('app:nueva_cita')
 
@@ -1224,7 +1226,6 @@ def editar_cita(request, cita_id):
     # Cambiar estado a completada o vencida si corresponde
     if cita.servicio:
         fin_cita = cita_datetime + timedelta(minutes=cita.servicio.duracion)
-
         if cita.estado == 'aceptada' and ahora >= fin_cita:
             cita.estado = 'completada'
             cita.save()
@@ -1232,17 +1233,15 @@ def editar_cita(request, cita_id):
             cita.estado = 'vencida'
             cita.save()
 
-    # Bloquear edición si el estado no permite
     if cita.estado in ['completada', 'rechazada', 'vencida']:
         messages.error(request, f"❌ No se puede editar una cita que está {cita.estado}.")
         return redirect('app:cliente_panel')
 
     if request.method == 'POST':
         form = EditarCitaForm(request.POST, instance=cita)
-
         if form.is_valid():
             cita_nueva = form.save(commit=False)
-            cita_nueva.empresa = cita.empresa  # Mantener empresa original
+            cita_nueva.empresa = cita.empresa
             servicio = cita_nueva.servicio
 
             nueva_fecha_hora = datetime.combine(cita_nueva.fecha, cita_nueva.hora)
@@ -1253,10 +1252,16 @@ def editar_cita(request, cita_id):
                 form.add_error(None, "❌ No puedes seleccionar una fecha y hora pasada.")
                 return render(request, 'app/editar_cita.html', {'form': form, 'cita': cita})
 
+            # Validar horario laboral
+            hora_cita = cita_nueva.hora
+            if not (cita_nueva.empresa.hora_inicio <= hora_cita <= cita_nueva.empresa.hora_cierre):
+                form.add_error(None, "⛔ La hora está fuera del horario laboral de la empresa.")
+                return render(request, 'app/editar_cita.html', {'form': form, 'cita': cita})
+
             fecha_hora_inicio = nueva_fecha_hora
             fecha_hora_fin = fecha_hora_inicio + timedelta(minutes=servicio.duracion)
 
-            # Verificar si el cliente tiene otra cita que se cruza
+            # Verificar conflictos con otras citas del cliente
             citas_cliente = Cita.objects.filter(
                 cliente=cita_nueva.cliente,
                 fecha=cita_nueva.fecha,
@@ -1272,7 +1277,7 @@ def editar_cita(request, cita_id):
                     form.add_error(None, "❌ Ya tienes una cita en ese horario.")
                     return render(request, 'app/editar_cita.html', {'form': form, 'cita': cita})
 
-            # Verificar conflictos en la empresa
+            # Verificar conflictos con otras citas en la empresa
             citas_conflictivas = Cita.objects.filter(
                 empresa=cita_nueva.empresa,
                 fecha=cita_nueva.fecha,
@@ -1294,7 +1299,6 @@ def editar_cita(request, cita_id):
 
             cita_nueva.save()
 
-            # Notificar cambios y capturar resultados
             resultados = notificar_cita(
                 cita_nueva,
                 cita_nueva.cliente,
@@ -1310,7 +1314,6 @@ def editar_cita(request, cita_id):
                 notificaciones.append("📧 Notificaciones enviadas por correo electrónico.")
             if resultados.get("telegram_cliente") or resultados.get("telegram_empresa"):
                 notificaciones.append("📲 Notificaciones enviadas por Telegram.")
-
             if notificaciones:
                 mensaje += " " + " ".join(notificaciones)
 
@@ -1320,7 +1323,6 @@ def editar_cita(request, cita_id):
         else:
             messages.error(request, "❌ Por favor, corrige los errores del formulario.")
             logger.error(f"Errores en formulario editar_cita: {form.errors}")
-
     else:
         form = EditarCitaForm(instance=cita)
 
@@ -1355,6 +1357,7 @@ def notificar_cita(cita, cliente, empresa, servicio, comentarios, accion):
             f"📜 Descripción: {servicio.descripcion}\n"
             f"🕒 Duración: {servicio.duracion} minutos\n"
             f"💰 Precio: {int(servicio.precio):,} DOP\n"
+            f"📅 Fecha: {cita.fecha}\n"
             f"🕒 Hora: {cita.hora.strftime('%I:%M %p').lstrip('0')}\n"
             f"💼 Servicio: {servicio.nombre}\n"
             f"📝 Comentarios: {comentarios}\n"
