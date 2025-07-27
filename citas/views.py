@@ -312,6 +312,8 @@ from django.views import View
 from django.utils.decorators import method_decorator
 
 from citas.models import Cliente, Empresa
+from django.db.models import Func, F
+
 
 # Configuración de logging
 logging.basicConfig(
