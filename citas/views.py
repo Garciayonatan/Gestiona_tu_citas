@@ -456,7 +456,6 @@ class TelegramWebhookView(View):
 
                 else:
                     enviar_mensaje_telegram(chat_id, "❌ Número no encontrado. Verifica o contacta al soporte.")
-                    # Aquí también removemos el estado para no bloquear futuras respuestas
                     esperando_telefono.pop(chat_id, None)
                     return JsonResponse({"ok": True})
 
@@ -484,7 +483,6 @@ class EnviarMensajeTelegramView(View):
             return JsonResponse({'status': 'mensaje enviado'})
         else:
             return JsonResponse({'error': 'error enviando mensaje'}, status=500)
-
 # Editar horario
 # Editar horario
 logger = logging.getLogger(__name__)
