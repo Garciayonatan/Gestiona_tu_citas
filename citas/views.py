@@ -400,17 +400,29 @@ class TelegramWebhookView(View):
             # Paso 3: Si está esperando el número
             if chat_id in esperando_telefono and texto:
                 telefono_original = texto.strip()
-
-                # Normalizar el número: eliminar cualquier carácter que no sea número
                 telefono_limpio = re.sub(r'\D', '', telefono_original)
 
                 if not telefono_limpio.isdigit():
                     enviar_mensaje_telegram(chat_id, "❌ El número ingresado no es válido. Por favor, intenta de nuevo.")
                     return JsonResponse({"ok": True})
 
-                # Buscar por número limpio
-                cliente = Cliente.objects.filter(telefono=telefono_limpio).first()
-                empresa = Empresa.objects.filter(telefono=telefono_limpio).first()
+                # Buscar cliente ignorando guiones
+                cliente = Cliente.objects.annotate(
+                    telefono_normalizado=Func(
+                        F('telefono'),
+                        function='regexp_replace',
+                        template="%(function)s(%(expressions)s, '[^0-9]', '', 'g')"
+                    )
+                ).filter(telefono_normalizado=telefono_limpio).first()
+
+                # Buscar empresa ignorando guiones
+                empresa = Empresa.objects.annotate(
+                    telefono_normalizado=Func(
+                        F('telefono'),
+                        function='regexp_replace',
+                        template="%(function)s(%(expressions)s, '[^0-9]', '', 'g')"
+                    )
+                ).filter(telefono_normalizado=telefono_limpio).first()
 
                 if cliente:
                     if cliente.telegram_chat_id:
