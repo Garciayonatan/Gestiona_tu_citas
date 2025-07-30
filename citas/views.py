@@ -1239,8 +1239,7 @@ def editar_cita(request, cita_id):
 
     # ✅ Forzar actualización del estado ANTES de cualquier validación
     if cita.servicio:
-        fin_cita = cita_datetime + timedelta(minutes=cita.servicio.duracion)
-        if ahora >= fin_cita:
+        if ahora >= cita_datetime:
             if cita.estado == 'aceptada':
                 cita.estado = 'completada'
                 cita.save()
