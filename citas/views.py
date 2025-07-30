@@ -1249,12 +1249,13 @@ def editar_cita(request, cita_id):
     # ✅ Actualizar estado si ya ha pasado
     if cita.servicio:
         fin_cita = cita_datetime + timedelta(minutes=cita.servicio.duracion)
-        if cita.estado == 'aceptada' and ahora >= fin_cita:
-            cita.estado = 'completada'
-            cita.save()
-        elif cita.estado == 'pendiente' and ahora >= cita_datetime:
-            cita.estado = 'vencida'
-            cita.save()
+        if ahora >= fin_cita:
+            if cita.estado == 'aceptada':
+                cita.estado = 'completada'
+                cita.save()
+            elif cita.estado == 'pendiente':
+                cita.estado = 'vencida'
+                cita.save()
 
     # ⛔ Revalidar si cambió el estado al actualizarlo
     if cita.estado in ['completada', 'rechazada', 'vencida']:
@@ -1276,8 +1277,13 @@ def editar_cita(request, cita_id):
                 form.add_error(None, "❌ No puedes seleccionar una fecha y hora pasada.")
                 return render(request, 'app/editar_cita.html', {'form': form, 'cita': cita})
 
-            # Validar horario laboral
+            # Validar horario laboral y día laborable
             hora_cita = cita_nueva.hora
+            dia_codigo = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'][cita_nueva.fecha.weekday()]
+            trabaja_ese_dia = cita_nueva.empresa.dias_laborables.filter(codigo=dia_codigo).first()
+            if not trabaja_ese_dia:
+                form.add_error(None, f"⛔ La empresa no trabaja el día {cita_nueva.fecha.strftime('%A')} ({dia_codigo.upper()}).")
+                return render(request, 'app/editar_cita.html', {'form': form, 'cita': cita})
             if not (cita_nueva.empresa.hora_inicio <= hora_cita <= cita_nueva.empresa.hora_cierre):
                 form.add_error(None, "⛔ La hora está fuera del horario laboral de la empresa.")
                 return render(request, 'app/editar_cita.html', {'form': form, 'cita': cita})
