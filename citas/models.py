@@ -68,8 +68,8 @@ class Empresa(models.Model):
     def esta_abierta(self, ahora=None):
         ahora = ahora or localtime(now())
         dias_codigo = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom']
-        codigo_dia_actual = dias_codigo[ahora.weekday()].upper()
-        #codigo_dia_actual = dias_codigo[ahora.weekday()]
+        #codigo_dia_actual = dias_codigo[ahora.weekday()].upper()
+        codigo_dia_actual = dias_codigo[ahora.weekday()]
         trabaja_hoy = self.dias_laborables.filter(codigo=codigo_dia_actual).exists()
         dentro_horario = self.hora_inicio <= ahora.time() <= self.hora_cierre
         return trabaja_hoy and dentro_horario
@@ -139,8 +139,8 @@ class Cita(models.Model):
         if self.fecha == hoy and self.hora <= ahora:
             raise ValidationError("La hora de la cita debe ser en el futuro.")
 
-        #dias_codigo = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom']
-        dias_codigo = ['LUN', 'MAR', 'MIE', 'JUE', 'VIE', 'SAB', 'DOM']
+        dias_codigo = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom']
+        #dias_codigo = ['LUN', 'MAR', 'MIE', 'JUE', 'VIE', 'SAB', 'DOM']
      
         codigo_dia_cita = dias_codigo[self.fecha.weekday()]
         if not self.empresa.dias_laborables.filter(codigo=codigo_dia_cita).exists():
