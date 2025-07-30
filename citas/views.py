@@ -1237,7 +1237,7 @@ def editar_cita(request, cita_id):
     if is_naive(cita_datetime):
         cita_datetime = make_aware(cita_datetime)
 
-    # ✅ Actualizar estado si ya ha pasado, independientemente del método
+    # ✅ Forzar actualización del estado ANTES de cualquier validación
     if cita.servicio:
         fin_cita = cita_datetime + timedelta(minutes=cita.servicio.duracion)
         if ahora >= fin_cita:
@@ -1415,7 +1415,7 @@ def notificar_cita(cita, cliente, empresa, servicio, comentarios, accion):
         logger.error(f"Error al enviar mensajes por Telegram: {e}")
 
     return resultados
-
+    
     
 @login_required(login_url='app:login')
 def eliminar_cita(request, cita_id):
