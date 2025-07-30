@@ -1277,14 +1277,19 @@ def editar_cita(request, cita_id):
                 form.add_error(None, "❌ No puedes seleccionar una fecha y hora pasada.")
                 return render(request, 'app/editar_cita.html', {'form': form, 'cita': cita})
 
-            # Validar horario laboral y día laborable
+            # ✅ Validar horario laboral y día laborable
             hora_cita = cita_nueva.hora
-            dia_codigo = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'][cita_nueva.fecha.weekday()]
-            trabaja_ese_dia = cita_nueva.empresa.dias_laborables.filter(codigo=dia_codigo).first()
-            if not trabaja_ese_dia:
+            dias_codigos = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom']
+            dia_codigo = dias_codigos[cita_nueva.fecha.weekday()]
+            dias_laborables = list(
+                cita_nueva.empresa.dias_laborables.values_list('codigo', flat=True)
+            )
+
+            if dia_codigo not in dias_laborables:
                 form.add_error(None, f"⛔ La empresa no trabaja el día {cita_nueva.fecha.strftime('%A')} ({dia_codigo.upper()}).")
                 return render(request, 'app/editar_cita.html', {'form': form, 'cita': cita})
-            if not (cita_nueva.empresa.hora_inicio <= hora_cita <= cita_nueva.empresa.hora_cierre):
+
+            if not (cita_nueva.empresa.hora_inicio <= hora_cita < cita_nueva.empresa.hora_cierre):
                 form.add_error(None, "⛔ La hora está fuera del horario laboral de la empresa.")
                 return render(request, 'app/editar_cita.html', {'form': form, 'cita': cita})
 
@@ -1424,6 +1429,7 @@ def notificar_cita(cita, cliente, empresa, servicio, comentarios, accion):
         logger.error(f"Error al enviar mensajes por Telegram: {e}")
 
     return resultados
+
     
 @login_required(login_url='app:login')
 def eliminar_cita(request, cita_id):
