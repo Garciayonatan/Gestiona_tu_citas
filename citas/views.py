@@ -1237,7 +1237,7 @@ def editar_cita(request, cita_id):
     if is_naive(cita_datetime):
         cita_datetime = make_aware(cita_datetime)
 
-    # ✅ Revisar si la cita ya venció y actualizar estado
+    # ✅ Actualizar estado si ya ha pasado, independientemente del método
     if cita.servicio:
         fin_cita = cita_datetime + timedelta(minutes=cita.servicio.duracion)
         if ahora >= fin_cita:
@@ -1247,8 +1247,6 @@ def editar_cita(request, cita_id):
             elif cita.estado == 'pendiente':
                 cita.estado = 'vencida'
                 cita.save()
-                messages.error(request, "⛔ La cita ya venció y no puede ser editada.")
-                return redirect('app:cliente_panel')
 
     # ⛔ Validar si la cita ya está en estado no editable
     if cita.estado in ['completada', 'rechazada', 'vencida']:
@@ -1278,13 +1276,8 @@ def editar_cita(request, cita_id):
 
             if not dia_laboral:
                 nombre_dia = {
-                    'lun': 'lunes',
-                    'mar': 'martes',
-                    'mie': 'miércoles',
-                    'jue': 'jueves',
-                    'vie': 'viernes',
-                    'sab': 'sábado',
-                    'dom': 'domingo',
+                    'lun': 'lunes', 'mar': 'martes', 'mie': 'miércoles',
+                    'jue': 'jueves', 'vie': 'viernes', 'sab': 'sábado', 'dom': 'domingo'
                 }.get(dia_codigo, "desconocido")
                 form.add_error(None, f"⛔ La empresa no trabaja el día {nombre_dia} ({dia_codigo.upper()}).")
                 return render(request, 'app/editar_cita.html', {'form': form, 'cita': cita})
@@ -1422,6 +1415,7 @@ def notificar_cita(cita, cliente, empresa, servicio, comentarios, accion):
         logger.error(f"Error al enviar mensajes por Telegram: {e}")
 
     return resultados
+
     
 @login_required(login_url='app:login')
 def eliminar_cita(request, cita_id):
