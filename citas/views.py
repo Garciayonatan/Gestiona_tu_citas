@@ -1237,12 +1237,7 @@ def editar_cita(request, cita_id):
     if is_naive(cita_datetime):
         cita_datetime = make_aware(cita_datetime)
 
-    # ⛔ Validar si la cita ya está en estado no editable
-    if cita.estado in ['completada', 'vencida']:
-        messages.error(request, f'⚠️ Esta cita ya está {cita.estado} y no se puede editar.')
-        return redirect('app:cliente_panel')
-
-    # ✅ Actualizar estado si ya ha pasado
+    # ✅ Actualizar estado si ya ha pasado la hora
     if cita.servicio:
         fin_cita = cita_datetime + timedelta(minutes=cita.servicio.duracion)
         if ahora >= fin_cita:
@@ -1252,7 +1247,7 @@ def editar_cita(request, cita_id):
                 cita.estado = 'vencida'
             cita.save()
 
-    # Revalidar estado después de actualización
+    # ⛔ No permitir edición si ya está en estado no editable
     if cita.estado in ['completada', 'rechazada', 'vencida']:
         messages.error(request, f"❌ No se puede editar una cita que está {cita.estado}.")
         return redirect('app:cliente_panel')
