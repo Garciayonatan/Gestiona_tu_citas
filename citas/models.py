@@ -68,7 +68,8 @@ class Empresa(models.Model):
     def esta_abierta(self, ahora=None):
         ahora = ahora or localtime(now())
         dias_codigo = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom']
-        codigo_dia_actual = dias_codigo[ahora.weekday()]
+        codigo_dia_actual = dias_codigo[ahora.weekday()].upper()
+        #codigo_dia_actual = dias_codigo[ahora.weekday()]
         trabaja_hoy = self.dias_laborables.filter(codigo=codigo_dia_actual).exists()
         dentro_horario = self.hora_inicio <= ahora.time() <= self.hora_cierre
         return trabaja_hoy and dentro_horario
