@@ -1226,18 +1226,6 @@ def nueva_cita(request):
 # El resto de funciones que mostraste (editar_cita, notificar_cita) no requieren cambios relacionados a este error.
 
 
-import logging
-from datetime import datetime, timedelta
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.utils.timezone import now, is_naive, make_aware
-from django.core.mail import send_mail
-from django.conf import settings
-
-from .models import Cita
-from .forms import EditarCitaForm
-from .utils import enviar_mensaje_telegram  # Asegúrate de tener esta función
 
 logger = logging.getLogger(__name__)
 
@@ -1250,23 +1238,22 @@ def editar_cita(request, cita_id):
     if is_naive(cita_datetime):
         cita_datetime = make_aware(cita_datetime)
 
-    # Estado no editable
+    # ⛔ Validar si la cita ya está en estado no editable
     if cita.estado in ['completada', 'vencida']:
-        messages.error(request, f"⚠️ Esta cita ya fue {cita.estado} y no se puede editar.")
+        messages.error(request, f'⚠️ Esta cita ya está {cita.estado} y no se puede editar.')
         return redirect('app:cliente_panel')
 
-    # Verificar si ya debe actualizarse el estado automáticamente
+    # ✅ Actualizar estado si ya ha pasado
     if cita.servicio:
         fin_cita = cita_datetime + timedelta(minutes=cita.servicio.duracion)
         if ahora >= fin_cita:
             if cita.estado == 'aceptada':
                 cita.estado = 'completada'
-                cita.save()
             elif cita.estado == 'pendiente':
                 cita.estado = 'vencida'
-                cita.save()
+            cita.save()
 
-    # Revalidar estado tras actualización
+    # ⛔ Revalidar si cambió el estado al actualizarlo
     if cita.estado in ['completada', 'rechazada', 'vencida']:
         messages.error(request, f"❌ No se puede editar una cita que está {cita.estado}.")
         return redirect('app:cliente_panel')
@@ -1286,13 +1273,16 @@ def editar_cita(request, cita_id):
                 form.add_error(None, "❌ No puedes seleccionar una fecha y hora pasada.")
                 return render(request, 'app/editar_cita.html', {'form': form, 'cita': cita})
 
-            # Validar día laborable y horario
+            # Validar horario laboral y día laborable
             hora_cita = cita_nueva.hora
-            dia_codigo = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'][cita_nueva.fecha.weekday()]
+            dia_codigo = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'][cita_nueva.fecha.weekday()].upper()
+
+            # 🔥 FIX: Aseguramos que se compara correctamente con el campo "codigo" (en mayúsculas)
             trabaja_ese_dia = cita_nueva.empresa.dias_laborables.filter(codigo=dia_codigo).first()
             if not trabaja_ese_dia:
-                form.add_error(None, f"⛔ La empresa no trabaja el día {cita_nueva.fecha.strftime('%A')} ({dia_codigo.upper()}).")
+                form.add_error(None, f"⛔ La empresa no trabaja el día {cita_nueva.fecha.strftime('%A')} ({dia_codigo}).")
                 return render(request, 'app/editar_cita.html', {'form': form, 'cita': cita})
+
             if not (cita_nueva.empresa.hora_inicio <= hora_cita <= cita_nueva.empresa.hora_cierre):
                 form.add_error(None, "⛔ La hora está fuera del horario laboral de la empresa.")
                 return render(request, 'app/editar_cita.html', {'form': form, 'cita': cita})
@@ -1433,7 +1423,6 @@ def notificar_cita(cita, cliente, empresa, servicio, comentarios, accion):
         logger.error(f"Error al enviar mensajes por Telegram: {e}")
 
     return resultados
-
     
 @login_required(login_url='app:login')
 def eliminar_cita(request, cita_id):
