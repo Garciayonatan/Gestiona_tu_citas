@@ -1226,7 +1226,6 @@ def nueva_cita(request):
 # El resto de funciones que mostraste (editar_cita, notificar_cita) no requieren cambios relacionados a este error.
 
 
-
 logger = logging.getLogger(__name__)
 
 @login_required(login_url='app:login')
@@ -1253,7 +1252,7 @@ def editar_cita(request, cita_id):
                 cita.estado = 'vencida'
             cita.save()
 
-    # ⛔ Revalidar si cambió el estado al actualizarlo
+    # Revalidar estado después de actualización
     if cita.estado in ['completada', 'rechazada', 'vencida']:
         messages.error(request, f"❌ No se puede editar una cita que está {cita.estado}.")
         return redirect('app:cliente_panel')
@@ -1273,14 +1272,23 @@ def editar_cita(request, cita_id):
                 form.add_error(None, "❌ No puedes seleccionar una fecha y hora pasada.")
                 return render(request, 'app/editar_cita.html', {'form': form, 'cita': cita})
 
-            # Validar horario laboral y día laborable
+            # Validar horario y día laborable
             hora_cita = cita_nueva.hora
-            dia_codigo = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'][cita_nueva.fecha.weekday()].upper()
+            dias = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom']
+            dia_codigo = dias[cita_nueva.fecha.weekday()]
+            dia_laboral = cita_nueva.empresa.dias_laborables.filter(codigo=dia_codigo).first()
 
-            # 🔥 FIX: Aseguramos que se compara correctamente con el campo "codigo" (en mayúsculas)
-            trabaja_ese_dia = cita_nueva.empresa.dias_laborables.filter(codigo=dia_codigo).first()
-            if not trabaja_ese_dia:
-                form.add_error(None, f"⛔ La empresa no trabaja el día {cita_nueva.fecha.strftime('%A')} ({dia_codigo}).")
+            if not dia_laboral:
+                nombre_dia = {
+                    'lun': 'lunes',
+                    'mar': 'martes',
+                    'mie': 'miércoles',
+                    'jue': 'jueves',
+                    'vie': 'viernes',
+                    'sab': 'sábado',
+                    'dom': 'domingo',
+                }.get(dia_codigo, "desconocido")
+                form.add_error(None, f"⛔ La empresa no trabaja el día {nombre_dia} ({dia_codigo.upper()}).")
                 return render(request, 'app/editar_cita.html', {'form': form, 'cita': cita})
 
             if not (cita_nueva.empresa.hora_inicio <= hora_cita <= cita_nueva.empresa.hora_cierre):
@@ -1290,34 +1298,30 @@ def editar_cita(request, cita_id):
             fecha_hora_inicio = nueva_fecha_hora
             fecha_hora_fin = fecha_hora_inicio + timedelta(minutes=servicio.duracion)
 
-            # Conflictos con otras citas del cliente
+            # Verificar conflictos con otras citas del cliente
             citas_cliente = Cita.objects.filter(
                 cliente=cita_nueva.cliente,
                 fecha=cita_nueva.fecha,
                 estado__in=['pendiente', 'aceptada']
             ).exclude(id=cita.id)
 
-            for otra_cita in citas_cliente:
-                otra_inicio = datetime.combine(otra_cita.fecha, otra_cita.hora)
-                if is_naive(otra_inicio):
-                    otra_inicio = make_aware(otra_inicio)
-                otra_fin = otra_inicio + timedelta(minutes=otra_cita.servicio.duracion)
+            for otra in citas_cliente:
+                otra_inicio = make_aware(datetime.combine(otra.fecha, otra.hora)) if is_naive(datetime.combine(otra.fecha, otra.hora)) else datetime.combine(otra.fecha, otra.hora)
+                otra_fin = otra_inicio + timedelta(minutes=otra.servicio.duracion)
                 if fecha_hora_inicio < otra_fin and fecha_hora_fin > otra_inicio:
                     form.add_error(None, "❌ Ya tienes una cita en ese horario.")
                     return render(request, 'app/editar_cita.html', {'form': form, 'cita': cita})
 
-            # Conflictos con otras citas en la empresa
-            citas_conflictivas = Cita.objects.filter(
+            # Verificar conflictos con otras citas de la empresa
+            citas_empresa = Cita.objects.filter(
                 empresa=cita_nueva.empresa,
                 fecha=cita_nueva.fecha,
                 estado__in=['pendiente', 'aceptada']
             ).exclude(id=cita.id)
 
             conflictos = 0
-            for otra in citas_conflictivas:
-                otra_inicio = datetime.combine(otra.fecha, otra.hora)
-                if is_naive(otra_inicio):
-                    otra_inicio = make_aware(otra_inicio)
+            for otra in citas_empresa:
+                otra_inicio = make_aware(datetime.combine(otra.fecha, otra.hora)) if is_naive(datetime.combine(otra.fecha, otra.hora)) else datetime.combine(otra.fecha, otra.hora)
                 otra_fin = otra_inicio + timedelta(minutes=otra.servicio.duracion)
                 if fecha_hora_inicio < otra_fin and fecha_hora_fin > otra_inicio:
                     conflictos += 1
@@ -1338,13 +1342,10 @@ def editar_cita(request, cita_id):
             )
 
             mensaje = "✅ Cita actualizada correctamente."
-            notificaciones = []
-            if resultados.get("email_cliente") or resultados.get("email_empresa"):
-                notificaciones.append("📧 Notificaciones enviadas por correo electrónico.")
-            if resultados.get("telegram_cliente") or resultados.get("telegram_empresa"):
-                notificaciones.append("📲 Notificaciones enviadas por Telegram.")
-            if notificaciones:
-                mensaje += " " + " ".join(notificaciones)
+            if resultados["email_cliente"] or resultados["email_empresa"]:
+                mensaje += " 📧 Notificaciones enviadas por correo electrónico."
+            if resultados["telegram_cliente"] or resultados["telegram_empresa"]:
+                mensaje += " 📲 Notificaciones enviadas por Telegram."
 
             messages.success(request, mensaje)
             return redirect('app:cliente_panel')
