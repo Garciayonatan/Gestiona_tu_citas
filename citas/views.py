@@ -1476,7 +1476,7 @@ def eliminar_cita(request, cita_id):
         cita.save()
 
 
-        messages.success(request, '✅ Cita eliminada (ocultada) exitosamente.')
+        messages.success(request, '✅ Cita eliminada (exitosamente).')
 
         # Si la cita estaba completada o vencida, no enviamos notificaciones
         if estado in ['completada', 'vencida']:
