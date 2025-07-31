@@ -236,12 +236,9 @@ def cliente_panel(request):
                 cita.save()
 
         elif cita.estado == 'pendiente' and cita.servicio:
+            # Calcular hora final del servicio
             fin_cita = fecha_hora_cita + timedelta(minutes=cita.servicio.duracion)
             if ahora > fin_cita:
-                cita.estado = 'vencida'
-                cita.save()
-            elif ahora >= fecha_hora_cita:
-                # Si ya pasó la hora de inicio y no se ha completado, marcar como vencida
                 cita.estado = 'vencida'
                 cita.save()
 
