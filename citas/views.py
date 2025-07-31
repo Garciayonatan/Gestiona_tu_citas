@@ -215,36 +215,47 @@ def cliente_panel(request):
     Vista para mostrar el panel del cliente con sus citas y las empresas disponibles.
     También actualiza automáticamente el estado de las citas que ya han pasado.
     """
-    cliente = get_object_or_404(Cliente, user=request.user)
-    
-    # Obtener solo las citas visibles para el cliente
-    citas = Cita.objects.filter(cliente=cliente, visible_para_cliente=True).select_related('empresa', 'servicio').order_by('fecha', 'hora')
 
-    ahora = timezone.now()
+    cliente = get_object_or_404(Cliente, user=request.user)
+
+    # Obtener solo las citas visibles para el cliente
+    citas = Cita.objects.filter(
+        cliente=cliente,
+        visible_para_cliente=True
+    ).select_related('empresa', 'servicio').order_by('fecha', 'hora')
+
+    ahora = now()
 
     for cita in citas:
-        # Combinar fecha y hora, y asegurar que tenga zona horaria
         fecha_hora_cita = datetime.combine(cita.fecha, cita.hora)
         if is_naive(fecha_hora_cita):
             fecha_hora_cita = make_aware(fecha_hora_cita)
 
         if cita.estado == 'aceptada' and cita.servicio:
-            # Calcular hora final del servicio
             fin_cita = fecha_hora_cita + timedelta(minutes=cita.servicio.duracion)
             if ahora >= fin_cita:
                 cita.estado = 'completada'
                 cita.save()
 
         elif cita.estado == 'pendiente' and cita.servicio:
-            # Calcular hora final del servicio
             fin_cita = fecha_hora_cita + timedelta(minutes=cita.servicio.duracion)
-            if ahora > fin_cita:
+            if ahora > fin_cita or ahora >= fecha_hora_cita:
                 cita.estado = 'vencida'
                 cita.save()
 
-    # Refrescar citas después de actualizar, filtrando por visible_para_cliente=True
-    citas = Cita.objects.filter(cliente=cliente, visible_para_cliente=True).select_related('empresa', 'servicio').order_by('fecha', 'hora')
-    
+    # Refrescar citas actualizadas
+    citas = Cita.objects.filter(
+        cliente=cliente,
+        visible_para_cliente=True
+    ).select_related('empresa', 'servicio').order_by('fecha', 'hora')
+
+    # Verificar si tiene alguna cita pendiente o aceptada
+    tiene_cita_activa = Cita.objects.filter(
+        cliente=cliente,
+        estado__in=['pendiente', 'aceptada'],
+        visible_para_cliente=True
+    ).exists()
+
     empresas = Empresa.objects.prefetch_related('dias_laborables')
     dias = DiaLaborable.objects.all()
 
@@ -253,6 +264,7 @@ def cliente_panel(request):
         'citas': citas,
         'empresas': empresas,
         'dias_laborables': dias,
+        'tiene_cita_activa': tiene_cita_activa,  # ✅ Puedes usar esto en el template
     })
 
 # Panel de empresa
