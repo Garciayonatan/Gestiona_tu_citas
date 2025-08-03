@@ -218,32 +218,39 @@ def cliente_panel(request):
 
     cliente = get_object_or_404(Cliente, user=request.user)
 
-    # Obtener solo las citas visibles para el cliente
-    citas = Cita.objects.filter(
-        cliente=cliente,
-        visible_para_cliente=True
-    ).select_related('empresa', 'servicio').order_by('fecha', 'hora')
-
     ahora = now()
+
+    # Obtener solo las citas visibles para el cliente
+    citas = list(
+        Cita.objects.filter(
+            cliente=cliente,
+            visible_para_cliente=True
+        ).select_related('empresa', 'servicio').order_by('fecha', 'hora')
+    )
+
+    citas_a_actualizar = []
 
     for cita in citas:
         fecha_hora_cita = datetime.combine(cita.fecha, cita.hora)
         if is_naive(fecha_hora_cita):
             fecha_hora_cita = make_aware(fecha_hora_cita)
 
-        if cita.estado == 'aceptada' and cita.servicio:
+        if cita.servicio:
             fin_cita = fecha_hora_cita + timedelta(minutes=cita.servicio.duracion)
-            if ahora >= fin_cita:
+
+            if cita.estado == 'aceptada' and ahora >= fin_cita:
                 cita.estado = 'completada'
-                cita.save()
+                citas_a_actualizar.append(cita)
 
-        elif cita.estado == 'pendiente' and cita.servicio:
-            fin_cita = fecha_hora_cita + timedelta(minutes=cita.servicio.duracion)
-            if ahora > fin_cita or ahora >= fecha_hora_cita:
+            elif cita.estado == 'pendiente' and (ahora > fin_cita or ahora >= fecha_hora_cita):
                 cita.estado = 'vencida'
-                cita.save()
+                citas_a_actualizar.append(cita)
 
-    # Refrescar citas actualizadas
+    # Guardar en batch las citas que cambiaron de estado
+    if citas_a_actualizar:
+        Cita.objects.bulk_update(citas_a_actualizar, ['estado'])
+
+    # Refrescar las citas actualizadas
     citas = Cita.objects.filter(
         cliente=cliente,
         visible_para_cliente=True
@@ -264,7 +271,7 @@ def cliente_panel(request):
         'citas': citas,
         'empresas': empresas,
         'dias_laborables': dias,
-        'tiene_cita_activa': tiene_cita_activa,  # ✅ Puedes usar esto en el template
+        'tiene_cita_activa': tiene_cita_activa,
     })
 
 # Panel de empresa
@@ -1238,26 +1245,25 @@ def nueva_cita(request):
 # El resto de funciones que mostraste (editar_cita, notificar_cita) no requieren cambios relacionados a este error.
 
 
+import logging
+from datetime import datetime, timedelta
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.utils.timezone import now, is_naive, make_aware
+from django.core.mail import send_mail
+from django.conf import settings
+
+from .models import Cita
+from .forms import EditarCitaForm
+from .utils import enviar_mensaje_telegram  # Si tienes esta función aparte
+
 logger = logging.getLogger(__name__)
 
 @login_required(login_url='app:login')
 def editar_cita(request, cita_id):
     cita = get_object_or_404(Cita, id=cita_id, cliente__user=request.user)
-
     ahora = now()
-    cita_datetime = datetime.combine(cita.fecha, cita.hora)
-    if is_naive(cita_datetime):
-        cita_datetime = make_aware(cita_datetime)
-
-    # ✅ Forzar actualización del estado ANTES de cualquier validación
-    if cita.servicio:
-        if ahora >= cita_datetime:
-            if cita.estado == 'aceptada':
-                cita.estado = 'completada'
-                cita.save()
-            elif cita.estado == 'pendiente':
-                cita.estado = 'vencida'
-                cita.save()
 
     # ⛔ Validar si la cita ya está en estado no editable
     if cita.estado in ['completada', 'rechazada', 'vencida']:
@@ -1426,6 +1432,7 @@ def notificar_cita(cita, cliente, empresa, servicio, comentarios, accion):
         logger.error(f"Error al enviar mensajes por Telegram: {e}")
 
     return resultados
+
     
     
 @login_required(login_url='app:login')
