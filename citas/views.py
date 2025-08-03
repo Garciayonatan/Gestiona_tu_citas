@@ -1238,27 +1238,13 @@ def nueva_cita(request):
 # El resto de funciones que mostraste (editar_cita, notificar_cita) no requieren cambios relacionados a este error.
 
 
-import logging
-from datetime import datetime, timedelta
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.utils.timezone import now, is_naive, make_aware
-from django.core.mail import send_mail
-from django.conf import settings
-
-from .models import Cita
-from .forms import EditarCitaForm
-from .utils import enviar_mensaje_telegram  # Si tienes esta función aparte
-
-logger = logging.getLogger(__name__)
-
 @login_required(login_url='app:login')
 def editar_cita(request, cita_id):
     cita = get_object_or_404(Cita, id=cita_id, cliente__user=request.user)
-    ahora = now()
 
-    # ⛔ Validar si la cita ya está en estado no editable
+    # NO se actualiza el estado aquí (ya lo hace cliente_panel)
+
+    # Validar si la cita ya está en estado no editable
     if cita.estado in ['completada', 'rechazada', 'vencida']:
         messages.error(request, f'⚠️ Esta cita ya está {cita.estado} y no se puede editar.')
         return redirect('app:cliente_panel')
@@ -1274,6 +1260,7 @@ def editar_cita(request, cita_id):
             if is_naive(nueva_fecha_hora):
                 nueva_fecha_hora = make_aware(nueva_fecha_hora)
 
+            ahora = now()
             if nueva_fecha_hora < ahora:
                 form.add_error(None, "❌ No puedes seleccionar una fecha y hora pasada.")
                 return render(request, 'app/editar_cita.html', {'form': form, 'cita': cita})
@@ -1307,7 +1294,9 @@ def editar_cita(request, cita_id):
             ).exclude(id=cita.id)
 
             for otra in citas_cliente:
-                otra_inicio = make_aware(datetime.combine(otra.fecha, otra.hora)) if is_naive(datetime.combine(otra.fecha, otra.hora)) else datetime.combine(otra.fecha, otra.hora)
+                otra_inicio = datetime.combine(otra.fecha, otra.hora)
+                if is_naive(otra_inicio):
+                    otra_inicio = make_aware(otra_inicio)
                 otra_fin = otra_inicio + timedelta(minutes=otra.servicio.duracion)
                 if fecha_hora_inicio < otra_fin and fecha_hora_fin > otra_inicio:
                     form.add_error(None, "❌ Ya tienes una cita en ese horario.")
@@ -1322,7 +1311,9 @@ def editar_cita(request, cita_id):
 
             conflictos = 0
             for otra in citas_empresa:
-                otra_inicio = make_aware(datetime.combine(otra.fecha, otra.hora)) if is_naive(datetime.combine(otra.fecha, otra.hora)) else datetime.combine(otra.fecha, otra.hora)
+                otra_inicio = datetime.combine(otra.fecha, otra.hora)
+                if is_naive(otra_inicio):
+                    otra_inicio = make_aware(otra_inicio)
                 otra_fin = otra_inicio + timedelta(minutes=otra.servicio.duracion)
                 if fecha_hora_inicio < otra_fin and fecha_hora_fin > otra_inicio:
                     conflictos += 1
@@ -1425,7 +1416,6 @@ def notificar_cita(cita, cliente, empresa, servicio, comentarios, accion):
         logger.error(f"Error al enviar mensajes por Telegram: {e}")
 
     return resultados
-
     
     
 @login_required(login_url='app:login')
