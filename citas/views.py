@@ -218,39 +218,32 @@ def cliente_panel(request):
 
     cliente = get_object_or_404(Cliente, user=request.user)
 
-    ahora = now()
-
     # Obtener solo las citas visibles para el cliente
-    citas = list(
-        Cita.objects.filter(
-            cliente=cliente,
-            visible_para_cliente=True
-        ).select_related('empresa', 'servicio').order_by('fecha', 'hora')
-    )
+    citas = Cita.objects.filter(
+        cliente=cliente,
+        visible_para_cliente=True
+    ).select_related('empresa', 'servicio').order_by('fecha', 'hora')
 
-    citas_a_actualizar = []
+    ahora = now()
 
     for cita in citas:
         fecha_hora_cita = datetime.combine(cita.fecha, cita.hora)
         if is_naive(fecha_hora_cita):
             fecha_hora_cita = make_aware(fecha_hora_cita)
 
-        if cita.servicio:
+        if cita.estado == 'aceptada' and cita.servicio:
             fin_cita = fecha_hora_cita + timedelta(minutes=cita.servicio.duracion)
-
-            if cita.estado == 'aceptada' and ahora >= fin_cita:
+            if ahora >= fin_cita:
                 cita.estado = 'completada'
-                citas_a_actualizar.append(cita)
+                cita.save()
 
-            elif cita.estado == 'pendiente' and (ahora > fin_cita or ahora >= fecha_hora_cita):
+        elif cita.estado == 'pendiente' and cita.servicio:
+            fin_cita = fecha_hora_cita + timedelta(minutes=cita.servicio.duracion)
+            if ahora > fin_cita or ahora >= fecha_hora_cita:
                 cita.estado = 'vencida'
-                citas_a_actualizar.append(cita)
+                cita.save()
 
-    # Guardar en batch las citas que cambiaron de estado
-    if citas_a_actualizar:
-        Cita.objects.bulk_update(citas_a_actualizar, ['estado'])
-
-    # Refrescar las citas actualizadas
+    # Refrescar citas actualizadas
     citas = Cita.objects.filter(
         cliente=cliente,
         visible_para_cliente=True
@@ -271,7 +264,7 @@ def cliente_panel(request):
         'citas': citas,
         'empresas': empresas,
         'dias_laborables': dias,
-        'tiene_cita_activa': tiene_cita_activa,
+        'tiene_cita_activa': tiene_cita_activa,  # ✅ Puedes usar esto en el template
     })
 
 # Panel de empresa
