@@ -207,7 +207,7 @@ def registro_cliente(request):
         'user_form': user_form,
         'cliente_form': cliente_form,
     })
-from django.utils.timezone import now, is_naive, make_aware, localtime
+
 # Panel del cliente
 @login_required(login_url='app:login')
 def cliente_panel(request):
@@ -224,28 +224,22 @@ def cliente_panel(request):
         visible_para_cliente=True
     ).select_related('empresa', 'servicio').order_by('fecha', 'hora')
 
-    # Hora actual en zona local
-    ahora = localtime(now())
+    ahora = now()
 
     for cita in citas:
-        # Combinar fecha y hora
         fecha_hora_cita = datetime.combine(cita.fecha, cita.hora)
-
-        # Asegurar datetime aware y en zona local
         if is_naive(fecha_hora_cita):
             fecha_hora_cita = make_aware(fecha_hora_cita)
-        fecha_hora_cita = localtime(fecha_hora_cita)
 
-        if cita.servicio:
+        if cita.estado == 'aceptada' and cita.servicio:
             fin_cita = fecha_hora_cita + timedelta(minutes=cita.servicio.duracion)
-
-            # Si ya pasó el fin y estaba aceptada → completada
-            if cita.estado == 'aceptada' and ahora >= fin_cita:
+            if ahora >= fin_cita:
                 cita.estado = 'completada'
                 cita.save()
 
-            # Si ya pasó la fecha/hora de inicio o fin y estaba pendiente → vencida
-            elif cita.estado == 'pendiente' and (ahora > fin_cita or ahora >= fecha_hora_cita):
+        elif cita.estado == 'pendiente' and cita.servicio:
+            fin_cita = fecha_hora_cita + timedelta(minutes=cita.servicio.duracion)
+            if ahora > fin_cita or ahora >= fecha_hora_cita:
                 cita.estado = 'vencida'
                 cita.save()
 
@@ -272,6 +266,7 @@ def cliente_panel(request):
         'dias_laborables': dias,
         'tiene_cita_activa': tiene_cita_activa,  # ✅ Puedes usar esto en el template
     })
+
 # Panel de empresa
 
 @login_required(login_url='app:login')
