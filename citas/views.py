@@ -207,7 +207,8 @@ def registro_cliente(request):
         'user_form': user_form,
         'cliente_form': cliente_form,
     })
-
+from django.utils.timezone import now, is_naive, make_aware, localtime
+  
 # Panel del cliente
 @login_required(login_url='app:login')
 def cliente_panel(request):
@@ -224,26 +225,33 @@ def cliente_panel(request):
         visible_para_cliente=True
     ).select_related('empresa', 'servicio').order_by('fecha', 'hora')
 
-    ahora = now()
+    # Hora actual en la zona local configurada en Django
+    ahora = localtime(now())
 
     for cita in citas:
+        # Combinar fecha y hora en datetime
         fecha_hora_cita = datetime.combine(cita.fecha, cita.hora)
+
+        # Asegurar que sea aware y en la zona local
         if is_naive(fecha_hora_cita):
             fecha_hora_cita = make_aware(fecha_hora_cita)
+        fecha_hora_cita = localtime(fecha_hora_cita)
 
-        if cita.estado == 'aceptada' and cita.servicio:
+        # Calcular hora de fin de la cita
+        if cita.servicio:
             fin_cita = fecha_hora_cita + timedelta(minutes=cita.servicio.duracion)
-            if ahora >= fin_cita:
+
+            # Cambiar de aceptada a completada
+            if cita.estado == 'aceptada' and ahora >= fin_cita:
                 cita.estado = 'completada'
                 cita.save()
 
-        elif cita.estado == 'pendiente' and cita.servicio:
-            fin_cita = fecha_hora_cita + timedelta(minutes=cita.servicio.duracion)
-            if ahora > fin_cita or ahora >= fecha_hora_cita:
+            # Cambiar de pendiente a vencida
+            elif cita.estado == 'pendiente' and (ahora > fin_cita or ahora >= fecha_hora_cita):
                 cita.estado = 'vencida'
                 cita.save()
 
-    # Refrescar citas actualizadas
+    # Refrescar citas después de actualizarlas
     citas = Cita.objects.filter(
         cliente=cliente,
         visible_para_cliente=True
@@ -264,7 +272,7 @@ def cliente_panel(request):
         'citas': citas,
         'empresas': empresas,
         'dias_laborables': dias,
-        'tiene_cita_activa': tiene_cita_activa,  # ✅ Puedes usar esto en el template
+        'tiene_cita_activa': tiene_cita_activa,  # ✅ Para usar en el template
     })
 
 # Panel de empresa
