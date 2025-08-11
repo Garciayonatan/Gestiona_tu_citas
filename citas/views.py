@@ -231,17 +231,21 @@ def cliente_panel(request):
         if is_naive(fecha_hora_cita):
             fecha_hora_cita = make_aware(fecha_hora_cita)
 
-        if cita.estado == 'aceptada' and cita.servicio:
-            fin_cita = fecha_hora_cita + timedelta(minutes=cita.servicio.duracion)
-            if ahora >= fin_cita:
-                cita.estado = 'completada'
-                cita.save()
+        # Verificar que cita tenga servicio y duración válida
+        if not cita.servicio or not cita.servicio.duracion:
+            continue
 
-        elif cita.estado == 'pendiente' and cita.servicio:
-            fin_cita = fecha_hora_cita + timedelta(minutes=cita.servicio.duracion)
-            if ahora > fin_cita or ahora >= fecha_hora_cita:
-                cita.estado = 'vencida'
-                cita.save()
+        fin_cita = fecha_hora_cita + timedelta(minutes=cita.servicio.duracion)
+
+        # Actualizar estado si la cita está aceptada y ya pasó la duración
+        if cita.estado == 'aceptada' and ahora >= fin_cita:
+            cita.estado = 'completada'
+            cita.save()
+
+        # Actualizar estado si la cita está pendiente y ya pasó la hora de inicio
+        elif cita.estado == 'pendiente' and ahora >= fecha_hora_cita:
+            cita.estado = 'vencida'
+            cita.save()
 
     # Refrescar citas actualizadas
     citas = Cita.objects.filter(
