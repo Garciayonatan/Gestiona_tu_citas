@@ -224,33 +224,32 @@ def cliente_panel(request):
         visible_para_cliente=True
     ).select_related('empresa', 'servicio').order_by('fecha', 'hora')
 
-    # Hora actual en la zona local
+    # Hora actual en zona local
     ahora = localtime(now())
 
     for cita in citas:
-        # Combinar fecha y hora en un datetime
+        # Combinar fecha y hora
         fecha_hora_cita = datetime.combine(cita.fecha, cita.hora)
 
-        # Asegurar que sea aware y en la zona local
+        # Asegurar datetime aware y en zona local
         if is_naive(fecha_hora_cita):
             fecha_hora_cita = make_aware(fecha_hora_cita)
         fecha_hora_cita = localtime(fecha_hora_cita)
 
         if cita.servicio:
-            # Calcular hora de fin de la cita
             fin_cita = fecha_hora_cita + timedelta(minutes=cita.servicio.duracion)
 
-            # Si ya terminó y estaba aceptada → completada
+            # Si ya pasó el fin y estaba aceptada → completada
             if cita.estado == 'aceptada' and ahora >= fin_cita:
                 cita.estado = 'completada'
                 cita.save()
 
-            # Si estaba pendiente y ya pasó el inicio o fin → vencida
+            # Si ya pasó la fecha/hora de inicio o fin y estaba pendiente → vencida
             elif cita.estado == 'pendiente' and (ahora > fin_cita or ahora >= fecha_hora_cita):
                 cita.estado = 'vencida'
                 cita.save()
 
-    # Refrescar citas después de actualizar
+    # Refrescar citas actualizadas
     citas = Cita.objects.filter(
         cliente=cliente,
         visible_para_cliente=True
@@ -271,7 +270,7 @@ def cliente_panel(request):
         'citas': citas,
         'empresas': empresas,
         'dias_laborables': dias,
-        'tiene_cita_activa': tiene_cita_activa,  # ✅ Para usar en el template
+        'tiene_cita_activa': tiene_cita_activa,  # ✅ Puedes usar esto en el template
     })
 # Panel de empresa
 
