@@ -1242,13 +1242,23 @@ def nueva_cita(request):
 # El resto de funciones que mostraste (editar_cita, notificar_cita) no requieren cambios relacionados a este error.
 
 
+logger = logging.getLogger(__name__)
+
+
 @login_required(login_url='app:login')
 def editar_cita(request, cita_id):
     cita = get_object_or_404(Cita, id=cita_id, cliente__user=request.user)
 
-    # NO se actualiza el estado aquí (ya lo hace cliente_panel)
+    # 🔹 Actualizar estado automáticamente si ya pasó su hora
+    fecha_hora_cita = datetime.combine(cita.fecha, cita.hora)
+    if is_naive(fecha_hora_cita):
+        fecha_hora_cita = make_aware(fecha_hora_cita)
 
-    # Validar si la cita ya está en estado no editable
+    if fecha_hora_cita < now() and cita.estado in ['pendiente', 'aceptada']:
+        cita.estado = 'completada'
+        cita.save(update_fields=['estado'])
+
+    # 🔹 Validar si está en estado no editable
     if cita.estado in ['completada', 'rechazada', 'vencida']:
         messages.error(request, f'⚠️ Esta cita ya está {cita.estado} y no se puede editar.')
         return redirect('app:cliente_panel')
@@ -1264,33 +1274,31 @@ def editar_cita(request, cita_id):
             if is_naive(nueva_fecha_hora):
                 nueva_fecha_hora = make_aware(nueva_fecha_hora)
 
-            ahora = now()
-            if nueva_fecha_hora < ahora:
+            if nueva_fecha_hora < now():
                 form.add_error(None, "❌ No puedes seleccionar una fecha y hora pasada.")
                 return render(request, 'app/editar_cita.html', {'form': form, 'cita': cita})
 
-            # Validar horario y día laborable
-            hora_cita = cita_nueva.hora
+            # 🔹 Validar día laborable
             dias = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom']
             dia_codigo = dias[cita_nueva.fecha.weekday()]
             dia_laboral = cita_nueva.empresa.dias_laborables.filter(codigo=dia_codigo).first()
-
             if not dia_laboral:
                 nombre_dia = {
                     'lun': 'lunes', 'mar': 'martes', 'mie': 'miércoles',
                     'jue': 'jueves', 'vie': 'viernes', 'sab': 'sábado', 'dom': 'domingo'
                 }.get(dia_codigo, "desconocido")
-                form.add_error(None, f"⛔ La empresa no trabaja el día {nombre_dia} ({dia_codigo.upper()}).")
+                form.add_error(None, f"⛔ La empresa no trabaja el día {nombre_dia}.")
                 return render(request, 'app/editar_cita.html', {'form': form, 'cita': cita})
 
-            if not (cita_nueva.empresa.hora_inicio <= hora_cita <= cita_nueva.empresa.hora_cierre):
+            # 🔹 Validar horario
+            if not (cita_nueva.empresa.hora_inicio <= cita_nueva.hora <= cita_nueva.empresa.hora_cierre):
                 form.add_error(None, "⛔ La hora está fuera del horario laboral de la empresa.")
                 return render(request, 'app/editar_cita.html', {'form': form, 'cita': cita})
 
             fecha_hora_inicio = nueva_fecha_hora
             fecha_hora_fin = fecha_hora_inicio + timedelta(minutes=servicio.duracion)
 
-            # Verificar conflictos con otras citas del cliente
+            # 🔹 Conflictos con citas del cliente
             citas_cliente = Cita.objects.filter(
                 cliente=cita_nueva.cliente,
                 fecha=cita_nueva.fecha,
@@ -1306,7 +1314,7 @@ def editar_cita(request, cita_id):
                     form.add_error(None, "❌ Ya tienes una cita en ese horario.")
                     return render(request, 'app/editar_cita.html', {'form': form, 'cita': cita})
 
-            # Verificar conflictos con otras citas de la empresa
+            # 🔹 Conflictos con citas de la empresa
             citas_empresa = Cita.objects.filter(
                 empresa=cita_nueva.empresa,
                 fecha=cita_nueva.fecha,
@@ -1326,6 +1334,7 @@ def editar_cita(request, cita_id):
                 form.add_error(None, "❌ Ya hay otras citas que se cruzan con ese horario.")
                 return render(request, 'app/editar_cita.html', {'form': form, 'cita': cita})
 
+            # 🔹 Guardar cita actualizada
             cita_nueva.save()
 
             resultados = notificar_cita(
@@ -1399,6 +1408,7 @@ def notificar_cita(cita, cliente, empresa, servicio, comentarios, accion):
         "telegram_empresa": False,
     }
 
+    # 🔹 Envío de correos
     try:
         if cliente.user.email:
             send_mail(asunto, mensajes["cliente"], settings.DEFAULT_FROM_EMAIL, [cliente.user.email])
@@ -1409,6 +1419,7 @@ def notificar_cita(cita, cliente, empresa, servicio, comentarios, accion):
     except Exception as e:
         logger.error(f"Error al enviar correos: {e}")
 
+    # 🔹 Envío de mensajes por Telegram
     try:
         if cliente.telegram_chat_id:
             enviar_mensaje_telegram(cliente.telegram_chat_id, mensajes["cliente"])
@@ -1420,7 +1431,6 @@ def notificar_cita(cita, cliente, empresa, servicio, comentarios, accion):
         logger.error(f"Error al enviar mensajes por Telegram: {e}")
 
     return resultados
-    
     
 @login_required(login_url='app:login')
 def eliminar_cita(request, cita_id):
