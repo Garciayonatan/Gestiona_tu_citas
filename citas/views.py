@@ -2208,21 +2208,17 @@ def subir_o_eliminar_foto_cliente(request):
 # Solo superusuarios pueden eliminar empresas
 @login_required(login_url='app:login')
 def eliminar_empresa(request, empresa_id):
-    """
-    Soft delete de una empresa: cualquier usuario logueado puede eliminarla.
-    No elimina la empresa de la base de datos, solo la marca como inactiva.
-    Redirige al login después de eliminarla.
-    """
-    # Obtiene la empresa o lanza 404
     empresa = get_object_or_404(Empresa, id=empresa_id)
 
-    # Solo acepta POST para la acción
     if request.method == "POST":
-        empresa.activo = False  # Soft delete
+        empresa.activo = False
         empresa.save()
-        messages.success(request, f"La empresa '{empresa.nombre_empresa}' fue removida del panel correctamente.")
+
+        # Cierra la sesión del usuario que eliminó la empresa
+        logout(request)
+
+        messages.success(request, f"La empresa '{empresa.nombre_empresa}' fue eliminada del panel correctamente.")
         return redirect('app:login')  # Redirige al login
 
-    # Otros métodos no permitidos
     messages.error(request, "Operación no permitida.")
     return redirect('app:empresa_panel')
