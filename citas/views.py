@@ -275,19 +275,24 @@ def cliente_panel(request):
 
 @login_required(login_url='app:login')
 def empresa_panel(request):
-    # Obtiene la empresa del usuario
+    """
+    Muestra el panel de la empresa para usuarios con empresa activa.
+    Si la empresa no existe o está inactiva, cierra sesión y redirige al login.
+    """
+    # Obtiene la empresa asociada al usuario
     empresa = getattr(request.user, 'empresa', None)
 
-    # Si no tiene empresa o está inactiva, cerrar sesión y redirigir al login
+    # Validación: empresa inexistente o inactiva
     if empresa is None or not empresa.activo:
         messages.info(request, "No tienes una empresa activa.")
         logout(request)
         return redirect('app:login')
 
-    # Trae las citas de la empresa
+    # Obtiene todas las citas de la empresa, ordenadas por fecha y hora
     citas = Cita.objects.filter(empresa=empresa).order_by('fecha', 'hora')
     ahora = timezone.now()
 
+    # Actualiza estados de las citas según la fecha y hora actual
     for cita in citas:
         fecha_hora_cita = datetime.combine(cita.fecha, cita.hora)
         if timezone.is_naive(fecha_hora_cita):
@@ -300,12 +305,15 @@ def empresa_panel(request):
             cita.estado = 'vencida'
             cita.save()
 
+    # Filtra solo las citas pendientes
     citas_pendientes = citas.filter(estado='pendiente')
     citas_pendientes_count = citas_pendientes.count()
 
+    # Obtiene días laborables y servicios de la empresa
     dias_laborables = empresa.dias_laborables.all()
     servicios = Servicio.objects.filter(empresa=empresa)
 
+    # Renderiza la plantilla del panel con toda la información
     return render(request, 'app/empresa_panel.html', {
         'empresa': empresa,
         'citas': citas,
