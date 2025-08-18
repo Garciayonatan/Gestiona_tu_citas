@@ -78,28 +78,37 @@ def login_view(request):
         username = request.POST.get('username')
         password = request.POST.get('password')
         user = authenticate(request, username=username, password=password)
-        
+
         if user:
-            login(request, user)
-            if hasattr(user, 'cliente'):
-                messages.success(request, 'Iniciaste sesión como cliente exitosamente.')
-                return redirect('app:cliente_panel')
-            elif hasattr(user, 'empresa'):
+            # Verifica si el usuario tiene empresa o cliente
+            if hasattr(user, 'empresa'):
+                # Revisa si la empresa está activa
+                if not user.empresa.activo:
+                    messages.error(request, "Tu empresa está inactiva. No puedes iniciar sesión.")
+                    return redirect('app:login')
+
+                login(request, user)
                 messages.success(request, 'Iniciaste sesión como empresa exitosamente.')
                 return redirect('app:empresa_panel')
+
+            elif hasattr(user, 'cliente'):
+                login(request, user)
+                messages.success(request, 'Iniciaste sesión como cliente exitosamente.')
+                return redirect('app:cliente_panel')
+
             else:
                 messages.warning(request, 'No se pudo determinar el tipo de usuario.')
                 logout(request)
                 return redirect('app:login')
+
         else:
             messages.error(request, 'Usuario o contraseña incorrectos.')
 
-    # ✅ Aquí se limpian los mensajes anteriores (de otras vistas)
+    # Limpiar mensajes anteriores
     storage = messages.get_messages(request)
     storage.used = True  # Marcar todos como usados y eliminar
 
     return render(request, 'app/login.html')
-
 # Cierre de sesión
 def logout_view(request):
     logout(request)
