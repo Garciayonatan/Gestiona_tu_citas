@@ -2201,3 +2201,24 @@ def subir_o_eliminar_foto_cliente(request):
             return redirect('empresa_panel')
 
     return render(request, 'app/subir_logo.html')
+
+
+# aqui va los eliminar
+
+# Solo superusuarios pueden eliminar empresas
+def eliminar_empresa(request, empresa_id):
+    # Verifica que el usuario esté logueado y sea superusuario
+    if not request.user.is_authenticated or not request.user.is_superuser:
+        messages.error(request, "No tienes permiso para realizar esta acción.")
+        return redirect(reverse("login"))
+    
+    empresa = get_object_or_404(Empresa, id=empresa_id)
+    
+    if request.method == "POST":
+        nombre = empresa.nombre_empresa
+        empresa.delete()
+        messages.success(request, f"La empresa '{nombre}' fue eliminada correctamente.")
+        return redirect(reverse("login"))  # Redirige al login con mensaje
+    
+    messages.error(request, "Operación no permitida.")
+    return redirect(reverse("login"))
