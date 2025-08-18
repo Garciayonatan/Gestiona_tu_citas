@@ -40,6 +40,7 @@
       display: flex;
       gap: 12px;
       align-items: center;
+      flex-wrap: wrap;
     }
     nav a, nav button {
       text-decoration: none; color: #1e293b; background: #60a5fa; padding: 12px 28px;
@@ -154,13 +155,12 @@
       <h1>Bienvenido, {{ request.user.username }}</h1>
       <nav>
         <a href="{% url 'app:logout' %}">Cerrar sesión</a>
-        {% if request.user.is_superuser %}
+        <!-- Botón visible para el dueño de la empresa -->
         <form method="POST" action="{% url 'app:eliminar_empresa' empresa.id %}" 
               onsubmit="return confirm('⚠️ ¿Estás seguro de que deseas eliminar esta empresa? Esta acción no se puede deshacer.');">
           {% csrf_token %}
           <button type="submit" class="btn-danger">🗑️ Eliminar Empresa</button>
         </form>
-        {% endif %}
       </nav>
     </header>
 
@@ -260,4 +260,3 @@
   </main>
 </body>
 </html>
-
