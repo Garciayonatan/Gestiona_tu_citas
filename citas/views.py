@@ -275,19 +275,19 @@ def cliente_panel(request):
 
 @login_required(login_url='app:login')
 def empresa_panel(request):
-    # Obtiene la empresa del usuario logueado
+    # Obtiene la empresa del usuario
     empresa = getattr(request.user, 'empresa', None)
 
-    # Si no tiene empresa o la empresa está inactiva, redirige al cliente_panel
+    # Si no tiene empresa o está inactiva, cerrar sesión y redirigir al login
     if empresa is None or not empresa.activo:
         messages.info(request, "No tienes una empresa activa.")
-        return redirect('app:cliente_panel')
+        logout(request)
+        return redirect('app:login')
 
-    # Trae las citas de la empresa ordenadas por fecha y hora
+    # Trae las citas de la empresa
     citas = Cita.objects.filter(empresa=empresa).order_by('fecha', 'hora')
     ahora = timezone.now()
 
-    # Actualiza el estado de las citas según la fecha y hora
     for cita in citas:
         fecha_hora_cita = datetime.combine(cita.fecha, cita.hora)
         if timezone.is_naive(fecha_hora_cita):
@@ -300,15 +300,12 @@ def empresa_panel(request):
             cita.estado = 'vencida'
             cita.save()
 
-    # Filtra las citas pendientes y cuenta cuántas hay
     citas_pendientes = citas.filter(estado='pendiente')
     citas_pendientes_count = citas_pendientes.count()
 
-    # Obtiene días laborables y servicios de la empresa
     dias_laborables = empresa.dias_laborables.all()
     servicios = Servicio.objects.filter(empresa=empresa)
 
-    # Renderiza la plantilla con toda la información
     return render(request, 'app/empresa_panel.html', {
         'empresa': empresa,
         'citas': citas,
@@ -317,6 +314,7 @@ def empresa_panel(request):
         'citas_pendientes': citas_pendientes,
         'citas_pendientes_count': citas_pendientes_count,
     })
+
 #telegram noti
 # Configurar el logger
 # Configuración del logger
@@ -2213,7 +2211,6 @@ def subir_o_eliminar_foto_cliente(request):
 def eliminar_empresa(request, empresa_id):
     """
     Soft delete de una empresa: marca como inactiva y cierra sesión del usuario.
-    No elimina la empresa de la base de datos.
     """
     empresa = get_object_or_404(Empresa, id=empresa_id)
 
@@ -2222,12 +2219,11 @@ def eliminar_empresa(request, empresa_id):
         empresa.activo = False
         empresa.save()
 
-        # Cierra la sesión del usuario que posee la empresa
+        # Cierra la sesión del usuario
         logout(request)
 
         messages.success(request, f"La empresa '{empresa.nombre_empresa}' fue eliminada del panel correctamente.")
-        return redirect('app:login')  # Redirige al login
+        return redirect('app:login')
 
-    # Si no es POST, operación no permitida
     messages.error(request, "Operación no permitida.")
     return redirect('app:empresa_panel')
