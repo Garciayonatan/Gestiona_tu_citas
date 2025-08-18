@@ -275,22 +275,22 @@ def cliente_panel(request):
 
 @login_required(login_url='app:login')
 def empresa_panel(request):
-    if not hasattr(request.user, 'empresa'):
+    empresa = getattr(request.user, 'empresa', None)
+
+    # Si no tiene empresa o la empresa está inactiva, redirige al cliente_panel
+    if empresa is None or not empresa.activo:
+        messages.info(request, "No tienes una empresa activa.")
         return redirect('app:cliente_panel')
 
-    empresa = request.user.empresa
+    # Trae las citas de la empresa
     citas = Cita.objects.filter(empresa=empresa).order_by('fecha', 'hora')
     ahora = timezone.now()
 
     for cita in citas:
-        # Combinar fecha y hora
         fecha_hora_cita = datetime.combine(cita.fecha, cita.hora)
-
-        # Hacer timezone-aware si no lo es
         if timezone.is_naive(fecha_hora_cita):
             fecha_hora_cita = timezone.make_aware(fecha_hora_cita)
 
-        # Actualizar estado si aplica
         if cita.estado == 'aceptada' and fecha_hora_cita <= ahora:
             cita.estado = 'completada'
             cita.save()
@@ -298,7 +298,6 @@ def empresa_panel(request):
             cita.estado = 'vencida'
             cita.save()
 
-    # Citas pendientes solo
     citas_pendientes = citas.filter(estado='pendiente')
     citas_pendientes_count = citas_pendientes.count()
 
@@ -311,7 +310,7 @@ def empresa_panel(request):
         'dias_laborables': dias_laborables,
         'servicios': servicios,
         'citas_pendientes': citas_pendientes,
-        'citas_pendientes_count': citas_pendientes_count,  # Contador para la plantilla
+        'citas_pendientes_count': citas_pendientes_count,
     })
 
 #telegram noti
@@ -2208,13 +2207,23 @@ def subir_o_eliminar_foto_cliente(request):
 # Solo superusuarios pueden eliminar empresas
 @login_required(login_url='app:login')
 def eliminar_empresa(request, empresa_id):
+    """
+    Soft delete de una empresa: marca como inactiva y cierra sesión del usuario.
+    No elimina la empresa de la base de datos.
+    """
     empresa = get_object_or_404(Empresa, id=empresa_id)
 
     if request.method == "POST":
+        # Soft delete
         empresa.activo = False
         empresa.save()
 
-        # Cierra la sesión del usuario que eliminó la empresa
+        # Desvincula la empresa del usuario para que no cargue más
+        if hasattr(request.user, 'empresa'):
+            request.user.empresa = None
+            request.user.save()
+
+        # Cierra la sesión del usuario
         logout(request)
 
         messages.success(request, f"La empresa '{empresa.nombre_empresa}' fue eliminada del panel correctamente.")
