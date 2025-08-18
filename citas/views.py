@@ -2211,6 +2211,7 @@ def eliminar_empresa(request, empresa_id):
     """
     Soft delete de una empresa: cualquier usuario logueado puede eliminarla.
     No elimina la empresa de la base de datos, solo la marca como inactiva.
+    Redirige al login después de eliminarla.
     """
     # Obtiene la empresa o lanza 404
     empresa = get_object_or_404(Empresa, id=empresa_id)
@@ -2220,7 +2221,7 @@ def eliminar_empresa(request, empresa_id):
         empresa.activo = False  # Soft delete
         empresa.save()
         messages.success(request, f"La empresa '{empresa.nombre_empresa}' fue removida del panel correctamente.")
-        return redirect('app:empresa_panel')  # Redirige al panel
+        return redirect('app:login')  # Redirige al login
 
     # Otros métodos no permitidos
     messages.error(request, "Operación no permitida.")
