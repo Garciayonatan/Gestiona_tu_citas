@@ -2227,3 +2227,18 @@ def editar_servicio(request, servicio_id):
         "form": form,
     }
     return render(request, "app/editar_servicio.html", context)
+
+def servicios_empresa(request, empresa_id):
+    empresa = get_object_or_404(Empresa, id=empresa_id)
+    servicios_activos = Servicio.objects.filter(empresa=empresa, activo=True)
+    servicios_ocultos = Servicio.objects.filter(empresa=empresa, activo=False)
+
+    context = {
+        "empresa": empresa,
+        "servicios_activos": servicios_activos,
+        "servicios_ocultos": servicios_ocultos,
+    }
+    return render(request, "app/servicios_empresa.html", context)
+
+    
+    
