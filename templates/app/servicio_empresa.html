@@ -82,6 +82,18 @@
       overflow-x: auto;
     }
 
+    /* Formulario dentro del collapse más bonito */
+    .editar-form {
+      background: #f1f1f1;
+      padding: 15px;
+      border-radius: 0.75rem;
+      margin-top: 10px;
+    }
+
+    .editar-form .form-control {
+      margin-bottom: 10px;
+    }
+
     /* --- Responsive para móviles: --- */
     @media (max-width: 768px) {
       .top-bar {
@@ -105,12 +117,10 @@
         font-size: 1rem;
       }
 
-      /* Ocultar encabezado de tabla */
       .table thead {
         display: none;
       }
 
-      /* Cada fila se muestra como bloque separado */
       .table tr {
         display: block;
         margin-bottom: 1.5rem;
@@ -121,14 +131,13 @@
         box-shadow: 0 2px 8px rgba(0,0,0,0.05);
       }
 
-      /* Cada celda en bloque apilado */
       .table td {
         display: block;
         padding: 10px 0;
         border: none;
         border-bottom: 1px solid #eee;
         position: relative;
-        padding-left: 110px; /* espacio para la etiqueta */
+        padding-left: 110px;
         word-break: break-word;
       }
 
@@ -136,7 +145,6 @@
         border-bottom: none;
       }
 
-      /* Etiqueta delante de cada dato */
       .table td::before {
         content: attr(data-label);
         position: absolute;
@@ -148,7 +156,6 @@
         white-space: nowrap;
       }
 
-      /* Ajuste botones en móvil */
       .table td form {
         margin: 0;
         padding: 0;
@@ -263,24 +270,29 @@
               </form>
 
               <!-- Formulario collapsible para editar -->
-              <div class="collapse mt-2" id="editarServicio{{ servicio.id }}">
+              <div class="collapse editar-form" id="editarServicio{{ servicio.id }}">
                 <form method="post">
                   {% csrf_token %}
                   <input type="hidden" name="editar_servicio" value="1" />
                   <input type="hidden" name="servicio_id" value="{{ servicio.id }}" />
-                  <div class="mb-2">
-                    <input type="text" name="nombre" class="form-control form-control-sm" value="{{ servicio.nombre }}" placeholder="Nombre">
+
+                  <div class="mb-3">
+                    <label class="form-label">Nombre</label>
+                    <input type="text" name="nombre" class="form-control" value="{{ servicio.nombre }}" required>
                   </div>
-                  <div class="mb-2">
-                    <textarea name="descripcion" class="form-control form-control-sm" placeholder="Descripción">{{ servicio.descripcion }}</textarea>
+                  <div class="mb-3">
+                    <label class="form-label">Descripción</label>
+                    <textarea name="descripcion" class="form-control" rows="3">{{ servicio.descripcion }}</textarea>
                   </div>
-                  <div class="mb-2">
-                    <input type="number" name="precio" class="form-control form-control-sm" value="{{ servicio.precio }}" placeholder="Precio">
+                  <div class="mb-3">
+                    <label class="form-label">Precio</label>
+                    <input type="number" name="precio" class="form-control" value="{{ servicio.precio }}" step="0.01" required>
                   </div>
-                  <div class="mb-2">
-                    <input type="number" name="duracion" class="form-control form-control-sm" value="{{ servicio.duracion }}" placeholder="Duración (min)">
+                  <div class="mb-3">
+                    <label class="form-label">Duración (minutos)</label>
+                    <input type="number" name="duracion" class="form-control" value="{{ servicio.duracion }}" required>
                   </div>
-                  <button type="submit" class="btn btn-success btn-sm">Guardar Cambios</button>
+                  <button type="submit" class="btn btn-success">Guardar Cambios</button>
                 </form>
               </div>
             </td>
