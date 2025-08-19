@@ -2201,3 +2201,25 @@ def subir_o_eliminar_foto_cliente(request):
             return redirect('empresa_panel')
 
     return render(request, 'app/subir_logo.html')
+
+# editar servicios 
+
+def editar_servicio(request, servicio_id):
+    servicio = get_object_or_404(Servicio, id=servicio_id)
+
+    if request.method == "POST":
+        form = ServicioForm(request.POST, instance=servicio)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Servicio actualizado correctamente.")
+            return redirect('app:servicios_empresa', empresa_id=servicio.empresa.id)  # Ajusta según tu URL
+        else:
+            messages.error(request, "Por favor, corrige los errores en el formulario.")
+    else:
+        form = ServicioForm(instance=servicio)
+
+    context = {
+        "servicio": servicio,
+        "form": form,
+    }
+    return render(request, "app/editar_servicio.html", context)

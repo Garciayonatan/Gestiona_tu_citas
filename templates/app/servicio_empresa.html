@@ -82,6 +82,7 @@
       overflow-x: auto;
     }
 
+    /* --- Responsive para móviles: --- */
     @media (max-width: 768px) {
       .top-bar {
         flex-direction: column;
@@ -104,10 +105,12 @@
         font-size: 1rem;
       }
 
+      /* Ocultar encabezado de tabla */
       .table thead {
         display: none;
       }
 
+      /* Cada fila se muestra como bloque separado */
       .table tr {
         display: block;
         margin-bottom: 1.5rem;
@@ -118,13 +121,14 @@
         box-shadow: 0 2px 8px rgba(0,0,0,0.05);
       }
 
+      /* Cada celda en bloque apilado */
       .table td {
         display: block;
         padding: 10px 0;
         border: none;
         border-bottom: 1px solid #eee;
         position: relative;
-        padding-left: 110px;
+        padding-left: 110px; /* espacio para la etiqueta */
         word-break: break-word;
       }
 
@@ -132,6 +136,7 @@
         border-bottom: none;
       }
 
+      /* Etiqueta delante de cada dato */
       .table td::before {
         content: attr(data-label);
         position: absolute;
@@ -143,6 +148,7 @@
         white-space: nowrap;
       }
 
+      /* Ajuste botones en móvil */
       .table td form {
         margin: 0;
         padding: 0;
@@ -244,13 +250,15 @@
             <td data-label="Precio">{{ servicio.precio_formateado }}</td>
             <td data-label="Duración">{{ servicio.duracion|default:"No especificado" }} min</td>
             <td data-label="Acciones">
+              <!-- Botón Editar -->
+              <a href="{% url 'app:editar_servicio' servicio.id %}" class="btn btn-primary btn-sm me-1">Editar</a>
+              <!-- Botón Ocultar -->
               <form method="post" style="display:inline;">
                 {% csrf_token %}
                 <input type="hidden" name="eliminar_servicio" value="1" />
                 <input type="hidden" name="servicio_id" value="{{ servicio.id }}" />
                 <button type="submit" class="btn btn-warning btn-sm">Ocultar</button>
               </form>
-              <a href="{% url 'app:editar_servicio' servicio.id %}" class="btn btn-primary btn-sm">Editar</a>
             </td>
           </tr>
           {% empty %}
@@ -285,13 +293,15 @@
             <td data-label="Precio">{{ servicio.precio_formateado }}</td>
             <td data-label="Duración">{{ servicio.duracion|default:"No especificado" }} min</td>
             <td data-label="Acciones">
+              <!-- Botón Editar -->
+              <a href="{% url 'app:editar_servicio' servicio.id %}" class="btn btn-primary btn-sm me-1">Editar</a>
+              <!-- Botón Activar -->
               <form method="post" style="display:inline;">
                 {% csrf_token %}
                 <input type="hidden" name="mostrar_servicio" value="1" />
                 <input type="hidden" name="servicio_id" value="{{ servicio.id }}" />
                 <button type="submit" class="btn btn-success btn-sm">Activar</button>
               </form>
-              <a href="{% url 'app:editar_servicio' servicio.id %}" class="btn btn-primary btn-sm">Editar</a>
             </td>
           </tr>
           {% empty %}
