@@ -244,7 +244,7 @@
             <td data-label="Precio">{{ servicio.precio_formateado }}</td>
             <td data-label="Duración">{{ servicio.duracion|default:"No especificado" }} min</td>
             <td data-label="Acciones">
-              <!-- Botón Editar -->
+              <!-- Botón Editar: ahora lleva a la página editar_servicio.html -->
               <a href="{% url 'app:editar_servicio' servicio.id %}" class="btn btn-primary btn-sm me-1">Editar</a>
               <!-- Botón Ocultar -->
               <form method="post" style="display:inline;">

@@ -27,16 +27,31 @@
     .btn-back {
       margin-bottom: 20px;
     }
+    .alert {
+      border-radius: 12px;
+      padding: 15px 25px;
+      font-size: 1rem;
+      font-weight: 500;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+    .btn-close {
+      filter: brightness(0.5);
+    }
+    .btn-close:hover {
+      filter: brightness(1);
+    }
   </style>
 </head>
 <body>
 
 <div class="container">
 
+  <!-- Botón para regresar a la lista de servicios -->
   <a href="{% url 'app:servicios_empresa' servicio.empresa.id %}" class="btn btn-secondary btn-back">⬅ Volver a Servicios</a>
 
   <h2>Editar Servicio: <strong>{{ servicio.nombre }}</strong></h2>
 
+  <!-- Mensajes de alerta -->
   {% if messages %}
     {% for message in messages %}
       <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
@@ -46,6 +61,7 @@
     {% endfor %}
   {% endif %}
 
+  <!-- Formulario de edición -->
   <form method="post">
     {% csrf_token %}
     <div class="mb-3">
