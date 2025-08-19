@@ -212,22 +212,20 @@ def registro_cliente(request):
 @login_required(login_url='app:login')
 def cliente_panel(request):
     """
-    Vista para mostrar el panel del cliente con sus citas y las empresas activas disponibles.
+    Vista para mostrar el panel del cliente con sus citas y las empresas disponibles.
     También actualiza automáticamente el estado de las citas que ya han pasado.
     """
 
     cliente = get_object_or_404(Cliente, user=request.user)
 
-    ahora = now()
-
-    # Obtener solo las citas visibles y de empresas activas
+    # Obtener solo las citas visibles para el cliente
     citas = Cita.objects.filter(
         cliente=cliente,
-        visible_para_cliente=True,
-        empresa__activo=True  # ✅ Solo citas de empresas activas
+        visible_para_cliente=True
     ).select_related('empresa', 'servicio').order_by('fecha', 'hora')
 
-    # Actualizar estado de las citas según fecha y hora
+    ahora = now()
+
     for cita in citas:
         fecha_hora_cita = datetime.combine(cita.fecha, cita.hora)
         if is_naive(fecha_hora_cita):
@@ -252,21 +250,17 @@ def cliente_panel(request):
     # Refrescar citas actualizadas
     citas = Cita.objects.filter(
         cliente=cliente,
-        visible_para_cliente=True,
-        empresa__activo=True  # ✅ Solo empresas activas
+        visible_para_cliente=True
     ).select_related('empresa', 'servicio').order_by('fecha', 'hora')
 
-    # Verificar si tiene alguna cita pendiente o aceptada en empresas activas
+    # Verificar si tiene alguna cita pendiente o aceptada
     tiene_cita_activa = Cita.objects.filter(
         cliente=cliente,
         estado__in=['pendiente', 'aceptada'],
-        visible_para_cliente=True,
-        empresa__activo=True  # ✅ Solo empresas activas
+        visible_para_cliente=True
     ).exists()
 
-    # Obtener solo empresas activas
-    empresas = Empresa.objects.filter(activo=True).prefetch_related('dias_laborables')
-
+    empresas = Empresa.objects.prefetch_related('dias_laborables')
     dias = DiaLaborable.objects.all()
 
     return render(request, 'app/cliente_panel.html', {
@@ -274,7 +268,7 @@ def cliente_panel(request):
         'citas': citas,
         'empresas': empresas,
         'dias_laborables': dias,
-        'tiene_cita_activa': tiene_cita_activa,
+        'tiene_cita_activa': tiene_cita_activa,  # ✅ Puedes usar esto en el template
     })
 
 # Panel de empresa
@@ -1045,7 +1039,9 @@ logger = logging.getLogger(__name__)
 @login_required(login_url='app:login')
 def nueva_cita(request):
     cliente = get_object_or_404(Cliente, user=request.user)
-    empresas = Empresa.objects.prefetch_related('dias_laborables')
+
+    # ✅ Solo empresas activas
+    empresas = Empresa.objects.filter(activo=True).prefetch_related('dias_laborables')
 
     if request.method == 'POST':
         try:
@@ -1058,7 +1054,9 @@ def nueva_cita(request):
                 messages.error(request, 'Todos los campos son obligatorios.')
                 return redirect('app:nueva_cita')
 
-            empresa = Empresa.objects.get(id=empresa_id)
+            # ✅ Obtener empresa solo si está activa
+            empresa = Empresa.objects.get(id=empresa_id, activo=True)
+            # ✅ Obtener servicio solo si está activo y pertenece a empresa activa
             servicio = Servicio.objects.get(id=servicio_id, empresa=empresa, activo=True)
 
             fecha_hora_naive = datetime.strptime(fecha_hora_str, '%Y-%m-%dT%H:%M')
@@ -1126,7 +1124,7 @@ def nueva_cita(request):
 
             hora_cita = fecha_hora.time()
 
-            # ✅ Ajuste aquí: no se permite cita a la hora exacta de cierre
+            # ✅ No se permite cita fuera del horario laboral
             if not (empresa.hora_inicio <= hora_cita < empresa.hora_cierre):
                 messages.error(request, 'La hora está fuera del horario laboral.')
                 return redirect('app:nueva_cita')
@@ -1142,10 +1140,8 @@ def nueva_cita(request):
             for cita in citas_existentes:
                 if cita.servicio is None:
                     continue
-
                 cita_inicio = make_aware(datetime.combine(cita.fecha, cita.hora))
                 cita_fin = cita_inicio + timedelta(minutes=cita.servicio.duracion)
-
                 if not (cita_fin <= fecha_hora or fecha_hora_fin <= cita_inicio):
                     citas_superpuestas.append(cita)
 
@@ -1153,6 +1149,7 @@ def nueva_cita(request):
                 messages.error(request, 'No hay disponibilidad para la hora seleccionada. Intenta con otro horario.')
                 return redirect('app:nueva_cita')
 
+            # ✅ Crear cita
             cita = Cita.objects.create(
                 cliente=cliente,
                 empresa=empresa,
@@ -1163,18 +1160,15 @@ def nueva_cita(request):
                 estado='pendiente'
             )
 
+            # Envío de correos y telegram
             asunto = f"📅 Nueva cita - {empresa.nombre_empresa}"
             mensaje_cliente = (
                 f"Hola {cliente.nombre_completo},\n\n"
                 f"Has solicitado una nueva cita:\n"
                 f"🏢 Empresa: {empresa.nombre_empresa}\n"
-                f"🏷️ Tipo de Empresa: {empresa.get_tipo_empresa_display()}\n"
-                f"📜 Descripción: {servicio.descripcion}\n"
-                f"🕒 Duración: {servicio.duracion} minutos\n"
+                f"💼 Servicio: {servicio.nombre}\n"
                 f"📅 Fecha: {cita.fecha}\n"
                 f"🕒 Hora: {cita.hora.strftime('%I:%M %p').lstrip('0')}\n"
-                f"💼 Servicio: {servicio.nombre}\n"
-                f"💰 Precio: {int(servicio.precio):,} DOP\n"
                 f"📝 Comentarios: {comentarios}\n"
                 f"📌 Estado: {cita.get_estado_display()}\n\n"
                 f"Gracias por usar nuestro servicio."
@@ -1182,14 +1176,10 @@ def nueva_cita(request):
             mensaje_empresa = (
                 f"Hola {empresa.nombre_dueno},\n\n"
                 f"Se ha solicitado una nueva cita en tu empresa {empresa.nombre_empresa}:\n"
-                f"🏷️ Tipo de Empresa: {empresa.get_tipo_empresa_display()}\n"
                 f"👤 Cliente: {cliente.nombre_completo}\n"
-                f"📜 Descripción del servicio: {servicio.descripcion}\n"
-                f"🕒 Duración: {servicio.duracion} minutos\n"
+                f"💼 Servicio: {servicio.nombre}\n"
                 f"📅 Fecha: {cita.fecha}\n"
                 f"🕒 Hora: {cita.hora.strftime('%I:%M %p').lstrip('0')}\n"
-                f"💼 Servicio: {servicio.nombre}\n"
-                f"💰 Precio: {int(servicio.precio):,} DOP\n"
                 f"📝 Comentarios: {comentarios}\n"
                 f"📌 Estado: {cita.get_estado_display()}\n\n"
                 f"Gracias por usar nuestro servicio."
@@ -1214,29 +1204,28 @@ def nueva_cita(request):
                 if cliente.telegram_chat_id:
                     enviar_mensaje_telegram(cliente.telegram_chat_id, mensaje_cliente)
                     telegram_enviado = True
-                telegram_ok = telegram_enviado
-                if not telegram_enviado:
-                    telegram_ok = True
+                telegram_ok = telegram_enviado or True
             except Exception as e:
                 telegram_ok = False
                 logger.warning(f"⚠️ Error al enviar Telegram: {e}")
                 messages.warning(request, "Cita creada, pero no se pudo enviar mensaje por Telegram.")
 
+            # Mensaje final
             if correo_ok and telegram_ok:
-                messages.success(request, "✅ Cita creada correctamente. Las notificaciones se enviaron correctamente por correo y Telegram.")
+                messages.success(request, "✅ Cita creada correctamente. Notificaciones enviadas correctamente.")
             elif correo_ok and not telegram_ok:
-                messages.success(request, "✅ Cita creada correctamente. Notificación enviada por correo, pero fallo el envío por Telegram.")
+                messages.success(request, "✅ Cita creada. Notificación enviada por correo, pero falló Telegram.")
             elif not correo_ok and telegram_ok:
-                messages.success(request, "✅ Cita creada correctamente. Notificación enviada por Telegram, pero fallo el envío por correo.")
+                messages.success(request, "✅ Cita creada. Notificación enviada por Telegram, pero falló correo.")
             else:
-                messages.success(request, "✅ Cita creada correctamente. No se pudieron enviar las notificaciones.")
+                messages.success(request, "✅ Cita creada correctamente. No se pudieron enviar notificaciones.")
 
             return redirect('app:cliente_panel')
 
         except Empresa.DoesNotExist:
-            messages.error(request, "Empresa no encontrada.")
+            messages.error(request, "Empresa no encontrada o está desactivada.")
         except Servicio.DoesNotExist:
-            messages.error(request, "Servicio no válido o no pertenece a la empresa, o está inactivo.")
+            messages.error(request, "Servicio no válido, inactivo o pertenece a una empresa desactivada.")
         except ValueError as ve:
             messages.error(request, f"Fecha y hora inválidas: {ve}")
         except Exception as e:
