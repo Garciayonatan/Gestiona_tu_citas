@@ -221,7 +221,7 @@ def registro_cliente(request):
 @login_required(login_url='app:login')
 def cliente_panel(request):
     """
-    Vista para mostrar el panel del cliente con sus citas y las empresas disponibles.
+    Vista para mostrar el panel del cliente con sus citas y las empresas activas disponibles.
     También actualiza automáticamente el estado de las citas que ya han pasado.
     """
 
@@ -269,7 +269,8 @@ def cliente_panel(request):
         visible_para_cliente=True
     ).exists()
 
-    empresas = Empresa.objects.prefetch_related('dias_laborables')
+    # ✅ Traer solo empresas activas
+    empresas = Empresa.objects.filter(activo=True).prefetch_related('dias_laborables')
     dias = DiaLaborable.objects.all()
 
     return render(request, 'app/cliente_panel.html', {
@@ -277,9 +278,8 @@ def cliente_panel(request):
         'citas': citas,
         'empresas': empresas,
         'dias_laborables': dias,
-        'tiene_cita_activa': tiene_cita_activa,  # ✅ Puedes usar esto en el template
+        'tiene_cita_activa': tiene_cita_activa,
     })
-
 # Panel de empresa
 
 @login_required(login_url='app:login')
