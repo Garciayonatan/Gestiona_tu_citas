@@ -61,7 +61,6 @@ urlpatterns = [
                  #'''''''                                                                         #borrar
       #borrar esto hoy 10 del 7 
     path('empresa/historial-citas/', historial_citas_empresa, name='historial_citas_empresa'),
-    path("empresa/<int:empresa_id>/eliminar/", views.eliminar_empresa, name="eliminar_empresa"),
     #borrar si no quiero esto de historial
 
     #-----------------------------------------------------------activar cuando yo quiera
