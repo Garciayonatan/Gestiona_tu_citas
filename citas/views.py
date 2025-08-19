@@ -2205,17 +2205,21 @@ def subir_o_eliminar_foto_cliente(request):
 # editar servicios 
 
 def editar_servicio(request, servicio_id):
+    # Obtener el servicio o mostrar 404 si no existe
     servicio = get_object_or_404(Servicio, id=servicio_id)
 
     if request.method == "POST":
+        # Crear el formulario con los datos enviados y el servicio existente
         form = ServicioForm(request.POST, instance=servicio)
         if form.is_valid():
             form.save()
             messages.success(request, "Servicio actualizado correctamente.")
-            return redirect('app:servicios_empresa', empresa_id=servicio.empresa.id)  # Ajusta según tu URL
+            # Redirigir a la lista de servicios de la empresa (sin pasar parámetros si la URL no los necesita)
+            return redirect('app:servicios_empresa')
         else:
             messages.error(request, "Por favor, corrige los errores en el formulario.")
     else:
+        # Mostrar el formulario con los datos existentes del servicio
         form = ServicioForm(instance=servicio)
 
     context = {

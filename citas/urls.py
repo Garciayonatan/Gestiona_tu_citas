@@ -63,7 +63,10 @@ urlpatterns = [
     path('empresa/historial-citas/', historial_citas_empresa, name='historial_citas_empresa'),
     
     #servicios editar
+
     path('servicio/editar/<int:servicio_id>/', views.editar_servicio, name='editar_servicio'),
+
+
     #borrar si no quiero esto de historial
 
     #-----------------------------------------------------------activar cuando yo quiera
