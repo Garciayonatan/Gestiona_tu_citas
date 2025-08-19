@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Activar / Desactivar Empresa</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(to right, #f8f9fa, #e9ecef);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #333;
+      padding: 30px;
+    }
+    .container {
+      background: #fff;
+      border-radius: 1rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      padding: 40px;
+      max-width: 500px;
+      margin: auto;
+      text-align: center;
+    }
+    h2 {
+      color: #004080;
+      margin-bottom: 30px;
+    }
+    .btn {
+      width: 200px;
+      margin: 10px 0;
+      font-weight: 600;
+    }
+    .alert {
+      border-radius: 12px;
+      padding: 15px 25px;
+      font-size: 1rem;
+      font-weight: 500;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+    .btn-close {
+      filter: brightness(0.5);
+    }
+    .btn-close:hover {
+      filter: brightness(1);
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Estado de la Empresa: <strong>{{ empresa.nombre }}</strong></h2>
+
+  <!-- Mensajes de alerta -->
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Botones para activar/desactivar empresa -->
+  <form method="post">
+    {% csrf_token %}
+    {% if empresa.activo %}
+      <button type="submit" name="accion" value="desactivar" class="btn btn-danger">Desactivar Empresa</button>
+    {% else %}
+      <button type="submit" name="accion" value="activar" class="btn btn-success">Activar Empresa</button>
+    {% endif %}
+  </form>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

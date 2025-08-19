@@ -2255,3 +2255,34 @@ def servicios_empresa(request):
         "servicios_ocultos": servicios_ocultos,
     }
     return render(request, "app/servicio_empresa.html", context)
+
+
+# emepresa activa y desactivida
+
+@login_required
+def activar_desactivar_empresa(request, empresa_id):
+    """
+    Vista para activar o desactivar una empresa según el botón presionado.
+    Solo el dueño de la empresa puede cambiar su estado.
+    """
+    empresa = get_object_or_404(Empresa, id=empresa_id)
+
+    # Verificar que el usuario sea dueño de la empresa
+    if request.user != empresa.usuario:
+        messages.error(request, "No tienes permisos para cambiar el estado de esta empresa.")
+        return redirect('app:empresa_panel')
+
+    if request.method == "POST":
+        accion = request.POST.get('accion')
+        if accion == "activar":
+            empresa.activo = True
+            empresa.save()
+            messages.success(request, "Empresa activada correctamente.")
+        elif accion == "desactivar":
+            empresa.activo = False
+            empresa.save()
+            messages.success(request, "Empresa desactivada correctamente.")
+        else:
+            messages.error(request, "Acción no válida.")
+
+    return render(request, "app/activar_desactivar_empresa.html", {"empresa": empresa})

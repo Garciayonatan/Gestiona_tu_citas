@@ -36,8 +36,9 @@
       font-size: 2.8rem; color: #60a5fa; font-weight: 700; letter-spacing: .6px;
       text-shadow: 0 0 8px #60a5fa88;
     }
+    nav { display: flex; gap: 16px; align-items: center; }
     nav a {
-      text-decoration: none; color: #1e293b; background: #60a5fa; padding: 16px 36px;
+      text-decoration: none; color: #1e293b; background: #60a5fa; padding: 12px 28px;
       border-radius: 28px; font-weight: 700; font-size: 1.15rem;
       transition: background .4s ease;
     }
@@ -141,7 +142,10 @@
   <main class="container" role="main" aria-label="Panel de empresa">
     <header>
       <h1>Bienvenido, {{ request.user.username }}</h1>
-      <nav><a href="{% url 'app:logout' %}">Cerrar sesión</a></nav>
+      <nav>
+        <a href="{% url 'app:activar_desactivar_empresa' empresa.id %}">⚡ Activar / Desactivar Empresa</a>
+        <a href="{% url 'app:logout' %}">Cerrar sesión</a>
+      </nav>
     </header>
 
     {% if messages %}

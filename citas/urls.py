@@ -67,7 +67,9 @@ urlpatterns = [
    path('servicio/editar/<int:servicio_id>/', views.editar_servicio, name='editar_servicio'),
    #path('empresa/<int:empresa_id>/servicios/', views.servicios_empresa, name='servicios_empresa'),
 
-    #borrar si no quiero esto de historial
+    #borrar si no quiero esto de desactivar y activar
+     path('empresa/<int:empresa_id>/activar-desactivar/', 
+         views.activar_desactivar_empresa, name='activar_desactivar_empresa'),
 
     #-----------------------------------------------------------activar cuando yo quiera
     #path('cliente/subir-foto/', views.subir_o_eliminar_foto_cliente, name='subir_foto_cliente'),

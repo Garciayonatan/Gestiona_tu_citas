@@ -17,6 +17,7 @@ TIPOS_EMPRESA = [
     ("Clínica", "Clínica"),
     ("Tienda", "Tienda"),
     ("Centro", "Centro"),
+    ("Otros", "Otros"),
 ]
 #borrar
 def get_default_servicio_id():
@@ -59,6 +60,8 @@ class Empresa(models.Model):
     dias_laborables = models.ManyToManyField(DiaLaborable, related_name="empresas", verbose_name="Días Laborables", blank=True)
     capacidad = models.PositiveIntegerField(default=1, verbose_name="Capacidad de Atención Simultánea", help_text="Número de personas que pueden ser atendidas al mismo tiempo en un horario.")
     cantidad_empleados = models.PositiveIntegerField(default=1, verbose_name="Cantidad de Empleados", help_text="Número de empleados registrados en la empresa.")
+    #nuevo esto es activo y desactivar
+    activo = models.BooleanField(default=True)  # True = activada, False = desactivada
     #logo = models.ImageField(upload_to='empresas/logos/', null=True, blank=True, verbose_name="Logo o Imagen")
 
     def save(self, *args, **kwargs):
