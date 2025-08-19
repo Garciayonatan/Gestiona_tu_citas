@@ -2218,8 +2218,8 @@ def editar_servicio(request, servicio_id):
         if form.is_valid():
             form.save()
             messages.success(request, "Servicio actualizado correctamente.")
-            # Redirigir a la lista de servicios de la empresa correctamente
-            return redirect('app:servicios_empresa', empresa_id=servicio.empresa.id)
+            # Redirigir a la lista de servicios usando la URL sin argumentos
+            return redirect('app:servicios_empresa')
         else:
             messages.error(request, "Por favor, corrige los errores en el formulario.")
     else:
@@ -2233,12 +2233,17 @@ def editar_servicio(request, servicio_id):
     return render(request, "app/editar_servicio.html", context)
 
 
-def servicios_empresa(request, empresa_id):
+def servicios_empresa(request):
     """
-    Vista para mostrar todos los servicios de una empresa, separados en activos y ocultos.
+    Vista para mostrar todos los servicios de la empresa del usuario logueado,
+    separados en activos y ocultos.
     """
-    # Obtener la empresa o mostrar 404 si no existe
-    empresa = get_object_or_404(Empresa, id=empresa_id)
+    # Obtener la empresa del usuario logueado
+    if not hasattr(request.user, 'empresa'):
+        messages.error(request, "No tienes permisos para ver esta sección.")
+        return redirect('app:home')
+
+    empresa = request.user.empresa
     
     # Obtener los servicios activos y ocultos de la empresa
     servicios_activos = Servicio.objects.filter(empresa=empresa, activo=True)

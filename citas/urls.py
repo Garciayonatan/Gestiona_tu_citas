@@ -51,7 +51,7 @@ urlpatterns = [
     path('restablecer-contrasena/', views.restablecer_contraseña_con_codigo, name='restablecer_contraseña'),
 
     # Panel empresa - servicios
-   # path('empresa/servicios/', views.administrar_servicios, name='servicios_empresa'),
+     path('empresa/servicios/', views.administrar_servicios, name='servicios_empresa'),
 
     # API servicios
     path('api/servicios/', obtener_servicios_por_empresa, name='api_servicios'),
@@ -65,7 +65,7 @@ urlpatterns = [
     #servicios editar
 
    path('servicio/editar/<int:servicio_id>/', views.editar_servicio, name='editar_servicio'),
-   path('empresa/<int:empresa_id>/servicios/', views.servicios_empresa, name='servicios_empresa'),
+   #path('empresa/<int:empresa_id>/servicios/', views.servicios_empresa, name='servicios_empresa'),
 
     #borrar si no quiero esto de historial
 
