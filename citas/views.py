@@ -2228,8 +2228,11 @@ def editar_servicio(request, servicio_id):
     }
     return render(request, "app/editar_servicio.html", context)
 
+
 def servicios_empresa(request, empresa_id):
+    # Obtener la empresa o mostrar 404 si no existe
     empresa = get_object_or_404(Empresa, id=empresa_id)
+    # Obtener los servicios activos y ocultos
     servicios_activos = Servicio.objects.filter(empresa=empresa, activo=True)
     servicios_ocultos = Servicio.objects.filter(empresa=empresa, activo=False)
 
@@ -2239,6 +2242,3 @@ def servicios_empresa(request, empresa_id):
         "servicios_ocultos": servicios_ocultos,
     }
     return render(request, "app/servicios_empresa.html", context)
-
-    
-    
