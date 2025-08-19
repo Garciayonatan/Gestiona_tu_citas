@@ -12,6 +12,7 @@
       color: #333;
       padding: 20px;
     }
+
     .container {
       background: #fff;
       border-radius: 1rem;
@@ -20,6 +21,7 @@
       max-width: 1100px;
       margin: auto;
     }
+
     .top-bar {
       display: flex;
       justify-content: space-between;
@@ -28,11 +30,13 @@
       row-gap: 10px;
       margin-bottom: 30px;
     }
+
     .top-bar h2 {
       font-weight: 700;
       color: #004080;
       font-size: 1.8rem;
     }
+
     .card {
       background-color: #f8f9fa;
       padding: 25px;
@@ -40,14 +44,17 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
       margin-bottom: 40px;
     }
+
     .form-label {
       font-weight: 600;
     }
+
     .table th, .table td {
       vertical-align: middle;
       white-space: normal;
       word-wrap: break-word;
     }
+
     .alert {
       border-radius: 12px;
       padding: 15px 25px;
@@ -55,41 +62,52 @@
       font-weight: 500;
       box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     }
+
     .btn-close {
       filter: brightness(0.5);
     }
+
     .btn-close:hover {
       filter: brightness(1);
     }
+
     .form-section h5 {
       font-size: 1.3rem;
       font-weight: bold;
       color: #005792;
       margin-bottom: 15px;
     }
+
     .table-responsive {
       overflow-x: auto;
     }
+
     @media (max-width: 768px) {
       .top-bar {
         flex-direction: column;
         align-items: flex-start;
       }
+
       .top-bar h2 {
         font-size: 1.5rem;
       }
+
       .btn {
         width: 100%;
       }
+
       .form-section {
         margin-top: 30px;
       }
+
       .form-select, .form-control {
         font-size: 1rem;
       }
+
       .table thead {
         display: none;
       }
+
       .table tr {
         display: block;
         margin-bottom: 1.5rem;
@@ -99,6 +117,7 @@
         padding: 15px 20px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.05);
       }
+
       .table td {
         display: block;
         padding: 10px 0;
@@ -108,9 +127,11 @@
         padding-left: 110px;
         word-break: break-word;
       }
+
       .table td:last-child {
         border-bottom: none;
       }
+
       .table td::before {
         content: attr(data-label);
         position: absolute;
@@ -121,10 +142,12 @@
         color: #005792;
         white-space: nowrap;
       }
+
       .table td form {
         margin: 0;
         padding: 0;
       }
+
       .table td form button {
         width: auto;
         padding: 6px 12px;
@@ -137,7 +160,6 @@
 
 <div class="container">
 
-  <!-- Mensajes de éxito o error -->
   {% if messages %}
   <div class="mb-4">
     {% for message in messages %}
@@ -149,7 +171,6 @@
   </div>
   {% endif %}
 
-  <!-- Barra superior -->
   <div class="top-bar">
     <h2>Servicios de <strong>{{ empresa.nombre_empresa }}</strong></h2>
     <a href="{% url 'app:empresa_panel' %}" class="btn btn-secondary">⬅ Volver al Panel</a>
@@ -176,8 +197,7 @@
     </form>
   </div>
 
-  <!-- Formulario nuevo servicio (solo si hay form en el contexto) -->
-  {% if form %}
+  <!-- Formulario nuevo servicio -->
   <div class="card">
     <h5>Agregar Nuevo Servicio</h5>
     <form method="post">
@@ -201,7 +221,6 @@
       <button type="submit" class="btn btn-success mt-2">Agregar Servicio</button>
     </form>
   </div>
-  {% endif %}
 
   <!-- Servicios Activos -->
   <div class="form-section">
