@@ -36,24 +36,12 @@
       font-size: 2.8rem; color: #60a5fa; font-weight: 700; letter-spacing: .6px;
       text-shadow: 0 0 8px #60a5fa88;
     }
-    nav {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      flex-wrap: wrap;
+    nav a {
+      text-decoration: none; color: #1e293b; background: #60a5fa; padding: 16px 36px;
+      border-radius: 28px; font-weight: 700; font-size: 1.15rem;
+      transition: background .4s ease;
     }
-    nav a, nav button {
-      text-decoration: none; color: #1e293b; background: #60a5fa; padding: 12px 28px;
-      border-radius: 28px; font-weight: 700; font-size: 1rem;
-      transition: background .4s ease; border: none; cursor: pointer;
-    }
-    nav a:hover, nav a:focus, nav button:hover, nav button:focus { background: #2563eb; color: #fff; }
-
-    .btn-danger {
-      background: #ef4444;
-      color: #fff !important;
-    }
-    .btn-danger:hover { background: #dc2626; }
+    nav a:hover, nav a:focus { background: #2563eb; color: #fff; outline: none; }
 
     .messages { margin-bottom: 32px; padding: 20px 28px; border-radius: 20px; font-weight: 700; font-size: 1.1rem; }
     .messages.error { background: #dc2626; color: #fff; border: 3px solid #b91c1c; }
@@ -153,15 +141,7 @@
   <main class="container" role="main" aria-label="Panel de empresa">
     <header>
       <h1>Bienvenido, {{ request.user.username }}</h1>
-      <nav>
-        <a href="{% url 'app:logout' %}">Cerrar sesión</a>
-        <!-- Botón visible para el dueño de la empresa -->
-        <form method="POST" action="{% url 'app:eliminar_empresa' empresa.id %}" 
-              onsubmit="return confirm('⚠️ ¿Estás seguro de que deseas eliminar esta empresa? Esta acción no se puede deshacer.');">
-          {% csrf_token %}
-          <button type="submit" class="btn-danger">🗑️ Eliminar Empresa</button>
-        </form>
-      </nav>
+      <nav><a href="{% url 'app:logout' %}">Cerrar sesión</a></nav>
     </header>
 
     {% if messages %}

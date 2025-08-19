@@ -78,37 +78,28 @@ def login_view(request):
         username = request.POST.get('username')
         password = request.POST.get('password')
         user = authenticate(request, username=username, password=password)
-
+        
         if user:
-            # Verifica si el usuario tiene empresa o cliente
-            if hasattr(user, 'empresa'):
-                # Revisa si la empresa está activa
-                if not user.empresa.activo:
-                    messages.error(request, "Tu empresa está inactiva. No puedes iniciar sesión.")
-                    return redirect('app:login')
-
-                login(request, user)
-                messages.success(request, 'Iniciaste sesión como empresa exitosamente.')
-                return redirect('app:empresa_panel')
-
-            elif hasattr(user, 'cliente'):
-                login(request, user)
+            login(request, user)
+            if hasattr(user, 'cliente'):
                 messages.success(request, 'Iniciaste sesión como cliente exitosamente.')
                 return redirect('app:cliente_panel')
-
+            elif hasattr(user, 'empresa'):
+                messages.success(request, 'Iniciaste sesión como empresa exitosamente.')
+                return redirect('app:empresa_panel')
             else:
                 messages.warning(request, 'No se pudo determinar el tipo de usuario.')
                 logout(request)
                 return redirect('app:login')
-
         else:
             messages.error(request, 'Usuario o contraseña incorrectos.')
 
-    # Limpiar mensajes anteriores
+    # ✅ Aquí se limpian los mensajes anteriores (de otras vistas)
     storage = messages.get_messages(request)
     storage.used = True  # Marcar todos como usados y eliminar
 
     return render(request, 'app/login.html')
+
 # Cierre de sesión
 def logout_view(request):
     logout(request)
@@ -221,7 +212,7 @@ def registro_cliente(request):
 @login_required(login_url='app:login')
 def cliente_panel(request):
     """
-    Vista para mostrar el panel del cliente con sus citas y las empresas activas disponibles.
+    Vista para mostrar el panel del cliente con sus citas y las empresas disponibles.
     También actualiza automáticamente el estado de las citas que ya han pasado.
     """
 
@@ -269,8 +260,7 @@ def cliente_panel(request):
         visible_para_cliente=True
     ).exists()
 
-    # ✅ Traer solo empresas activas
-    empresas = Empresa.objects.filter(activo=True).prefetch_related('dias_laborables')
+    empresas = Empresa.objects.prefetch_related('dias_laborables')
     dias = DiaLaborable.objects.all()
 
     return render(request, 'app/cliente_panel.html', {
@@ -278,35 +268,29 @@ def cliente_panel(request):
         'citas': citas,
         'empresas': empresas,
         'dias_laborables': dias,
-        'tiene_cita_activa': tiene_cita_activa,
+        'tiene_cita_activa': tiene_cita_activa,  # ✅ Puedes usar esto en el template
     })
+
 # Panel de empresa
 
 @login_required(login_url='app:login')
 def empresa_panel(request):
-    """
-    Muestra el panel de la empresa para usuarios con empresa activa.
-    Si la empresa no existe o está inactiva, cierra sesión y redirige al login.
-    """
-    # Obtiene la empresa asociada al usuario
-    empresa = getattr(request.user, 'empresa', None)
+    if not hasattr(request.user, 'empresa'):
+        return redirect('app:cliente_panel')
 
-    # Validación: empresa inexistente o inactiva
-    if empresa is None or not empresa.activo:
-        messages.info(request, "No tienes una empresa activa.")
-        logout(request)
-        return redirect('app:login')
-
-    # Obtiene todas las citas de la empresa, ordenadas por fecha y hora
+    empresa = request.user.empresa
     citas = Cita.objects.filter(empresa=empresa).order_by('fecha', 'hora')
     ahora = timezone.now()
 
-    # Actualiza estados de las citas según la fecha y hora actual
     for cita in citas:
+        # Combinar fecha y hora
         fecha_hora_cita = datetime.combine(cita.fecha, cita.hora)
+
+        # Hacer timezone-aware si no lo es
         if timezone.is_naive(fecha_hora_cita):
             fecha_hora_cita = timezone.make_aware(fecha_hora_cita)
 
+        # Actualizar estado si aplica
         if cita.estado == 'aceptada' and fecha_hora_cita <= ahora:
             cita.estado = 'completada'
             cita.save()
@@ -314,22 +298,20 @@ def empresa_panel(request):
             cita.estado = 'vencida'
             cita.save()
 
-    # Filtra solo las citas pendientes
+    # Citas pendientes solo
     citas_pendientes = citas.filter(estado='pendiente')
     citas_pendientes_count = citas_pendientes.count()
 
-    # Obtiene días laborables y servicios de la empresa
     dias_laborables = empresa.dias_laborables.all()
     servicios = Servicio.objects.filter(empresa=empresa)
 
-    # Renderiza la plantilla del panel con toda la información
     return render(request, 'app/empresa_panel.html', {
         'empresa': empresa,
         'citas': citas,
         'dias_laborables': dias_laborables,
         'servicios': servicios,
         'citas_pendientes': citas_pendientes,
-        'citas_pendientes_count': citas_pendientes_count,
+        'citas_pendientes_count': citas_pendientes_count,  # Contador para la plantilla
     })
 
 #telegram noti
@@ -2219,28 +2201,3 @@ def subir_o_eliminar_foto_cliente(request):
             return redirect('empresa_panel')
 
     return render(request, 'app/subir_logo.html')
-
-
-# aqui va los eliminar
-
-# Solo superusuarios pueden eliminar empresas
-@login_required(login_url='app:login')
-def eliminar_empresa(request, empresa_id):
-    """
-    Soft delete de una empresa: marca como inactiva y cierra sesión del usuario.
-    """
-    empresa = get_object_or_404(Empresa, id=empresa_id)
-
-    if request.method == "POST":
-        # Soft delete
-        empresa.activo = False
-        empresa.save()
-
-        # Cierra la sesión del usuario
-        logout(request)
-
-        messages.success(request, f"La empresa '{empresa.nombre_empresa}' fue eliminada del panel correctamente.")
-        return redirect('app:login')
-
-    messages.error(request, "Operación no permitida.")
-    return redirect('app:empresa_panel')
