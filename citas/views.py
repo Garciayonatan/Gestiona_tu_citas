@@ -2241,4 +2241,4 @@ def servicios_empresa(request, empresa_id):
         "servicios_activos": servicios_activos,
         "servicios_ocultos": servicios_ocultos,
     }
-    return render(request, "app/servicios_empresa.html", context)
+    return render(request, "app/servicio_empresa.html", context)
