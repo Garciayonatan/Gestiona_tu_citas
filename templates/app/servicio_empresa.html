@@ -82,7 +82,6 @@
       overflow-x: auto;
     }
 
-    /* --- Responsive para móviles: --- */
     @media (max-width: 768px) {
       .top-bar {
         flex-direction: column;
@@ -105,12 +104,10 @@
         font-size: 1rem;
       }
 
-      /* Ocultar encabezado de tabla */
       .table thead {
         display: none;
       }
 
-      /* Cada fila se muestra como bloque separado */
       .table tr {
         display: block;
         margin-bottom: 1.5rem;
@@ -121,14 +118,13 @@
         box-shadow: 0 2px 8px rgba(0,0,0,0.05);
       }
 
-      /* Cada celda en bloque apilado */
       .table td {
         display: block;
         padding: 10px 0;
         border: none;
         border-bottom: 1px solid #eee;
         position: relative;
-        padding-left: 110px; /* espacio para la etiqueta */
+        padding-left: 110px;
         word-break: break-word;
       }
 
@@ -136,7 +132,6 @@
         border-bottom: none;
       }
 
-      /* Etiqueta delante de cada dato */
       .table td::before {
         content: attr(data-label);
         position: absolute;
@@ -148,7 +143,6 @@
         white-space: nowrap;
       }
 
-      /* Ajuste botones en móvil */
       .table td form {
         margin: 0;
         padding: 0;
