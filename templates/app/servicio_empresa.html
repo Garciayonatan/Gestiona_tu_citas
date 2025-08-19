@@ -250,12 +250,39 @@
             <td data-label="Precio">{{ servicio.precio_formateado }}</td>
             <td data-label="Duración">{{ servicio.duracion|default:"No especificado" }} min</td>
             <td data-label="Acciones">
+              <!-- Botón editar -->
+              <button class="btn btn-info btn-sm mb-1" type="button" data-bs-toggle="collapse" data-bs-target="#editarServicio{{ servicio.id }}" aria-expanded="false" aria-controls="editarServicio{{ servicio.id }}">
+                Editar
+              </button>
+              <!-- Botón ocultar -->
               <form method="post" style="display:inline;">
                 {% csrf_token %}
                 <input type="hidden" name="eliminar_servicio" value="1" />
                 <input type="hidden" name="servicio_id" value="{{ servicio.id }}" />
-                <button type="submit" class="btn btn-warning btn-sm">Ocultar</button>
+                <button type="submit" class="btn btn-warning btn-sm mb-1">Ocultar</button>
               </form>
+
+              <!-- Formulario collapsible para editar -->
+              <div class="collapse mt-2" id="editarServicio{{ servicio.id }}">
+                <form method="post">
+                  {% csrf_token %}
+                  <input type="hidden" name="editar_servicio" value="1" />
+                  <input type="hidden" name="servicio_id" value="{{ servicio.id }}" />
+                  <div class="mb-2">
+                    <input type="text" name="nombre" class="form-control form-control-sm" value="{{ servicio.nombre }}" placeholder="Nombre">
+                  </div>
+                  <div class="mb-2">
+                    <textarea name="descripcion" class="form-control form-control-sm" placeholder="Descripción">{{ servicio.descripcion }}</textarea>
+                  </div>
+                  <div class="mb-2">
+                    <input type="number" name="precio" class="form-control form-control-sm" value="{{ servicio.precio }}" placeholder="Precio">
+                  </div>
+                  <div class="mb-2">
+                    <input type="number" name="duracion" class="form-control form-control-sm" value="{{ servicio.duracion }}" placeholder="Duración (min)">
+                  </div>
+                  <button type="submit" class="btn btn-success btn-sm">Guardar Cambios</button>
+                </form>
+              </div>
             </td>
           </tr>
           {% empty %}
