@@ -2204,7 +2204,11 @@ def subir_o_eliminar_foto_cliente(request):
 
 # editar servicios 
 
+
 def editar_servicio(request, servicio_id):
+    """
+    Vista para editar un servicio existente.
+    """
     # Obtener el servicio o mostrar 404 si no existe
     servicio = get_object_or_404(Servicio, id=servicio_id)
 
@@ -2215,7 +2219,6 @@ def editar_servicio(request, servicio_id):
             form.save()
             messages.success(request, "Servicio actualizado correctamente.")
             # Redirigir a la lista de servicios de la empresa
-            # ⚠ Importante: pasar solo el valor, no 'empresa_id='
             return redirect('app:servicios_empresa', servicio.empresa.id)
         else:
             messages.error(request, "Por favor, corrige los errores en el formulario.")
@@ -2231,9 +2234,13 @@ def editar_servicio(request, servicio_id):
 
 
 def servicios_empresa(request, empresa_id):
+    """
+    Vista para mostrar todos los servicios de una empresa, separados en activos y ocultos.
+    """
     # Obtener la empresa o mostrar 404 si no existe
     empresa = get_object_or_404(Empresa, id=empresa_id)
-    # Obtener los servicios activos y ocultos
+    
+    # Obtener los servicios activos y ocultos de la empresa
     servicios_activos = Servicio.objects.filter(empresa=empresa, activo=True)
     servicios_ocultos = Servicio.objects.filter(empresa=empresa, activo=False)
 
