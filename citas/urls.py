@@ -64,9 +64,8 @@ urlpatterns = [
     
     #servicios editar
 
-    path('servicio/editar/<int:servicio_id>/', views.editar_servicio, name='editar_servicio'),
-    # path('empresa/<int:empresa_id>/servicios/', views.servicios_empresa, name='servicios_empresa'),
-
+   path('servicio/editar/<int:servicio_id>/', views.editar_servicio, name='editar_servicio'),
+   path('empresa/<int:empresa_id>/servicios/', views.servicios_empresa, name='servicios_empresa'),
 
     #borrar si no quiero esto de historial
 
