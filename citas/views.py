@@ -2214,8 +2214,8 @@ def editar_servicio(request, servicio_id):
         if form.is_valid():
             form.save()
             messages.success(request, "Servicio actualizado correctamente.")
-            # Redirigir a la lista de servicios de la empresa (sin pasar parámetros si la URL no los necesita)
-            return redirect('app:servicios_empresa')
+            # Redirigir a la lista de servicios de la empresa usando empresa_id
+            return redirect('app:servicios_empresa', empresa_id=servicio.empresa.id)
         else:
             messages.error(request, "Por favor, corrige los errores en el formulario.")
     else:
