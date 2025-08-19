@@ -212,20 +212,22 @@ def registro_cliente(request):
 @login_required(login_url='app:login')
 def cliente_panel(request):
     """
-    Vista para mostrar el panel del cliente con sus citas y las empresas disponibles.
+    Vista para mostrar el panel del cliente con sus citas y las empresas activas disponibles.
     También actualiza automáticamente el estado de las citas que ya han pasado.
     """
 
     cliente = get_object_or_404(Cliente, user=request.user)
 
-    # Obtener solo las citas visibles para el cliente
-    citas = Cita.objects.filter(
-        cliente=cliente,
-        visible_para_cliente=True
-    ).select_related('empresa', 'servicio').order_by('fecha', 'hora')
-
     ahora = now()
 
+    # Obtener solo las citas visibles y de empresas activas
+    citas = Cita.objects.filter(
+        cliente=cliente,
+        visible_para_cliente=True,
+        empresa__activo=True  # ✅ Solo citas de empresas activas
+    ).select_related('empresa', 'servicio').order_by('fecha', 'hora')
+
+    # Actualizar estado de las citas según fecha y hora
     for cita in citas:
         fecha_hora_cita = datetime.combine(cita.fecha, cita.hora)
         if is_naive(fecha_hora_cita):
@@ -250,17 +252,21 @@ def cliente_panel(request):
     # Refrescar citas actualizadas
     citas = Cita.objects.filter(
         cliente=cliente,
-        visible_para_cliente=True
+        visible_para_cliente=True,
+        empresa__activo=True  # ✅ Solo empresas activas
     ).select_related('empresa', 'servicio').order_by('fecha', 'hora')
 
-    # Verificar si tiene alguna cita pendiente o aceptada
+    # Verificar si tiene alguna cita pendiente o aceptada en empresas activas
     tiene_cita_activa = Cita.objects.filter(
         cliente=cliente,
         estado__in=['pendiente', 'aceptada'],
-        visible_para_cliente=True
+        visible_para_cliente=True,
+        empresa__activo=True  # ✅ Solo empresas activas
     ).exists()
 
-    empresas = Empresa.objects.prefetch_related('dias_laborables')
+    # Obtener solo empresas activas
+    empresas = Empresa.objects.filter(activo=True).prefetch_related('dias_laborables')
+
     dias = DiaLaborable.objects.all()
 
     return render(request, 'app/cliente_panel.html', {
@@ -268,7 +274,7 @@ def cliente_panel(request):
         'citas': citas,
         'empresas': empresas,
         'dias_laborables': dias,
-        'tiene_cita_activa': tiene_cita_activa,  # ✅ Puedes usar esto en el template
+        'tiene_cita_activa': tiene_cita_activa,
     })
 
 # Panel de empresa
