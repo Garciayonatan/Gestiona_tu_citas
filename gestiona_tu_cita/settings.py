@@ -75,8 +75,7 @@ DATABASES = {
         'HOST': config('DB_HOST'),
         'PORT': config('DB_PORT', default='5432'),
         'OPTIONS': {
-            'sslmode': 'verify-full',
-            'sslrootcert': BASE_DIR / 'render-postgres.crt',
+            'sslmode': 'disable',
         },
     }
 }
