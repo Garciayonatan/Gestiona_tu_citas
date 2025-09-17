@@ -63,6 +63,9 @@ TEMPLATES = [
 WSGI_APPLICATION = 'gestiona_tu_cita.wsgi.application'
 
 # BASE DE DATOS
+# ==========================
+# BASE DE DATOS
+# ==========================
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -71,8 +74,12 @@ DATABASES = {
         'PASSWORD': config('DB_PASSWORD'),
         'HOST': config('DB_HOST'),
         'PORT': config('DB_PORT', default='5432'),
+        'OPTIONS': {
+            'sslmode': 'require',  # Esto fuerza la conexión SSL
+        },
     }
 }
+
 
 # VALIDADORES DE CONTRASEÑA
 AUTH_PASSWORD_VALIDATORS = [
