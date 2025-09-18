@@ -11,9 +11,6 @@ config = AutoConfig(search_path=BASE_DIR)
 # SEGURIDAD
 SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
-
-# ALLOWED_HOSTS - asegúrate que en tu .env esté así:
-# ALLOWED_HOSTS=127.0.0.1,localhost,gestiona-tu-citas.onrender.com
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='', cast=Csv())
 
 # APLICACIONES INSTALADAS
@@ -62,9 +59,8 @@ TEMPLATES = [
 # WSGI
 WSGI_APPLICATION = 'gestiona_tu_cita.wsgi.application'
 
-# BASE DE DATOS
 # ==========================
-# BASE DE DATOS
+# BASE DE DATOS (Supabase)
 # ==========================
 DATABASES = {
     'default': {
@@ -75,12 +71,10 @@ DATABASES = {
         'HOST': config('DB_HOST'),
         'PORT': config('DB_PORT', default='5432'),
         'OPTIONS': {
-            'sslmode': 'require',  # <-- así fuerza SSL
+            'sslmode': config('DB_SSLMODE', default='require')
         },
     }
 }
-
-
 
 # VALIDADORES DE CONTRASEÑA
 AUTH_PASSWORD_VALIDATORS = [
@@ -131,14 +125,10 @@ CSRF_FAILURE_VIEW = 'citas.views.csrf_failure'
 TELEGRAM_BOT_TOKEN = config('TELEGRAM_BOT_TOKEN', default=None)
 TELEGRAM_CHAT_ID = config('TELEGRAM_CHAT_ID', default=None)
 
-
-#enviar mensaje a whatsapp
-
+# Twilio / WhatsApp (opcional)
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_WHATSAPP_NUMBER = os.getenv("TWILIO_WHATSAPP_NUMBER")
-
-#whatsapp
 
 # LOGIN Y LOGOUT
 LOGIN_REDIRECT_URL = '/home/'
@@ -146,5 +136,4 @@ LOGIN_URL = '/accounts/login/'
 LOGOUT_REDIRECT_URL = '/'
 
 # DEBUG - para comprobar si se está leyendo bien el .env
-# (puedes comentar o eliminar esta línea en producción)
 print(f"DEBUG={DEBUG}, ALLOWED_HOSTS={ALLOWED_HOSTS}")
