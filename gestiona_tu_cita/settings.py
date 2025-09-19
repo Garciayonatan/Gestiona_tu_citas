@@ -82,13 +82,13 @@ TEMPLATES = [
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": config("DB_NAME"),
-        "USER": config("DB_USER"),
-        "PASSWORD": config("DB_PASSWORD"),
-        "HOST": config("DB_HOST"),
-        "PORT": config("DB_PORT", default="5432"),
+        "NAME": config("DB_NAME").strip(),
+        "USER": config("DB_USER").strip(),
+        "PASSWORD": config("DB_PASSWORD").strip(),
+        "HOST": config("DB_HOST").strip(),
+        "PORT": config("DB_PORT", default="5432").strip(),
         "OPTIONS": {
-        "sslmode": config("DB_SSLMODE", default="require")
+            "sslmode": config("DB_SSLMODE", default="require").strip()
         },
     }
 }
