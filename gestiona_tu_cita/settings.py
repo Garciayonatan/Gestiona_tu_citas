@@ -11,14 +11,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ===============================
 SECRET_KEY = config("SECRET_KEY", default="django-insecure-placeholder-key")
 DEBUG = config("DEBUG", default=False, cast=bool)
+
 ALLOWED_HOSTS = config(
     "ALLOWED_HOSTS",
-    default="gestiona-tu-citas.onrender.com",
+    default="127.0.0.1,localhost,gestiona-tu-citas.onrender.com",
     cast=Csv()
 )
+
 CSRF_TRUSTED_ORIGINS = config(
     "CSRF_TRUSTED_ORIGINS",
-    default="https://gestiona-tu-citas.onrender.com",
+    default="http://localhost,http://127.0.0.1,https://gestiona-tu-citas.onrender.com",
     cast=Csv()
 )
 
@@ -75,7 +77,7 @@ TEMPLATES = [
 ]
 
 # ===============================
-# 🗄️ Base de Datos - PostgreSQL con SSL
+# 🗄️ Base de Datos - PostgreSQL con SSL (Render)
 # ===============================
 DATABASES = {
     "default": {
@@ -121,23 +123,23 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # ===============================
 # 📧 Configuración de Email (Gmail)
 # ===============================
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_BACKEND = config("EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend")
 EMAIL_HOST = config("EMAIL_HOST", default="smtp.gmail.com")
 EMAIL_PORT = config("EMAIL_PORT", default=587, cast=int)
 EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=True, cast=bool)
-EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="tu_correo@gmail.com")
-EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="tu_contraseña")
+EMAIL_HOST_USER = config("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default=EMAIL_HOST_USER)
 
 # ===============================
-# 🔒 Seguridad (Producción en Render)
+# 🔒 Seguridad para Render
 # ===============================
-SECURE_HSTS_SECONDS = config("SECURE_HSTS_SECONDS", default=31536000, cast=int)
+SECURE_HSTS_SECONDS = config("SECURE_HSTS_SECONDS", default=3600, cast=int)
 SECURE_HSTS_INCLUDE_SUBDOMAINS = config("SECURE_HSTS_INCLUDE_SUBDOMAINS", default=True, cast=bool)
 SECURE_HSTS_PRELOAD = config("SECURE_HSTS_PRELOAD", default=True, cast=bool)
-SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=True, cast=bool)
-SESSION_COOKIE_SECURE = config("SESSION_COOKIE_SECURE", default=True, cast=bool)
-CSRF_COOKIE_SECURE = config("CSRF_COOKIE_SECURE", default=True, cast=bool)
+SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=False, cast=bool)
+SESSION_COOKIE_SECURE = config("SESSION_COOKIE_SECURE", default=False, cast=bool)
+CSRF_COOKIE_SECURE = config("CSRF_COOKIE_SECURE", default=False, cast=bool)
 
 # ===============================
 # 🔑 Login y Logout
@@ -145,6 +147,12 @@ CSRF_COOKIE_SECURE = config("CSRF_COOKIE_SECURE", default=True, cast=bool)
 LOGIN_REDIRECT_URL = "/home/"
 LOGIN_URL = "/accounts/login/"
 LOGOUT_REDIRECT_URL = "/"
+
+# ===============================
+# 🤖 Telegram Bot
+# ===============================
+TELEGRAM_BOT_TOKEN = config("TELEGRAM_BOT_TOKEN", default="")
+TELEGRAM_CHAT_ID = config("TELEGRAM_CHAT_ID", default="")
 
 # ===============================
 # Opciones adicionales para Render
